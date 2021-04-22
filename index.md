@@ -1,14 +1,16 @@
----
-layout: default
----
-
 # User guide
 
-* For [ESPResSo devel](http://espressomd.org/html/doc/index.html)
+* For [ESPResSo devel](doc/index.html)
+$if(latest_release)$
+* For [ESPResSo $latest_release$](doc$latest_release$/index.html)
+$endif$
 
 # Tutorials
 
 * For [ESPResSo devel](tutorials.html)
+$if(latest_release)$
+* For [ESPResSo $latest_release$](tutorials$latest_release$.html)
+$endif$
 
 # Development
 

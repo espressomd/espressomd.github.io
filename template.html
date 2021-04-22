@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="$lang$" xml:lang="$lang$"$if(dir)$ dir="$dir$"$endif$>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,maximum-scale=2">
+  <meta name="generator" content="pandoc" />
+$for(author-meta)$
+  <meta name="author" content="$author-meta$" />
+$endfor$
+$if(date-meta)$
+  <meta name="dcterms.date" content="$date-meta$" />
+$endif$
+$if(keywords)$
+  <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
+$endif$
+  <style type="text/css">
+$if(quotes)$
+      q { quotes: "“" "”" "‘" "’"; }
+$endif$
+  </style>
+$for(css)$
+  <link rel="stylesheet" href="$css$" />
+$endfor$
+$if(math)$
+  $math$
+$endif$
+$for(header-includes)$
+  $header-includes$
+$endfor$
+
+<!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>$if(title-prefix)$$title-prefix$ | $endif$$pagetitle$</title>
+<meta name="generator" content="Jekyll v3.9.0">
+<meta property="og:title" content="$if(title-prefix)$$title-prefix$ | $endif$$pagetitle$">
+<meta property="og:locale" content="$lang$">
+<meta name="description" content="$subtitle$">
+<meta property="og:description" content="$subtitle$">
+<link rel="canonical" href="https://espressomd.github.io">
+<meta property="og:url" content="https://espressomd.github.io">
+<meta property="og:site_name" content="ESPResSo">
+<script type="application/ld+json">
+{"description":"$subtitle$","url":"https://espressomd.github.io","@type":"WebSite","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://github.com/espressomd/espresso/blob/python/doc/logo/logo_500x500.png"}},"headline":"$title-prefix$","name":"$pagetitle$","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+</head>
+<body>
+$for(include-before)$
+$include-before$
+$endfor$
+
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/espressomd/espresso">View on GitHub</a>
+
+          <h1 id="project_title">ESPResSo</h1>
+          <h2 id="project_tagline">Extensible Simulation Package for Research on Soft Matter Systems</h2>
+
+$if(latest_release)$
+            <section id="downloads">
+              <a class="tar_download_link" href="https://github.com/espressomd/espresso/releases/download/$latest_release$/espresso-$latest_release$.tar.gz">Download this project as a tar.gz file</a>
+            </section>
+$endif$
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+$body$
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+
+        <p class="copyright">ESPResSo maintained by <a href="https://github.com/espressomd">espressomd</a></p>
+
+        <p>Published with <a href="https://pages.github.com/">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+
+$for(include-after)$
+$include-after$
+$endfor$
+</body>
+</html>
