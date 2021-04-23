@@ -1,0 +1,611 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11. Single particle forces (constraints) &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="12. Lattice-Boltzmann" href="lb.html" />
+    <link rel="prev" title="10. System manipulation" href="system_manipulation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lb.html" title="12. Lattice-Boltzmann"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="system_manipulation.html" title="10. System manipulation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">11. </span>Single particle forces (constraints)</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="single-particle-forces-constraints">
+<span id="id1"></span><h1><span class="section-number">11. </span>Single particle forces (constraints)<a class="headerlink" href="#single-particle-forces-constraints" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="espressomd.html#espressomd.constraints.Constraint" title="espressomd.constraints.Constraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.Constraint</span></code></a></p>
+<p>A Constraint is an immobile surface which can interact with particles via a
+non-bonded potential, where the distance between the two particles is
+replaced by the distance of the center of the particle to the surface.</p>
+<p>The constraints are identified like a particle via its type <code class="docutils literal notranslate"><span class="pre">particle_type</span></code> for the
+non-bonded interaction. After a type is defined for each constraint one
+has to define the interaction of all different particle types with the
+constraint using the  <a class="reference internal" href="espressomd.html#espressomd.interactions.NonBondedInteractions" title="espressomd.interactions.NonBondedInteractions"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.NonBondedInteractions</span></code></a> class.</p>
+<div class="section" id="shaped-based-constraints">
+<span id="id2"></span><h2><span class="section-number">11.1. </span>Shaped-based constraints<a class="headerlink" href="#shaped-based-constraints" title="Permalink to this headline">¶</a></h2>
+<p>In order to use shapes you first have to import the <a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a>
+module. This module provides classes for the different available shapes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.shapes</span>
+</pre></div>
+</div>
+<p>Shapes define geometries which can be used in <em>ESPResSo</em> either as
+constraints in particle interactions or as a boundary for a
+lattice-Boltzmann fluid.</p>
+<p>To avoid unexpected behavior make sure all parts of your shape are
+within the central box since the distance to the shape is calculated only
+within the central box. If parts of the shape are placed
+outside of the central box these parts are truncated by the box boundaries. This may
+or may not be desired as for example in the case of a cylinder without or with cylinder cover.</p>
+<p>A shape is instantiated by calling its constructor. If you wanted to
+create a wall shape you could do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wall</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Available shapes are listed below.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Wall" title="espressomd.shapes.Wall"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Wall</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Cylinder" title="espressomd.shapes.Cylinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Cylinder</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Ellipsoid" title="espressomd.shapes.Ellipsoid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Ellipsoid</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.HollowCone" title="espressomd.shapes.HollowCone"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.HollowCone</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Rhomboid" title="espressomd.shapes.Rhomboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Rhomboid</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.SimplePore" title="espressomd.shapes.SimplePore"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.SimplePore</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Slitpore" title="espressomd.shapes.Slitpore"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Slitpore</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Sphere" title="espressomd.shapes.Sphere"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Sphere</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.SpheroCylinder" title="espressomd.shapes.SpheroCylinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.SpheroCylinder</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Stomatocyte" title="espressomd.shapes.Stomatocyte"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Stomatocyte</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.shapes.Torus" title="espressomd.shapes.Torus"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Torus</span></code></a></p></li>
+</ul>
+</div></blockquote>
+<div class="section" id="adding-shape-based-constraints-to-the-system">
+<span id="id3"></span><h3><span class="section-number">11.1.1. </span>Adding shape-based constraints to the system<a class="headerlink" href="#adding-shape-based-constraints-to-the-system" title="Permalink to this headline">¶</a></h3>
+<p>Usually you want to use constraints based on a shape.
+The module <a class="reference internal" href="espressomd.html#module-espressomd.constraints" title="espressomd.constraints"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.constraints</span></code></a> provides the class
+<a class="reference internal" href="espressomd.html#espressomd.constraints.ShapeBasedConstraint" title="espressomd.constraints.ShapeBasedConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.ShapeBasedConstraint</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">shape_constraint</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">ShapeBasedConstraint</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">my_shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In order to add the constraint to the system
+invoke the <a class="reference internal" href="espressomd.html#espressomd.constraints.Constraints.add" title="espressomd.constraints.Constraints.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape_constraint</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All previously listed shapes can be added to the system constraints
+by passing an initialized shape object to <a class="reference internal" href="espressomd.html#espressomd.constraints.Constraints.add" title="espressomd.constraints.Constraints.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a>, returning a constraint object</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">misshaped</span> <span class="o">=</span> <span class="n">Wall</span><span class="p">(</span><span class="n">dist</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">myConstraint</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">myShape</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="n">p_type</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The extra argument <code class="docutils literal notranslate"><span class="pre">particle_type</span></code> specifies the non-bonded interaction to be used with
+that constraint.</p>
+<p>There are two additional optional parameters
+to fine-tune the behavior of the constraint. If <code class="docutils literal notranslate"><span class="pre">penetrable</span></code> is set to
+<code class="docutils literal notranslate"><span class="pre">True</span></code> then particles can move through the constraint. In this case the
+other option <code class="docutils literal notranslate"><span class="pre">only_positive</span></code> controls where the particle is subjected to the
+interaction potential (see <a class="reference internal" href="#available-options"><span class="std std-ref">Available options</span></a>).
+If the <code class="docutils literal notranslate"><span class="pre">penetrable</span></code> option is ignored or is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, the
+constraint cannot be violated, i.e. no
+particle can go through the constraint surface (<em>ESPResSo</em> will exit if any does).
+If we wanted to add a non-penetrable pore constraint to our simulation,
+we could do the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pore</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">SimplePore</span><span class="p">(</span>
+    <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span> <span class="n">radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">smoothing_radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">pore_constraint</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">ShapeBasedConstraint</span><span class="p">(</span>
+    <span class="n">shape</span><span class="o">=</span><span class="n">pore</span><span class="p">,</span> <span class="n">penetrable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pore_constraint</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Interactions between the pore and other particles are then defined
+as usual (<a class="reference internal" href="inter_non-bonded.html#non-bonded-interactions"><span class="std std-ref">Non-bonded interactions</span></a>) to prevent particles from crossing
+the shape surface.</p>
+</div>
+<div class="section" id="deleting-a-constraint">
+<span id="id4"></span><h3><span class="section-number">11.1.2. </span>Deleting a constraint<a class="headerlink" href="#deleting-a-constraint" title="Permalink to this headline">¶</a></h3>
+<p>Constraints can be removed in a similar fashion using <a class="reference internal" href="espressomd.html#espressomd.constraints.Constraints.remove" title="espressomd.constraints.Constraints.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.constraints.Constraints.remove()</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">myConstraint</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This command will delete the specified constraint.</p>
+</div>
+<div class="section" id="getting-the-currently-defined-constraints">
+<span id="id5"></span><h3><span class="section-number">11.1.3. </span>Getting the currently defined constraints<a class="headerlink" href="#getting-the-currently-defined-constraints" title="Permalink to this headline">¶</a></h3>
+<p>One can iterate through constraints, for example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will print the shape information for all defined constraints.</p>
+</div>
+<div class="section" id="getting-the-force-on-a-constraint">
+<span id="id6"></span><h3><span class="section-number">11.1.4. </span>Getting the force on a constraint<a class="headerlink" href="#getting-the-force-on-a-constraint" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.constraints.ShapeBasedConstraint.total_force" title="espressomd.constraints.ShapeBasedConstraint.total_force"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.constraints.ShapeBasedConstraint.total_force()</span></code></a></p>
+<p>Returns the force acting on the constraint. Note, however, that this is
+only due to forces from interactions with particles, not with other
+constraints. Also, these forces still do not mean that the constraints
+move, they are just the negative of the sum of forces acting on all
+particles due to this constraint. Similarly, the total energy does not
+contain constraint-constraint contributions.</p>
+<p>For example the pressure from wall</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">total_force</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="getting-the-minimal-distance-to-a-constraint">
+<span id="id7"></span><h3><span class="section-number">11.1.5. </span>Getting the minimal distance to a constraint<a class="headerlink" href="#getting-the-minimal-distance-to-a-constraint" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.constraints.ShapeBasedConstraint.min_dist" title="espressomd.constraints.ShapeBasedConstraint.min_dist"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.constraints.ShapeBasedConstraint.min_dist()</span></code></a></p>
+<p>Calculates the smallest distance to all interacting
+constraints that can be repulsive (wall, cylinder, sphere, rhomboid,
+pore, slitpore). Negative distances mean that the position is
+within the area that particles should not access. Helpful to find
+initial configurations.</p>
+</div>
+<div class="section" id="available-shapes">
+<span id="id8"></span><h3><span class="section-number">11.1.6. </span>Available shapes<a class="headerlink" href="#available-shapes" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a></p>
+<p>Python syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span> <span class="kn">from</span> <span class="nn">espressomd.shapes</span> <span class="kn">import</span> <span class="o">&lt;</span><span class="n">SHAPE</span><span class="o">&gt;</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;SHAPE&gt;</span></code> can be any of the available shapes.</p>
+<p>The surface’s geometry is defined via a few available shapes.
+The following shapes can be used as constraints.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When using shapes with concave edges and corners, the fact that a particle
+only interacts with the closest point on the constraint surface leads to discontinuous
+force fields acting on the particles. This breaks energy conservation in otherwise
+symplectic integrators. Often, the total energy of the system increases exponentially.</p>
+</div>
+<div class="section" id="wall">
+<h4><span class="section-number">11.1.6.1. </span>Wall<a class="headerlink" href="#wall" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Wall" title="espressomd.shapes.Wall"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Wall</span></code></a></p>
+<p>An infinite plane defined by the normal vector <code class="docutils literal notranslate"><span class="pre">normal</span></code>
+and the distance <code class="docutils literal notranslate"><span class="pre">dist</span></code> from the origin (in the direction of the normal vector).
+The force acts in the direction of the normal.
+Note that <code class="docutils literal notranslate"><span class="pre">dist</span></code> describes the distance from the origin in units of the normal
+vector so that the product of <code class="docutils literal notranslate"><span class="pre">dist</span></code> and <code class="docutils literal notranslate"><span class="pre">normal</span></code> is a point on the surface.
+Therefore negative distances are quite common!</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-wall.png"><img alt="Visualization of a constraint with a Wall shape." src="_images/shape-wall.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">Wall</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wall</span> <span class="o">=</span> <span class="n">Wall</span><span class="p">(</span><span class="n">dist</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">wall</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For penetrable walls, if the <code class="docutils literal notranslate"><span class="pre">only_positive</span></code> flag is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, interactions
+are only calculated if the particle is on the side of the wall in which the
+normal vector is pointing.</p>
+</div>
+<div class="section" id="sphere">
+<h4><span class="section-number">11.1.6.2. </span>Sphere<a class="headerlink" href="#sphere" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Sphere" title="espressomd.shapes.Sphere"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Sphere</span></code></a></p>
+<p>A sphere with center <code class="docutils literal notranslate"><span class="pre">center</span></code> and radius <code class="docutils literal notranslate"><span class="pre">radius</span></code>.
+The direction <code class="docutils literal notranslate"><span class="pre">direction</span></code> determines the force direction, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward
+and <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward.</p>
+<div class="figure align-center" id="shape-sphere">
+<a class="reference internal image-reference" href="_images/shape-sphere.png"><img alt="Visualization of a constraint with a Sphere shape." src="_images/shape-sphere.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">Sphere</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sphere</span> <span class="o">=</span> <span class="n">Sphere</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span> <span class="n">radius</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ellipsoid">
+<h4><span class="section-number">11.1.6.3. </span>Ellipsoid<a class="headerlink" href="#ellipsoid" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Ellipsoid" title="espressomd.shapes.Ellipsoid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Ellipsoid</span></code></a></p>
+<p>An ellipsoid with center <code class="docutils literal notranslate"><span class="pre">center</span></code>, semiaxis <code class="docutils literal notranslate"><span class="pre">a</span></code> along the symmetry axis and
+equatorial semiaxes <code class="docutils literal notranslate"><span class="pre">b</span></code>. The symmetry axis is aligned parallel to the x-axis.
+The direction <code class="docutils literal notranslate"><span class="pre">direction</span></code> determines the force direction, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward and <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward.
+The distance to the surface is determined iteratively via Newton’s method.</p>
+<div class="figure align-center" id="shape-ellipsoid">
+<a class="reference internal image-reference" href="_images/shape-ellipsoid.png"><img alt="Visualization of a constraint with an Ellipsoid shape." src="_images/shape-ellipsoid.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with an <code class="docutils literal notranslate"><span class="pre">Ellipsoid</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">ellipsoid</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cylinder">
+<h4><span class="section-number">11.1.6.4. </span>Cylinder<a class="headerlink" href="#cylinder" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Cylinder" title="espressomd.shapes.Cylinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Cylinder</span></code></a></p>
+<p>A cylinder with center <code class="docutils literal notranslate"><span class="pre">center</span></code>, radius <code class="docutils literal notranslate"><span class="pre">radius</span></code> and length <code class="docutils literal notranslate"><span class="pre">length</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">axis</span></code> parameter is a vector along the cylinder axis, which is normalized in the program.
+The direction <code class="docutils literal notranslate"><span class="pre">direction</span></code> determines the force direction, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward and <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-cylinder.png"><img alt="Visualization of a constraint with a Cylinder shape." src="_images/shape-cylinder.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">Cylinder</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cylinder</span> <span class="o">=</span> <span class="n">Cylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">radius</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                    <span class="n">length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">cylinder</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rhomboid">
+<h4><span class="section-number">11.1.6.5. </span>Rhomboid<a class="headerlink" href="#rhomboid" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Rhomboid" title="espressomd.shapes.Rhomboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Rhomboid</span></code></a></p>
+<p>A rhomboid or parallelepiped, defined by one corner located at <code class="docutils literal notranslate"><span class="pre">corner</span></code>
+and three adjacent edges, defined by the three vectors connecting the
+corner <code class="docutils literal notranslate"><span class="pre">corner</span></code> with its three neighboring corners: <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code>.
+The direction <code class="docutils literal notranslate"><span class="pre">direction</span></code> determines the force direction, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward and <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rhomboid</span> <span class="o">=</span> <span class="n">Rhomboid</span><span class="p">(</span><span class="n">corner</span><span class="o">=</span><span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span>
+                    <span class="n">a</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                    <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+                    <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                    <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">rhomboid</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">penetrable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>creates a rhomboid defined by one corner located at <code class="docutils literal notranslate"><span class="pre">[5.0,</span> <span class="pre">5.0,</span> <span class="pre">5.0]</span></code> and three
+adjacent edges, defined by the three vectors connecting the corner with its three neighboring corners, <code class="docutils literal notranslate"><span class="pre">(1,1,0)</span></code> , <code class="docutils literal notranslate"><span class="pre">(0,0,1)</span></code> and <code class="docutils literal notranslate"><span class="pre">(0,1,0)</span></code>.</p>
+</div>
+<div class="section" id="simplepore">
+<h4><span class="section-number">11.1.6.6. </span>SimplePore<a class="headerlink" href="#simplepore" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.SimplePore" title="espressomd.shapes.SimplePore"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.SimplePore</span></code></a></p>
+<p>Two parallel infinite planes, connected by a cylindrical orifice. The cylinder
+is connected to the planes by torus segments with an adjustable radius.</p>
+<p>Length and radius of the cylindrical pore can be set via the corresponding parameters
+<code class="docutils literal notranslate"><span class="pre">length</span></code> and <code class="docutils literal notranslate"><span class="pre">radius</span></code>. The parameter <code class="docutils literal notranslate"><span class="pre">center</span></code> defines the central point of the pore.
+The orientation of the pore is given by the vector <code class="docutils literal notranslate"><span class="pre">axis</span></code>, which points along the cylinder’s symmetry axis.
+The pore openings are smoothed with torus segments, the radius of which can be set using the parameter <code class="docutils literal notranslate"><span class="pre">smoothing_radius</span></code>.
+In the OpenGL visualizer, these torus segments are rendered as a half-torus instead of a quarter-torus.
+You can safely ignore this visual artifact, in the force/energy calculation, only a quarter-torus is used.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-simplepore.png"><img alt="Visualization of a constraint with a SimplePore shape." src="_images/shape-simplepore.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">SimplePore</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pore</span> <span class="o">=</span> <span class="n">SimplePore</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                  <span class="n">length</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                  <span class="n">radius</span><span class="o">=</span><span class="mf">12.5</span><span class="p">,</span>
+                  <span class="n">smoothing_radius</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                  <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">pore</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">penetrable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stomatocyte">
+<h4><span class="section-number">11.1.6.7. </span>Stomatocyte<a class="headerlink" href="#stomatocyte" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Stomatocyte" title="espressomd.shapes.Stomatocyte"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Stomatocyte</span></code></a></p>
+<p>A stomatocyte-shaped boundary surface.
+This command should be used with care.
+The position can be any point in the simulation box and is set via the (3,) array_like parameter <code class="docutils literal notranslate"><span class="pre">center</span></code>.
+The orientation of the (cylindrically symmetric) stomatocyte is given by an <code class="docutils literal notranslate"><span class="pre">axis</span></code> (a (3,) array_like of <code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>),
+which points in the direction of the symmetry axis and does not need to be normalized.
+Parameters <code class="docutils literal notranslate"><span class="pre">outer_radius</span></code>, <code class="docutils literal notranslate"><span class="pre">inner_radius</span></code>, and <code class="docutils literal notranslate"><span class="pre">layer_width</span></code> specify the
+shape of the stomatocyte. Here inappropriate choices of parameters can yield
+undesired results, such as discontinuous shapes or NaN values. Always use
+values greater than 1 for <code class="docutils literal notranslate"><span class="pre">inner_radius</span></code> to avoid NaN values.
+The width <code class="docutils literal notranslate"><span class="pre">layer_width</span></code> is used as a scaling parameter.
+That is, a stomatocyte given by <code class="docutils literal notranslate"><span class="pre">outer_radius:inner_radius:layer_width</span></code> = 7:3:1
+is half the size of the stomatocyte given by 7:3:2.</p>
+<p>Not all choices of parameters give reasonable values for the shape of the stomatocyte,
+but the combination 7:3:1 is a good point to start from when trying to modify the shape.
+If you observe jumps in forces for particles inside the stomatocyte cavity,
+your parameters are most likely wrong, in which case the OpenGL visualizer
+will typically fail to draw dots inside the stomatocyte cavity.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-stomatocyte1.png"><img alt="Visualization of a constraint with a Stomatocyte shape." src="_images/shape-stomatocyte1.png" style="height: 6.00000cm;" /></a>
+</div>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-stomatocyte2.png"><img alt="Close-up view of the internal Stomatocyte structure." src="_images/shape-stomatocyte2.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">Stomatocyte</span></code> shape (with a closeup of the internal structure) created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stomatocyte</span> <span class="o">=</span> <span class="n">Stomatocyte</span><span class="p">(</span><span class="n">inner_radius</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                          <span class="n">outer_radius</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                          <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                          <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+                          <span class="n">layer_width</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                          <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">stomatocyte</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">penetrable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="slitpore">
+<h4><span class="section-number">11.1.6.8. </span>Slitpore<a class="headerlink" href="#slitpore" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Slitpore" title="espressomd.shapes.Slitpore"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Slitpore</span></code></a></p>
+<p>A T-shaped channel that extends in the <em>z</em>-direction.
+The cross sectional geometry is depicted in Fig. <a class="reference internal" href="#figure-slitpore"><span class="std std-ref">schematic</span></a>.
+It is translationally invariant in y direction.</p>
+<p>The region is described as a pore (lower vertical part of the “T”-shape) and a channel (upper horizontal part of the “T”-shape).</p>
+<div class="figure align-center" id="figure-slitpore">
+<a class="reference internal image-reference" href="_images/slitpore.png"><img alt="Schematic for the Slitpore shape with labeled geometrical parameters." src="_images/slitpore.png" style="height: 10.00000cm;" /></a>
+</div>
+<p>The parameter <code class="docutils literal notranslate"><span class="pre">channel_width</span></code> specifies the distance between the top and the plateau edge.
+The parameter <code class="docutils literal notranslate"><span class="pre">pore_length</span></code> specifies the distance between the bottom and the plateau edge.
+The parameter <code class="docutils literal notranslate"><span class="pre">pore_width</span></code> specifies the distance between the two plateau edges, it is the space between the left and right walls of the pore region.
+The parameters <code class="docutils literal notranslate"><span class="pre">pore_mouth</span></code> and <code class="docutils literal notranslate"><span class="pre">dividing_plane</span></code> specify the location in the z-coordinate resp. x-coordinate of the pore opening.</p>
+<p>All the edges  are smoothed via the parameters <code class="docutils literal notranslate"><span class="pre">upper_smoothing_radius</span></code> (for the concave corner at the edge of the plateau region) and <code class="docutils literal notranslate"><span class="pre">lower_smoothing_radius</span></code> (for the convex corner at the bottom of the pore region).
+The meaning of the geometrical parameters can be inferred from the schematic in Fig. <a class="reference internal" href="#figure-slitpore"><span class="std std-ref">slitpore</span></a>.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-slitpore.png"><img alt="Visualization of a constraint with a Slitpore shape." src="_images/shape-slitpore.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">Slitpore</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">slitpore</span> <span class="o">=</span> <span class="n">Slitpore</span><span class="p">(</span><span class="n">channel_width</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                    <span class="n">lower_smoothing_radius</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+                    <span class="n">upper_smoothing_radius</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">pore_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                    <span class="n">pore_mouth</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+                    <span class="n">pore_width</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                    <span class="n">dividing_plane</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">slitpore</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">penetrable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="spherocylinder">
+<h4><span class="section-number">11.1.6.9. </span>SpheroCylinder<a class="headerlink" href="#spherocylinder" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.SpheroCylinder" title="espressomd.shapes.SpheroCylinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.SpheroCylinder</span></code></a></p>
+<p>A cylinder capped by hemispheres on both ends. Generates a capsule, pill, or spherocylinder depending on the choice of parameters.
+Similar to <a class="reference internal" href="espressomd.html#espressomd.shapes.Cylinder" title="espressomd.shapes.Cylinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Cylinder</span></code></a>, it is positioned at <code class="docutils literal notranslate"><span class="pre">center</span></code> and has a radius <code class="docutils literal notranslate"><span class="pre">radius</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">length</span></code> parameter is the cylinder length, and does not include the contribution from the hemispherical ends.
+The <code class="docutils literal notranslate"><span class="pre">axis</span></code> parameter is a vector along the cylinder axis, which is normalized in the program.
+The direction <code class="docutils literal notranslate"><span class="pre">direction</span></code> determines the force direction, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward and <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-spherocylinder.png"><img alt="Visualization of a constraint with a SpheroCylinder shape." src="_images/shape-spherocylinder.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">SpheroCylinder</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">spherocylinder</span> <span class="o">=</span> <span class="n">SpheroCylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+                                <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">radius</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                                <span class="n">length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">spherocylinder</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="torus">
+<h4><span class="section-number">11.1.6.10. </span>Torus<a class="headerlink" href="#torus" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.Torus" title="espressomd.shapes.Torus"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Torus</span></code></a></p>
+<p>It is positioned at <code class="docutils literal notranslate"><span class="pre">center</span></code> and has a radius <code class="docutils literal notranslate"><span class="pre">radius</span></code> with tube radius <code class="docutils literal notranslate"><span class="pre">tube_radius</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">normal</span></code> parameter is the torus rotation axis, which is normalized in the program.
+The direction <code class="docutils literal notranslate"><span class="pre">direction</span></code> determines the force direction, <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward and <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-torus.png"><img alt="Visualization of a constraint with a Torus shape." src="_images/shape-torus.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">Torus</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">torus</span> <span class="o">=</span> <span class="n">Torus</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span> <span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+              <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">tube_radius</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">torus</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="hollowcone">
+<h4><span class="section-number">11.1.6.11. </span>HollowCone<a class="headerlink" href="#hollowcone" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.shapes.HollowCone" title="espressomd.shapes.HollowCone"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.HollowCone</span></code></a></p>
+<p>A hollow cone with round corners.
+The parameters <code class="docutils literal notranslate"><span class="pre">inner_radius</span></code> and <code class="docutils literal notranslate"><span class="pre">outer_radius</span></code> specifies the two radii .
+The parameter <code class="docutils literal notranslate"><span class="pre">opening_angle</span></code> specifies the opening angle of the cone (in radians, between 0 and <span class="math notranslate nohighlight">\(\pi/2\)</span> ), and thus also determines the length.</p>
+<p>The orientation of the (cylindrically symmetric) cone is specified with the parameter <code class="docutils literal notranslate"><span class="pre">axis</span></code> (a (3,) array_like of <code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>),
+which points in the direction of the symmetry axis, and does not need to be normalized.</p>
+<p>The position is specified via the (3,) array_like <code class="docutils literal notranslate"><span class="pre">center</span></code> and can be any point in the simulation box.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">width</span></code> specifies the width.
+This shape supports the <code class="docutils literal notranslate"><span class="pre">direction</span></code> parameter, <code class="docutils literal notranslate"><span class="pre">+1</span></code> for outward and <code class="docutils literal notranslate"><span class="pre">-1</span></code> for inward.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/shape-hollowcone.png"><img alt="Visualization of a constraint with a HollowCone shape." src="_images/shape-hollowcone.png" style="height: 6.00000cm;" /></a>
+</div>
+<p>Pictured is an example constraint with a <code class="docutils literal notranslate"><span class="pre">HollowCone</span></code> shape created with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hollowcone</span> <span class="o">=</span> <span class="n">HollowCone</span><span class="p">(</span><span class="n">inner_radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                        <span class="n">outer_radius</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                        <span class="n">opening_angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">4.0</span><span class="p">,</span>
+                        <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                        <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+                        <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">hollowcone</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">penetrable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="available-options">
+<span id="id9"></span><h3><span class="section-number">11.1.7. </span>Available options<a class="headerlink" href="#available-options" title="Permalink to this headline">¶</a></h3>
+<p>There are some options to help control the behaviour of shaped-based
+constraints. Some of the options, like <code class="docutils literal notranslate"><span class="pre">direction</span></code> need to be specified for
+the shape <a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a>, and some options are specified for the
+constraint  <a class="reference internal" href="espressomd.html#espressomd.constraints.ShapeBasedConstraint" title="espressomd.constraints.ShapeBasedConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.ShapeBasedConstraint</span></code></a>. We will
+discuss them together in this section in the context of a specific example.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">direction</span></code> option typically specifies which volumes are inside versus
+outside the shape. Consider a constraint based on the sphere shape. If one
+wishes to place particles inside the sphere, one would usually use
+<code class="docutils literal notranslate"><span class="pre">direction=-1</span></code>, if one wishes to place particles outside, one would use
+<code class="docutils literal notranslate"><span class="pre">direction=1</span></code>. In this example, we place a sphere centre at position
+(25,0,0). A particle is continuously displaced on the x-axis in order to probe
+the effect of different options. For this, we need to first define a repulsive
+interaction between the probe and the constraint.</p>
+<p>The plot below demonstrates how the distance between the probe and the
+constraint surface is calculated when the <code class="docutils literal notranslate"><span class="pre">distance</span></code> option is toggled
+between <code class="docutils literal notranslate"><span class="pre">direction=1</span></code> and <code class="docutils literal notranslate"><span class="pre">direction=-1</span></code>. In the plot, a schematic of a
+circle centered at x=25 is used to represent the spherical constraint.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/constraint-distance.png"><img alt="Distance measure from an example spherical constraint." src="_images/constraint-distance.png" style="height: 8.00000cm;" /></a>
+</div>
+<p>When the option <code class="docutils literal notranslate"><span class="pre">direction=1</span></code> is used for the sphere shape, positive
+distances are measured whenever the particle is outside the sphere and negative
+distances are measured whenever the particle is inside the sphere. Conversely,
+when the option <code class="docutils literal notranslate"><span class="pre">direction=-1</span></code> is used for the sphere shape, negative
+distances are measured whenever the particle is outside the sphere and positive
+distances are measured whenever the particle is inside the sphere. In other
+words, this option helps defines the sign of the normal surface vector.</p>
+<p>For now, this may not sound useful but it can be practical when used with
+together with constraint options such as <code class="docutils literal notranslate"><span class="pre">penetrable</span></code> or <code class="docutils literal notranslate"><span class="pre">only_positive</span></code>.
+In the former case, using non-penetrable surfaces with <code class="docutils literal notranslate"><span class="pre">penetrable=False</span></code> will
+cause <em>ESPResSo</em> to throw an error is any distances between interacting particles and
+constraints are found to be negative. This can be used to stop a simulation if
+for one reason or another particles end up in an unwanted location.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">only_positive</span></code> constraint option is used to define if a force should be
+applied to a particle that has a negative distance. For example, consider the
+same probe particle as in the previous case. The plot below shows the particle
+force with <code class="docutils literal notranslate"><span class="pre">only_positive=True</span></code>. Notice that when the distance is negative,
+forces are not applied at all to the particle. Thus the constraint surface is
+either purely radially outwards (when <code class="docutils literal notranslate"><span class="pre">direction=1</span></code>) or radially inwards
+(when <code class="docutils literal notranslate"><span class="pre">direction=-1</span></code>). Note that in both cases the constraint was set to be
+penetrable with <code class="docutils literal notranslate"><span class="pre">penetrable=True</span></code> or else the simulation would crash whenever
+the particle was found in any location that yields a negative distance.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/constraint-force.png"><img alt="Force measure from an example spherical constraint." src="_images/constraint-force.png" style="height: 8.00000cm;" /></a>
+</div>
+<p>The next figure shows what happens if we turn off the <code class="docutils literal notranslate"><span class="pre">only_positive</span></code> flag by
+setting <code class="docutils literal notranslate"><span class="pre">only_positive=False</span></code>. In this case the particle is pushed radially
+inward if it is inside the sphere and radially outward if it is outside. As
+with the previous example, the constraint was set to be penetrable for this to
+make sense.</p>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/constraint-force_only_positive.png"><img alt="Force measure from an example spherical constraint." src="_images/constraint-force_only_positive.png" style="height: 8.00000cm;" /></a>
+</div>
+<p>Most shapes have a clear interpretation of what is inside versus outside with
+the exception of a planar wall. For this, there is no <code class="docutils literal notranslate"><span class="pre">direction</span></code> option, but
+the <code class="docutils literal notranslate"><span class="pre">normal</span></code> vector of the wall points in the direction that is considered to
+yield positive distances.  Outside their use in constraints, shapes can also be
+used as a way to define LB boundary nodes. In this case, negative distances
+define nodes which are part of a boundary (please refer to <a class="reference internal" href="lb.html#using-shapes-as-lattice-boltzmann-boundary"><span class="std std-ref">Using shapes as lattice-Boltzmann boundary</span></a>).</p>
+</div>
+</div>
+<div class="section" id="external-fields">
+<span id="id10"></span><h2><span class="section-number">11.2. </span>External Fields<a class="headerlink" href="#external-fields" title="Permalink to this headline">¶</a></h2>
+<p>There is a variety of external fields, which differ by how their
+values are obtained and how they couple to particles.</p>
+<div class="section" id="constant-fields">
+<h3><span class="section-number">11.2.1. </span>Constant fields<a class="headerlink" href="#constant-fields" title="Permalink to this headline">¶</a></h3>
+<p>These are fields that are constant in space or simple linear functions
+of the position.  The available fields are:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.HomogeneousMagneticField" title="espressomd.constraints.HomogeneousMagneticField"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.HomogeneousMagneticField</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.ElectricPlaneWave" title="espressomd.constraints.ElectricPlaneWave"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.ElectricPlaneWave</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.LinearElectricPotential" title="espressomd.constraints.LinearElectricPotential"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.LinearElectricPotential</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.HomogeneousFlowField" title="espressomd.constraints.HomogeneousFlowField"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.HomogeneousFlowField</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.Gravity" title="espressomd.constraints.Gravity"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.Gravity</span></code></a></p></li>
+</ul>
+<p>A detailed description can be found in the class documentation.</p>
+<p>Please be aware of the fact that a constant per-particle force can be
+set via the <code class="docutils literal notranslate"><span class="pre">ext_force</span></code> property of the particles and is not provided
+here.</p>
+</div>
+<div class="section" id="interpolated-force-and-potential-fields">
+<h3><span class="section-number">11.2.2. </span>Interpolated Force and Potential fields<a class="headerlink" href="#interpolated-force-and-potential-fields" title="Permalink to this headline">¶</a></h3>
+<p>The values of these fields are obtained by interpolating table data,
+which has to be provided by the user. The fields differ by how
+they couple to particles, for a detailed description see their respective
+class documentation.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.ForceField" title="espressomd.constraints.ForceField"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.ForceField</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.PotentialField" title="espressomd.constraints.PotentialField"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.PotentialField</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.ElectricPotential" title="espressomd.constraints.ElectricPotential"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.ElectricPotential</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.constraints.FlowField" title="espressomd.constraints.FlowField"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.FlowField</span></code></a></p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">11. Single particle forces (constraints)</a><ul>
+<li><a class="reference internal" href="#shaped-based-constraints">11.1. Shaped-based constraints</a><ul>
+<li><a class="reference internal" href="#adding-shape-based-constraints-to-the-system">11.1.1. Adding shape-based constraints to the system</a></li>
+<li><a class="reference internal" href="#deleting-a-constraint">11.1.2. Deleting a constraint</a></li>
+<li><a class="reference internal" href="#getting-the-currently-defined-constraints">11.1.3. Getting the currently defined constraints</a></li>
+<li><a class="reference internal" href="#getting-the-force-on-a-constraint">11.1.4. Getting the force on a constraint</a></li>
+<li><a class="reference internal" href="#getting-the-minimal-distance-to-a-constraint">11.1.5. Getting the minimal distance to a constraint</a></li>
+<li><a class="reference internal" href="#available-shapes">11.1.6. Available shapes</a></li>
+<li><a class="reference internal" href="#available-options">11.1.7. Available options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#external-fields">11.2. External Fields</a><ul>
+<li><a class="reference internal" href="#constant-fields">11.2.1. Constant fields</a></li>
+<li><a class="reference internal" href="#interpolated-force-and-potential-fields">11.2.2. Interpolated Force and Potential fields</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lb.html" title="12. Lattice-Boltzmann"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="system_manipulation.html" title="10. System manipulation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">11. </span>Single particle forces (constraints)</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2020, The ESPResSo project.
+      Last updated on Oct 19, 2020.
+    </div>
+  </body>
+</html>

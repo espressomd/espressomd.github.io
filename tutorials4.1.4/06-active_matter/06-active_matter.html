@@ -1,0 +1,2420 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+  "http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+<head><title></title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+<meta name="generator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
+<meta name="originator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
+<!-- html --> 
+<meta name="src" content="06-active_matter.tex"> 
+<link rel="stylesheet" type="text/css" href="06-active_matter.css"> 
+  <style type="text/css">
+div.container {
+width: 1140px;
+padding: 15px;
+padding-left: 80px;
+padding-right: 80px;
+box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.2);
+margin-left:auto;
+margin-right:auto;
+font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+pre.listings {
+border: 1px solid #cfcfcf;
+border-radius: 2px;
+background: #f7f7f7;
+padding: 0.8em;
+}
+  </style>
+</head><body >
+
+<div class="container">
+<a 
+ id="x1-1doc"></a>
+<!--l. 51--><p class="noindent" ><span 
+class="cmssbx-10x-x-144">Active</span>
+<span 
+class="cmssbx-10x-x-144">Matter</span>
+<span 
+class="cmssbx-10x-x-144">Tutorial</span><a 
+ id="Q1-1-0"></a>
+</p>
+       <!--l. 51--><p class="noindent" ><span 
+class="cmss-10">Joost de Graaf</span><sup class="textsuperscript"><span 
+class="cmss-9">1</span></sup><sup class="textsuperscript"><span 
+class="cmss-9">,</span> </sup><sup class="textsuperscript"><span 
+class="cmr-9">a)</span></sup> <span 
+class="cmss-10">and Henri Menke</span><sup class="textsuperscript"><span 
+class="cmss-9">1</span></sup><sup class="textsuperscript"><span 
+class="cmss-9">,</span> </sup><sup class="textsuperscript"><span 
+class="cmr-9">b)</span></sup></p>
+       <!--l. 51--><p class="noindent" ><span 
+class="cmti-9">Institute for Computational Physics, Universit</span><span 
+class="cmti-9">ät Stuttgart, Allmandring 3, D-70569 Stuttgart,</span>
+       <span 
+class="cmti-9">Germany</span>
+</p>
+<p class="noindent" >  <sup class="textsuperscript"><span 
+class="cmr-9">a)</span></sup><span 
+class="cmtt-8">jgraaf@icp.uni-stuttgart.de</span><br />
+  <sup class="textsuperscript"><span 
+class="cmr-9">b)</span></sup><span 
+class="cmtt-8">henri@icp.uni-stuttgart.de</span>
+</p>
+       <!--l. 39--><p class="noindent" ><a 
+ id="Q1-1-0"></a>In this tutorial we explore the ways to simulate self-propulsion in the simulation software package <span 
+class="cmss-10">ESPResSo</span>.
+       We consider three examples that illustrate the properties of these systems. First, we study the concept of
+       enhanced diffusion of a self-propelled particle. Second, we investigate rectification in an asymmetric geometry.
+       Finally, we determine the flow field around a self-propelled particle using lattice-Boltzmann simulations (LB).
+       These three subsections should give insight into the basics of simulating active matter with <span 
+class="cmss-10">ESPResSo</span>. This
+       tutorial assumes basic knowledge of Python and <span 
+class="cmss-10">ESPResSo</span>, as well as the use of lattice-Boltzmann within
+       <span 
+class="cmss-10">ESPResSo</span>. It is therefore recommended to go through the relevant tutorials first, before attempting this one.
+</p><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">I.</span>  <span 
+class="cmssbx-10x-x-90">ACTIVE</span>
+<span 
+class="cmssbx-10x-x-90">PARTICLES</span>
+<a 
+ id="Q1-1-0"></a>
+ </p><p class="noindent" >
+Active matter is a term that describes a class of systems, in which energy is constantly consumed to perform work. These
+systems are therefore highly out-of-equilibrium (thermodynamically) and (can) thus defy description using the standard
+framework of statistical mechanics. Active systems are, however, ubiquitous. On our length scale, we encounter flocks of
+birds&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem1"><span 
+class="cmr-9">1</span></a></sup>, schools of fish&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem2"><span 
+class="cmr-9">2</span></a></sup>, and, of course, humans&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem3"><span 
+class="cmr-9">3</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem4"><span 
+class="cmr-9">4</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem5"><span 
+class="cmr-9">5</span></a></sup>; on the mesoscopic level examples are found in bacteria&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem6"><span 
+class="cmr-9">6</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem7"><span 
+class="cmr-9">7</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem8"><span 
+class="cmr-9">8</span></a></sup>,
+sperm&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem9"><span 
+class="cmr-9">9</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem10"><span 
+class="cmr-9">10</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem11"><span 
+class="cmr-9">11</span></a></sup>, and algae&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem12"><span 
+class="cmr-9">12</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem13"><span 
+class="cmr-9">13</span></a></sup>; and on the nanoscopic level, transport along the cytoskeleton is achieved by myosin
+motors&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem14"><span 
+class="cmr-9">14</span></a></sup>. This exemplifies that range of length scales which the field of active matter encompasses, as well as its diversity.
+Recent years have seen a huge increase in studies into systems consisting of self-propelled particles, in particular artificial ones
+in the colloidal regime&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem15"><span 
+class="cmr-9">15</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem16"><span 
+class="cmr-9">16</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem17"><span 
+class="cmr-9">17</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem18"><span 
+class="cmr-9">18</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem19"><span 
+class="cmr-9">19</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem20"><span 
+class="cmr-9">20</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem21"><span 
+class="cmr-9">21</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem22"><span 
+class="cmr-9">22</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem23"><span 
+class="cmr-9">23</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem24"><span 
+class="cmr-9">24</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem25"><span 
+class="cmr-9">25</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem26"><span 
+class="cmr-9">26</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem27"><span 
+class="cmr-9">27</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem28"><span 
+class="cmr-9">28</span></a></sup>. These self-propelled colloids show promise as physical model
+systems for complex biological behavior (bacteria moving collectively) and could be used to answer fundamental questions
+concerning out-of-equilibrium statistical physics&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem29"><span 
+class="cmr-9">29</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem30"><span 
+class="cmr-9">30</span></a></sup>. Simulations can also play an important role in this regard, as the
+parameters are more easily tunable and the results &#8216;cleaner&#8217; than in experiments. The above should give you some idea of
+the importance of the field of active matter and why you should be interested in performing simulations in
+it.
+</p><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">II.</span>  <span 
+class="cmssbx-10x-x-90">ACTIVE</span>
+<span 
+class="cmssbx-10x-x-90">PARTICLES</span>
+<span 
+class="cmssbx-10x-x-90">IN</span>
+<span 
+class="cmssbx-10x-x-90">ESPRESSO</span>
+<a 
+ id="Q1-1-0"></a>
+ </p><p class="noindent" >
+The <span class="lstinline"></span><span 
+class="cmtt-9">ENGINE</span> feature offers intuitive syntax for adding self-propulsion to a particle. The propulsion will occur along the vector
+that defines the orientation of the particle (henceforth referred to as &#8216;director&#8217;). In <span 
+class="cmss-10">ESPResSo</span> the orientation of the
+particle is defined by a quaternion; this in turn defines a rotation matrix that acts on the particle&#8217;s initial
+orientation (along the z-axis), which then defines the particles current orientation through the matrix-oriented
+vector&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem32"><span 
+class="cmr-9">32</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem33"><span 
+class="cmr-9">33</span></a></sup>. Within the <span class="lstinline"></span><span 
+class="cmtt-9">ENGINE</span> feature there are two ways of setting up a self-propelled particle, with and without
+hydrodynamic interactions. The particle without hydrodynamic interactions will be discussed first, as it is the simplest
+case.
+
+                                                                                                 
+</p><p class="noindent" >                                                                                  
+<span 
+class="cmssbx-10x-x-90">A.</span>
+<span 
+class="cmssbx-10x-x-90">Self-Propulsion</span>
+<span 
+class="cmssbx-10x-x-90">without</span>
+<span 
+class="cmssbx-10x-x-90">Hydrodynamics</span>
+<a 
+ id="Q1-1-0"></a>
+ </p><p class="noindent" >
+For this type of self-propulsion the Langevin thermostat is exploited. The Langevin thermostat causes a particle to experience
+a velocity-dependent friction&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup>. When a constant force is applied along the director, the friction causes the particle to attain
+a terminal velocity, due to the balance of driving and friction force, see Fig.&#x00A0;<a 
+href="#x1-2r1">1<!--tex4ht:ref: fig:balance --></a>. The exponent with which the particle&#8217;s velocity
+relaxes towards this value, depends on the strength of the friction and the mass of the particle. The <span class="lstinline"></span><span 
+class="cmtt-9">ENGINE</span> feature implies
+that rotation of the particles (the <span class="lstinline"></span><span 
+class="cmtt-9">ROTATION</span> feature) is compiled into <span 
+class="cmss-10">ESPResSo</span>. The particle can thus reorient due to external
+torques or due to thermal fluctuations, whenever the rotational degrees of freedom are thermalized. Note that the rotation
+of the particles has to be enabled explicitly via their <span class="lstinline"></span><span 
+class="cmtt-9">ROTATION</span> property. This &#8216;engine&#8217; building block can be
+connected to other particles,&#x00A0;<span 
+class="cmti-10">e.g.</span>, via the virtual sites (rigid body)&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup> to construct complex self-propelled
+objects<sup class="textsuperscript"><a 
+href="#bibitem34"><span 
+class="cmr-9">34</span></a></sup>.
+  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 110--><p class="noindent" >
+<!--l. 111--><p class="noindent" > <img 
+src="figures/friction-.png" width="500px"  
+></div>
+<a 
+ id="x1-2r1"></a>
+<span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;1. A balance of the driving force in the direction defined by the &#8216;director&#8217; unit vector and the friction due to the Langevin</span>
+<span 
+class="cmr-9">thermostat results in a constant terminal velocity.</span>
+                                                                                                 
+                                                                                                 
+  </div><hr class="endfigure">
+  The configuration for the Langevin-based swimming is exposed as an attribute of the <span class="lstinline"></span><span 
+class="cmtt-9">ParticleHandle</span> class of <span 
+class="cmss-10">ESPResSo</span>,
+which represents a particle in the simulation. You can either set up the self-propulsion during the creation of a particle or at a
+later stage. In the following example we set up a particle with ID 0 at the position (1<span 
+class="cmmi-10">,</span>1<span 
+class="cmmi-10">,</span>1) and set its terminal velocity to
+1<span 
+class="cmmi-10">.</span>0.
+    <!--l. 121--><pre class="listings"><span class="label"><a 
+ id="x1-3r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">part</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">add</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">pos</span><span 
+class="cmtt-9">=[1,1,1],</span><span 
+class="cmtt-9">swimming</span><span 
+class="cmtt-9">={</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">v_swim</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:1.0})</span>
+<span class="label"><a 
+ id="x1-4r2"></a></span></pre>
+<!--l. 124--><p class="noindent" >As you can see, the keyword for setting up the engine is <span class="lstinline"></span><span 
+class="cmtt-9">swimming</span>. The code <span class="lstinline"></span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">v_swim</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:1.0</span> sets the terminal velocity to 1<span 
+class="cmmi-10">.</span>0 (in
+MD units). Setting the terminal velocity directly is possible, since the terminal velocity is simply the ratio of the applied
+driving force and Langevin friction coefficient. It is also possible to set the driving force directly, which requires you to
+calculate/compute the terminal velocity. This can be achieved by replacing <span class="lstinline"></span><span 
+class="cmtt-9">v_swim</span> with <span class="lstinline"></span><span 
+class="cmtt-9">f_swim</span>. Please note, that the options
+<span class="lstinline"></span><span 
+class="cmtt-9">v_swim</span> and <span class="lstinline"></span><span 
+class="cmtt-9">f_swim</span> are mutually exclusive. Also, one is limited to the force/velocity and time step that can be used by the
+stability criteria on the Langevin algorithm itself.
+<!--l. 135--><p class="indent" >  To modify a passive particle (switch on self-propulsion) or deactivate activity, one can use the following
+commands: Suppose a passive particle with, say ID 1, has been set up, we can add self-propulsion to it by
+specifying
+    <!--l. 138--><pre class="listings"><span class="label"><a 
+ id="x1-5r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">part</span><span 
+class="cmtt-9">[1].</span><span 
+class="cmtt-9">swimming</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">{</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">f_swim</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:0.03}</span>
+<span class="label"><a 
+ id="x1-6r2"></a></span></pre>
+<!--l. 141--><p class="noindent" >Finally, a particle&#8217;s activity can be switched off, by setting either <span class="lstinline"></span><span 
+class="cmtt-9">v_swim</span> or <span class="lstinline"></span><span 
+class="cmtt-9">f_swim</span> to zero
+    <!--l. 142--><pre class="listings"><span class="label"><a 
+ id="x1-7r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">part</span><span 
+class="cmtt-9">[0].</span><span 
+class="cmtt-9">swimming</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">{</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">f_swim</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:0.0}</span>
+<span class="label"><a 
+ id="x1-8r2"></a></span></pre>
+<!--l. 145--><p class="noindent" >on the particle with ID 0 in this case. The numerical values of <span class="lstinline"></span><span 
+class="cmtt-9">v_swim</span> and <span class="lstinline"></span><span 
+class="cmtt-9">f_swim</span> in these examples are completely arbitrary and
+crucially depend on all other parameters of your simulation, such as friction, temperature, interactions, etc. Please consult the
+User Guide&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup> for additional information.
+<!--l. 151--><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">B.</span>
+<span 
+class="cmssbx-10x-x-90">Self-Propulsion</span>
+<span 
+class="cmssbx-10x-x-90">with</span>
+<span 
+class="cmssbx-10x-x-90">Hydrodynamics</span>
+<a 
+ id="Q1-1-1"></a>
+ </p><p class="noindent" >
+In situations where hydrodynamic interactions between swimmers or swimmers and objects are of importance, we use the
+lattice-Boltzmann (LB) to propagate the fluid&#8217;s momentum diffusion. We recommend the GPU-based variant of LB in
+<span 
+class="cmss-10">ESPResSo</span>, since it is much faster. Moreover, the current implementation of the CPU self-propulsion is limited to one CPU.
+This is because the ghost-node structure of the <span 
+class="cmss-10">ESPResSo</span> cell-list code does not allow for straightforward MPI parallellization
+of the swimmer objects across several CPUs.
+  Of particular importance for self-propulsion at low Reynolds number is the fact that active systems (bacteria, sperm, algae,
+but also artificial chemically powered swimmers) are force free. That is, the flow field around one of these objects does
+not contain a monopolar (Stokeslet) contribution. In the case of a sperm cell, see Fig.&#x00A0;<a 
+href="#x1-9r2">2<!--tex4ht:ref: fig:pusher-puller --></a>(a), the reasoning
+is as follows. The whip-like tail pushes against the fluid and the fluid pushes against the tail, at the same
+time the head experiences drag, pushing against the fluid and being pushed back against by the fluid. This
+ensures that both the swimmer and the fluid experience no net force. However, due to the asymmetry of the
+distribution of forces around the swimmer, the fluid flow still causes net motion. When there is no net force
+on the fluid, the lowest-order multipole that can be present is a hydrodynamic dipole. Since a dipole has an
+orientation, there are two types of swimmer: pushers and pullers. The distinction is made by whether the particle
+pulls fluid in from the front and back, and pushes it out towards its side (puller), or vice versa (pusher), see
+Fig.&#x00A0;<a 
+href="#x1-9r2">2<!--tex4ht:ref: fig:pusher-puller --></a>(c,d).
+  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 179--><p class="noindent" >
+<!--l. 180--><p class="noindent" > <img 
+src="figures/pusher-puller-.png" width="600px"   
+></div>
+<a 
+ id="x1-9r2"></a>
+<span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;2. (a) Illustration of a sperm cell modeled using our two-point swimmer code. The head is represented by a solid particle,</span>
+<span 
+class="cmr-9">on which a force is acting (black arrow). In the fluid a counter force is applied (white arrow). This generates a pusher-type</span>
+<span 
+class="cmr-9">particle. (b) Illustration of the puller-type Chlamydomonas algae, also represented by our two-point swimmer. (c,d) Sketch of</span>
+<span 
+class="cmr-9">the flow-lines around the swimmers: (c) pusher and (d) puller.</span>
+                                                                                                 
+                                                                                                 
+  </div><hr class="endfigure">
+  In <span 
+class="cmss-10">ESPResSo</span> one can model both pushers and pullers using the following command. Say we want to set up a pusher with ID
+0 at the position (1<span 
+class="cmmi-10">,</span>1<span 
+class="cmmi-10">,</span>1) that has a dipolar strength of 0.1. Then we need to first set up the LB fluid (on the GPU) by
+invoking
+    <!--l. 195--><pre class="listings"><span class="label"><a 
+ id="x1-10r1"></a></span><span 
+class="cmtt-9">lbf</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">espressomd</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">lb</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">LBFluidGPU</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">agrid</span><span 
+class="cmtt-9">=1,</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">dens</span><span 
+class="cmtt-9">=1.0,</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">visc</span><span 
+class="cmtt-9">=1.0,</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">tau</span><span 
+class="cmtt-9">=0.01)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-11r2"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">actors</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">add</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">lbf</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-12r3"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">thermostat</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">set_lb</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">LB_fluid</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">lbf</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">gamma</span><span 
+class="cmtt-9">=20.0,</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">seed</span><span 
+class="cmtt-9">=42)</span>
+<span class="label"><a 
+ id="x1-13r4"></a></span></pre>
+<!--l. 200--><p class="noindent" >In this example we used parameters for which we know the LB reproduces Stokes-level hydrodynamic interactions well. Here, we
+simulate a quiescent unthermalized LB fluid (this is the default behavior). We next set up the pusher by imputing the
+following line
+    <!--l. 204--><pre class="listings"><span class="label"><a 
+ id="x1-14r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">part</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">add</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">pos</span><span 
+class="cmtt-9">=[1,1,1],</span><span 
+class="cmtt-9">swimming</span><span 
+class="cmtt-9">={</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">f_swim</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:0.1,</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">dipole_length</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:1.0})</span>
+<span class="label"><a 
+ id="x1-15r2"></a></span></pre>
+<!--l. 207--><p class="noindent" >The <span class="lstinline"></span><span 
+class="cmtt-9">v_swim</span> option exists, but it does not produce the right flow field. With <span class="lstinline"></span><span 
+class="cmtt-9">v_swim</span> one has motion, but no dipolar flow field.
+This can be used to check whether the presence of a dipolar flow field is the dominant term in describing the interactions. The
+keys <span class="lstinline"></span><span 
+class="cmtt-9">f_swim</span> and <span class="lstinline"></span><span 
+class="cmtt-9">dipole_length</span> together determine what the dipole strength is. One should be careful, however, the
+<span class="lstinline"></span><span 
+class="cmtt-9">dipole_length</span> should be at least one grid spacing, since use is made of the LB interpolation scheme. If the length is less than
+one grid spacing, you can easily run into discretization artifacts or cause the particle not to move. This dipole length
+together with the director and the keyword <span class="lstinline"></span><span 
+class="cmtt-9">pusher</span><span 
+class="cmtt-9">/</span><span 
+class="cmtt-9">puller</span> determines where the counter force on the fluid is
+applied to make the system force free, see Fig.&#x00A0;<a 
+href="#x1-9r2">2<!--tex4ht:ref: fig:pusher-puller --></a>(a) for an illustration of the setup. That is to say, a force of
+magnitude <span class="lstinline"></span><span 
+class="cmtt-9">f_swim</span> is applied to the particle (leading to a Stokeslet in the fluid, due to friction) and a counter force
+is applied to compensate for this in the fluid (resulting in an extended dipole flow field, due to the second
+monopole). For a puller the counter force is applied in front of the particle and for a pusher it is in the back
+(Fig.&#x00A0;<a 
+href="#x1-9r2">2<!--tex4ht:ref: fig:pusher-puller --></a>(b)).
+<!--l. 226--><p class="indent" >  Finally, there are a few caveats to the swimming setup with hydrodynamic interactions. First, the stability of this algorithm
+is governed by the stability limitations of the LB method. Second, since the particle is essentially a point particle, there is no
+rotation caused by the fluid flow,&#x00A0;<span 
+class="cmti-10">e.g.</span>, a swimmer in a Posseuille flow. If the thermostat is switched on, the rotational degrees
+of freedom will also be thermalized, but there is still no contribution of rotation due to &#8216;external&#8217; flow fields. A It is
+recommended to use an alternative means of obtaining rotations in your LB swimming simulations. For example, by
+constructing a raspberry particle&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem35"><span 
+class="cmr-9">35</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem36"><span 
+class="cmr-9">36</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem37"><span 
+class="cmr-9">37</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem38"><span 
+class="cmr-9">38</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem39"><span 
+class="cmr-9">39</span></a></sup>.
+<!--l. 237--><p class="noindent" ><span 
+class="cmssbx-10x-x-90">III.</span>  <span 
+class="cmssbx-10x-x-90">ENHANCED</span>
+<span 
+class="cmssbx-10x-x-90">DIFFUSION</span>
+<a 
+ id="Q1-1-2"></a>
+ </p><p class="noindent" >
+Self-propelled particles behave differently from passive ones when it comes to their diffusivity. In particular, an active particle
+of a certain size violates the Stokes-Einstein relation&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem40"><span 
+class="cmr-9">40</span></a></sup>, which states that the translational diffusion coefficient (of a sphere) is
+given by
+  <table 
+class="equation"><tr><td><a 
+ id="x1-16r1"></a>
+  <center class="math-display" >
+<img 
+src="figures/06-active_matter0x.png" class="math-display" ></center></td><td class="equation-label">(1)</td></tr></table>
+where <span 
+class="cmmi-10">k</span><sub><span 
+class="cmr-7">B</span></sub> is Boltzmann&#8217;s constant, <span 
+class="cmmi-10">T </span>the temperature, <span 
+class="cmmi-10">&#x03B7; </span>is the viscosity, and <span 
+class="cmmi-10">R </span>is the radius. N.B. For a Langevin thermostat
+the friction <span 
+class="cmmi-10">&#x03B6; </span><span 
+class="cmsy-10">&#x2261; </span>6<span 
+class="cmmi-10">&#x03C0;&#x03B7;R </span>and the &#8216;temperature&#8217; is given in units of <span 
+class="cmmi-10">k</span><sub><span 
+class="cmr-7">B</span></sub>. If the self-propelled particle does not
+experience Brownian motion, it would move with a constant speed along a straight line. This means that its
+mean-squared displacement (MSD) is ballistic. Rotational reorientation due to Brownian collisions with the fluid, cause
+this self-propulsion-induced ballistic regime to transition into a diffusive regime, on a time governed by the
+rotational diffusion. Thus, when compared to its passive equivalent, the ballistic regime of the MSD is stretched
+                                                                                                 
+                                                                                                 
+considerably and the diffusivity is enhanced. Analysis of the equations of motion&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem21"><span 
+class="cmr-9">21</span></a></sup> shows that the MSD is given
+by
+  <table 
+class="equation"><tr><td><a 
+ id="x1-17r2"></a>
+  <center class="math-display" >
+<img 
+src="figures/06-active_matter1x.png" class="math-display" ></center></td><td class="equation-label">(2)</td></tr></table>
+where <span 
+class="cmsy-10">&#x27E8;</span><span 
+class="cmmi-10">r</span><sup><span 
+class="cmr-7">2</span></sup>(<span 
+class="cmmi-10">t</span>)<span 
+class="cmsy-10">&#x27E9; </span>is the MSD from time <span 
+class="cmmi-10">t </span>= 0, <span 
+class="cmmi-10">v </span>is the propulsion velocity, <span 
+class="cmmi-10">&#x03C4;</span><sub><span 
+class="cmmi-7">R</span></sub><sup><span 
+class="cmr-7">2</span></sup> is the rotational Brownian time, and <span 
+class="cmmi-10">D </span>is the
+translational diffusivity as in Eq.&#x00A0;(<a 
+href="#x1-16r1">1<!--tex4ht:ref: eq:SE --></a>). For small times (<span 
+class="cmmi-10">t </span><span 
+class="cmsy-10">&#x226A; </span><span 
+class="cmmi-10">&#x03C4;</span><sub><span 
+class="cmmi-7">R</span></sub>) the motion is ballistic
+  <table 
+class="equation"><tr><td><a 
+ id="x1-18r3"></a>
+  <center class="math-display" >
+<img 
+src="figures/06-active_matter2x.png" class="math-display" ></center></td><td class="equation-label">(3)</td></tr></table>
+while for long times (<span 
+class="cmmi-10">t </span><span 
+class="cmsy-10">&#x226B; </span><span 
+class="cmmi-10">&#x03C4;</span><sub><span 
+class="cmmi-7">R</span></sub>) the motion is diffusive
+  <table 
+class="equation"><tr><td><a 
+ id="x1-19r4"></a>
+  <center class="math-display" >
+<img 
+src="figures/06-active_matter3x.png" class="math-display" ></center></td><td class="equation-label">(4)</td></tr></table>
+with enhanced diffusion coefficient <span 
+class="cmmi-10">D</span><sub><span 
+class="cmr-7">eff</span></sub> = <span 
+class="cmmi-10">D </span>+ <span 
+class="cmmi-10">v</span><sup><span 
+class="cmr-7">2</span></sup><span 
+class="cmmi-10">&#x03C4;</span><sub><span 
+class="cmmi-7">R</span></sub><span 
+class="cmmi-10">&#x2215;</span>6. Note that no matter the strength of the activity, provided it is some
+finite value, the crossover between ballistic motion and enhanced diffusion is controlled by the rotational diffusion time. One
+can, of course, also connect this increased diffusion with an effective temperature, using Eq.&#x00A0;(<a 
+href="#x1-16r1">1<!--tex4ht:ref: eq:SE --></a>). However, this apparent
+equivalence can lead to problems when one then attempts to apply statistical mechanics to such systems at the effective
+temperature. That is, there is typically more to being out-of-equilibrium than can be captured by a simple remapping of
+equilibrium parameters.
+                                                                                                 
+</p><p class="noindent" >                                                                  
+<span 
+class="cmssbx-10x-x-90">A.</span>
+<span 
+class="cmssbx-10x-x-90">Configuring</span>
+<span 
+class="cmssbx-10x-x-90">ESPResSo</span>
+<span 
+class="cmssbx-10x-x-90">for</span>
+<span 
+class="cmssbx-10x-x-90">Active</span>
+<span 
+class="cmssbx-10x-x-90">Matter</span>
+<a 
+ id="Q1-1-2"></a>
+ </p><p class="noindent" >
+To start, you will need the latest version of the <span 
+class="cmss-10">ESPResSo</span> master. This can be obtained as follows, provided that you have
+correctly configured git. First acquire <span 
+class="cmss-10">ESPResSo</span> from the online source<sup class="textsuperscript"><a 
+href="#bibitem41"><span 
+class="cmr-9">41</span></a></sup> via
+    <!--l. 289--><pre class="listings"><span class="label"><a 
+ id="x1-20r1"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">git</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">clone</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">https</span><span 
+class="cmtt-9">://</span><span 
+class="cmtt-9">github</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">com</span><span 
+class="cmtt-9">/</span><span 
+class="cmtt-9">espressomd</span><span 
+class="cmtt-9">/</span><span 
+class="cmtt-9">espresso</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">git</span>
+<span class="label"><a 
+ id="x1-21r2"></a></span></pre>
+<!--l. 293--><p class="indent" >  Now you are ready to configure <span 
+class="cmss-10">ESPResSo</span> in the newly created <span 
+class="cmss-10">ESPResSo</span> directory.
+    <!--l. 294--><pre class="listings"><span class="label"><a 
+ id="x1-22r1"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">mkdir</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">build</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-23r2"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">cd</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">build</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-24r3"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">cmake</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">..</span>
+<span class="label"><a 
+ id="x1-25r4"></a></span></pre>
+<!--l. 299--><p class="noindent" >After this, you will need to copy the <span class="lstinline"></span><span 
+class="cmtt-9">myconfig</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">sample</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">hpp</span> file into <span class="lstinline"></span><span 
+class="cmtt-9">myconfig</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">hpp</span> and select the appropriate <span class="lstinline"></span><span 
+class="cmtt-9">FEATURES</span> in the
+latter.
+    <!--l. 301--><pre class="listings"><span class="label"><a 
+ id="x1-26r1"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">cp</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">myconfig</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">sample</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">hpp</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">myconfig</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">hpp</span>
+<span class="label"><a 
+ id="x1-27r2"></a></span></pre>
+<!--l. 304--><p class="noindent" >To run all the tutorials you need to uncomment the following <span class="lstinline"></span><span 
+class="cmtt-9">FEATURES</span>:
+    <!--l. 305--><pre class="listings"><span class="label"><a 
+ id="x1-28r1"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">MASS</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-29r2"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">ENGINE</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-30r3"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">ROTATION</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-31r4"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">ROTATIONAL_INERTIA</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-32r5"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">CUDA</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-33r6"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">LB_BOUNDARIES_GPU</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-34r7"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">define</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">LENNARD_JONES</span>
+<span class="label"><a 
+ id="x1-35r8"></a></span></pre>
+<!--l. 314--><p class="noindent" >Now you are ready to build <span 
+class="cmss-10">ESPResSo</span>. You have to run <span class="lstinline"></span><span 
+class="cmtt-9">cmake</span> again to process the modified <span class="lstinline"></span><span 
+class="cmtt-9">myconfig</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">hpp</span>.
+    <!--l. 315--><pre class="listings"><span class="label"><a 
+ id="x1-36r1"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">cmake</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">..</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-37r2"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">make</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">j</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">8</span>
+<span class="label"><a 
+ id="x1-38r3"></a></span></pre>
+<!--l. 319--><p class="noindent" >Next you can find the tutorial files in the &#8220;doc/tutorials/06-active_mater/&#8221; directory. There are two folders,
+one called &#8216;EXERCISES&#8217; and one called &#8216;SOLUTIONS&#8217;. Copy the content of &#8216;EXERCISES&#8217; into your build
+directory.
+<!--l. 323--><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">B.</span>
+<span 
+class="cmssbx-10x-x-90">The</span>
+<span 
+class="cmssbx-10x-x-90">Enhanced-Diffusion</span>
+<span 
+class="cmssbx-10x-x-90">Tutorial</span>
+<a 
+ id="Q1-1-2"></a>
+ </p><p class="noindent" >
+In the folder EXERCISES you will find the <span class="lstinline"></span><span 
+class="cmtt-9">enhanced_diffusion</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">py</span> file. This tutorial demonstrates that our Langevin-based
+swimmer code captures enhanced diffusion. N.B. It is incomplete and needs your input to be evaluated in <span 
+class="cmss-10">ESPResSo</span> without
+errors. A fully functional file exists in the SOLUTIONS folder, but we recommend that you try solving the exercises on your
+own first.
+  To start the exercises, go into the EXERCISES directory and invoke the Python variant of <span 
+class="cmss-10">ESPResSo</span> on the
+script
+    <!--l. 332--><pre class="listings"><span class="label"><a 
+ id="x1-39r1"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">./../</span><span 
+class="cmtt-9">pypresso</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">enhanced_diffusion</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">py</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">0.0</span>
+<span class="label"><a 
+ id="x1-40r2"></a></span></pre>
+<!--l. 335--><p class="noindent" >where the parameter 0.0 gives the magnitude of the self-propulsion velocity. At this stage, executing the above line will cause an
+error, as the exercise has not yet been completed. If you read through the script, you will find all the basic elements of a
+simple <span 
+class="cmss-10">ESPResSo</span> simulation, with two exceptions. First, you will see that a single swimmer is set up using the
+<span class="lstinline"></span><span 
+class="cmtt-9">swimming</span><span 
+class="cmtt-9">={</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">v_swim</span><span 
+class="tctt-0900">'</span><span 
+class="cmtt-9">:...}</span> combination, with a value of the velocity that is read in from the command prompt.
+Second, you find that around the integration loop there are commands related to the correlator. These have the
+form
+    <!--l. 344--><pre class="listings"><span class="label"><a 
+ id="x1-41r1"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Determine</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">the</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">MSD</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">correlator</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-42r2"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-43r3"></a></span><span 
+class="cmtt-9">pos_id</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">ParticlePositions</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">ids</span><span 
+class="cmtt-9">=[0])</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-44r4"></a></span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Correlator</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">obs1</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">pos_id</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-45r5"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">corr_operation</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">square_distance_componentwise</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-46r6"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">delta_N</span><span 
+class="cmtt-9">=1,</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-47r7"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">tau_max</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">tmax</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-48r8"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">tau_lin</span><span 
+class="cmtt-9">=16)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-49r9"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">auto_update_accumulators</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">add</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-50r10"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-51r11"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Integrate</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-52r12"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-53r13"></a></span><span 
+class="cmtt-9">for</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">i</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">in</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">range</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">SAMP_STEPS</span><span 
+class="cmtt-9">):</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-54r14"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">integrator</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">run</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">SAMP_LENGTH</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-55r15"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-56r16"></a></span><span 
+class="cmtt-9">#</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Finalize</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">the</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">correlator</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">and</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">write</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">to</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">disk</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-57r17"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-58r18"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">auto_update_accumulators</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">remove</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-59r19"></a></span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">finalize</span><span 
+class="cmtt-9">()</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-60r20"></a></span><span 
+class="cmtt-9">numpy</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">savetxt</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">output</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">dat</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">result</span><span 
+class="cmtt-9">())</span>
+<span class="label"><a 
+ id="x1-61r21"></a></span></pre>
+                                                                                                 
+                                                                                                 
+<!--l. 366--><p class="noindent" >Here, the observable <span class="lstinline"></span><span 
+class="cmtt-9">pos_id</span> is set to the particle positions of the only particle in the simulation (with ID 0). Then an MSD
+correlation is created on the next line. Since the MSD is an auto-correlation function, we only require one entry for the
+observables, see the User Guide for additional information&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup>. The command <span class="lstinline"></span><span 
+class="cmtt-9">corr_operation</span> allows one to
+choose the type of correlation, in this case <span class="lstinline"></span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">square_distance_componentwise</span><span 
+class="cmtt-9">"</span>, which gives the MSD for each
+component (x, y, and z). The time step <span class="lstinline"></span><span 
+class="cmtt-9">dt</span> is set next, followed by the value of the maximum time (<span class="lstinline"></span><span 
+class="cmtt-9">tmax</span>) over
+which the correlation is to be computed. This maximum can be set to the total integrated time. However, it is
+recommended &#8212; as in the script &#8212; not to do so, since this will give very limited sampling for the longest times
+(one or even zero samples). In the tutorial only a 1000th of the total run length is used for <span class="lstinline"></span><span 
+class="cmtt-9">tmax</span>, which means
+at least 1000 samples are gathered for the longest time in the correlation function. You can play with this
+parameter to see the effect on the quality of the sampling. The command <span class="lstinline"></span><span 
+class="cmtt-9">tau_lin</span><span 
+class="cmtt-9">=16</span> indicates that the intervals of
+sampling are chosen by the correlator according to an exponential distribution, see the User Guide&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup>. Next the
+command
+    <!--l. 383--><pre class="listings"><span class="label"><a 
+ id="x1-62r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">auto_update_accumulators</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">add</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">)</span>
+<span class="label"><a 
+ id="x1-63r2"></a></span></pre>
+<!--l. 386--><p class="noindent" >lets <span 
+class="cmss-10">ESPResSo</span> know to start measuring the correlation function and to do so automatically during integration. After integration,
+the commands
+    <!--l. 388--><pre class="listings"><span class="label"><a 
+ id="x1-64r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">auto_update_accumulators</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">remove</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-65r2"></a></span><span 
+class="cmtt-9">msd</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">finalize</span><span 
+class="cmtt-9">()</span>
+<span class="label"><a 
+ id="x1-66r3"></a></span></pre>
+<!--l. 392--><p class="noindent" >ensure that the auto updating is terminated and that any available information used to create the auto correlation. That is,
+information that has not yet been used is processed. Finally, the correlation allows you to write output to disk in a format
+that depends on the specific choice of correlation.
+<!--l. 397--><p class="indent" >  With the above knowledge it should be easy to understand the partially functional Python script. It is a straightforward
+simulation of a single particle, which uses the correlator functionality of <span 
+class="cmss-10">ESPResSo</span>&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a><span 
+class="cmr-9">,</span><a 
+href="#bibitem33"><span 
+class="cmr-9">33</span></a></sup> to determine the MSD
+and (angular) velocity auto-correlation function (A)VACF. The latter two are of interest, since we can infer
+that the swimming only affects the translational motion and not the rotational motion. They are given by
+<div class="eqnarray">
+  <center class="math-display" >
+<img 
+src="figures/06-active_matter4x.png" class="math-display" ><a 
+ id="x1-67r5"></a><a 
+ id="x1-67r6"></a></center>
+</div>respectively. Here, <span 
+class="cmbx-10">v </span>is the velocity and <span 
+class="cmmib-10">&#x03C9;</span> is the angular velocity, and the brackets <span 
+class="cmsy-10">&#x27E8;&#x27E9;</span><sub><span 
+class="cmmi-7">&#x03C4;</span></sub> indicate time averaging over <span 
+class="cmmi-10">&#x03C4;</span>. The first
+task is to get the script up and running. Once you have done this, you will find that you can output a single measurement of
+the MSD and (A)VACF for a passive system (<span class="lstinline"></span><span 
+class="cmtt-9">vel</span><span 
+class="cmtt-9">=0.0</span>) or an active on (e.g., <span class="lstinline"></span><span 
+class="cmtt-9">vel</span><span 
+class="cmtt-9">=5.0</span>). You can visualize these using
+<span class="lstinline"></span><span 
+class="cmtt-9">matplotlib</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">pyplot</span>, for instance. To plot the total MSD, you need to sum up the contributions from the different components
+(x, y and z).
+<!--l. 417--><p class="indent" >  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 418--><p class="noindent" >
+<!--l. 419--><p class="noindent" > <img 
+src="figures/enhanced-.png" width="600px"  ></div>
+<a 
+ id="x1-68r3"></a>
+<span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;3. (a) Averaged MSD with standard error for the passive and active particle. The dependence of the MSD on time (</span><span 
+class="cmmi-9">t</span><span 
+class="cmr-9">)</span>
+<span 
+class="cmr-9">has been indicated with guides to the eye. (b) The AVACF for the same system. Note that the activity does not influence the</span>
+<span 
+class="cmr-9">rotational behavior.</span>
+                                                                                                 
+                                                                                                 
+<!--l. 425--><p class="indent" >  </div><hr class="endfigure">
+<!--l. 427--><p class="indent" >  Despite the long run length, the quality of the MSD and (A)VACF can be lacking. It is therefore recommended that you
+output 5 uncorrelated data files. The Python script is designed to facilitate you doing this. Once you have obtained this
+data for a velocity of <span class="lstinline"></span><span 
+class="cmtt-9">vel</span><span 
+class="cmtt-9">=0.0</span> (passive) and <span class="lstinline"></span><span 
+class="cmtt-9">vel</span><span 
+class="cmtt-9">=5.0</span> active particle, you can average over these and obtain a
+mean and standard error for your data. You will be pleased to find that indeed, there is enhanced diffusion
+for the active system and that the ballistic regime is stretched compared to the passive case, see Fig.&#x00A0;<a 
+href="#x1-68r3">3<!--tex4ht:ref: fig:enhanced --></a>(a).
+Contrasting the passive and active AVACFs shows that the rotational properties are unaffected (Fig.&#x00A0;<a 
+href="#x1-68r3">3<!--tex4ht:ref: fig:enhanced --></a>(b)), as
+expected.
+<!--l. 438--><p class="noindent" ><span 
+class="cmssbx-10x-x-90">IV.</span>  <span 
+class="cmssbx-10x-x-90">RECTIFICATION</span>
+<a 
+ id="Q1-1-3"></a>
+ </p><p class="noindent" >
+In this tutorial you will consider the &#8216;rectifying&#8217; properties of certain geometries on active systems. Rectification can best be
+understood by considering a system of passive particles first. In an in-equilibrium system, for which the particles are confined
+to an asymmetric box, we know that the particle density is homogeneous throughout, provided that there are no
+external potentials acting on the particles. There are, of course, limitations involving the particle size and the
+size of the geometry, but for an ideal gas this is certainly true. However, in an out-of-equilibrium setting one
+can have a heterogeneous distribution of particles, which limits the applicability of an &#8216;effective&#8217; temperature
+description. For instance, self-propelled particles will move in a preferred direction a series of wedge-shaped
+obstacles&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem42"><span 
+class="cmr-9">42</span></a></sup>. If the obstacles are in a closed tube, then the self-propelled particles will accumulate on one end. Since
+the speed at which they accumulate depends on their self-motility, different bacteria can be separated in this
+way&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem43"><span 
+class="cmr-9">43</span></a></sup>.
+</p><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">A.</span>
+<span 
+class="cmssbx-10x-x-90">The</span>
+<span 
+class="cmssbx-10x-x-90">Rectifying-Geometry</span>
+<span 
+class="cmssbx-10x-x-90">Tutorial</span>
+<a 
+ id="Q1-1-3"></a>
+ </p><p class="noindent" >
+Here, we will set up a rectifying geometry. In the folder EXERCISES you will find the <span class="lstinline"></span><span 
+class="cmtt-9">rectification_geometry</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">py</span> file. This
+will help you construct and visualize a rectifying geometry of a cylindrical chamber with a wedge-like obstacle in the center,
+see Fig.&#x00A0;<a 
+href="#x1-69r4">4<!--tex4ht:ref: fig:system --></a>(a). You will first need to complete the exercises before the script evaluates properly. The wedge-like obstacle causes
+rectification when the particles are self-propelled. As you can see the LB is used and the rectifying geometry is built by
+adding instances of the <span class="lstinline"></span><span 
+class="cmtt-9">LBBoundary</span> class to the system, see the User Guide for more information&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup>. The reason
+for the use of LB is to help visualize the geometry. An alternative is the OpenGL visualizer included with
+<span 
+class="cmss-10">ESPResSo</span>.
+  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 470--><p class="noindent" >
+<!--l. 471--><p class="noindent" > <img 
+src="figures/geometry-.png" width="600px"  
+></div>
+<a 
+ id="x1-69r4"></a>
+<span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;4. (a) Sketch of the rectifying geometry which we simulate for this tutorial. (b) The geometry of the </span><span class="lstinline"></span><span 
+class="cmtt-9">HollowCone</span> <span 
+class="cmr-9">constraint</span>
+<span 
+class="cmr-9">and </span><span class="lstinline"></span><span 
+class="cmtt-9">LBBoundary</span><span 
+class="cmr-9">. The figure is cylindrically symmetric about the x-axis. The size of the pore opening is determined by </span><span 
+class="cmmi-9">r</span><sub><span 
+class="cmmi-6">i</span></sub><span 
+class="cmr-9">, the</span>
+<span 
+class="cmr-9">length of the cone by </span><span 
+class="cmmi-9">r</span><sub><span 
+class="cmmi-6">o</span></sub> <span 
+class="cmr-9">and the opening angle by </span><span 
+class="cmmi-9">&#x03B1;</span><span 
+class="cmr-9">. Finally, the pore is given a width using the parameter </span><span 
+class="cmmi-9">w</span><span 
+class="cmr-9">.</span>
+                                                                                                 
+                                                                                                 
+  </div><hr class="endfigure">
+  The first block of the script sets up the basic simulation parameters, with which you should be familiar &#8211; if you are
+struggling with this part, please consult the previous tutorials. The second block sets up the boundaries using instances of
+<span class="lstinline"></span><span 
+class="cmtt-9">LBBoundary</span>, as was introduced in the LB tutorial. Here it is worth noting that the geometric parameters of the <span class="lstinline"></span><span 
+class="cmtt-9">HollowCone</span>
+command are somewhat counterintuitive. They are illustrated in Fig.&#x00A0;<a 
+href="#x1-69r4">4<!--tex4ht:ref: fig:system --></a>(b) for clarification. Finally, in the third block the
+code
+    <!--l. 489--><pre class="listings"><span class="label"><a 
+ id="x1-70r1"></a></span><span 
+class="cmtt-9">lbf</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">print_vtk_boundary</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">{}/</span><span 
+class="cmtt-9">boundary</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">vtk</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">format</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">outdir</span><span 
+class="cmtt-9">))</span>
+<span class="label"><a 
+ id="x1-71r2"></a></span></pre>
+<!--l. 492--><p class="noindent" >ensures that the boundary data is exported to a <span class="lstinline"></span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">vtk</span> file. This file can be read in and visualized using the program <span class="lstinline"></span><span 
+class="cmtt-9">ParaView</span>,
+which should have been introduced in the LB and Electrostatics tutorials. Here, we briefly comment on how the geometry can
+be visualized. In the command prompt type
+    <!--l. 496--><pre class="listings"><span class="label"><a 
+ id="x1-72r1"></a></span><span 
+class="tctt-0900">$</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">paraview</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&amp;</span>
+<span class="label"><a 
+ id="x1-73r2"></a></span></pre>
+<!--l. 499--><p class="noindent" >to open ParaView. Open the relevant <span class="lstinline"></span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">vtk</span> file (in our case <span class="lstinline"></span><span 
+class="cmtt-9">boundary</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">vtk</span>). Click the green <span class="lstinline"></span><span 
+class="cmtt-9">Apply</span> button. Now add a <span class="lstinline"></span><span 
+class="cmtt-9">Clip</span> from
+the ribbon just above the Pipeline Browser to the highlighted <span class="lstinline"></span><span 
+class="cmtt-9">boundary</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">vtk</span> entry. Within the <span class="lstinline"></span><span 
+class="cmtt-9">Clip</span> <span class="lstinline"></span><span 
+class="cmtt-9">Properties</span> tab, select
+<span class="lstinline"></span><span 
+class="cmtt-9">Scalar</span> in the <span class="lstinline"></span><span 
+class="cmtt-9">Clip</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Type</span> drop-down tab. Then set the value of the scalar to 0.1 with the slide (or by typing in the field) and
+tick the <span class="lstinline"></span><span 
+class="cmtt-9">Inside</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Out</span> box. Click <span class="lstinline"></span><span 
+class="cmtt-9">Apply</span>, next slide the <span class="lstinline"></span><span 
+class="cmtt-9">Opacity</span> slide to 0.25, to visualize the inside of the geometry that you have
+created, see Fig.&#x00A0;<a 
+href="#x1-74r5">5<!--tex4ht:ref: fig:rectify --></a>(a).
+<!--l. 509--><p class="indent" >  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 510--><p class="noindent" >
+<!--l. 511--><p class="noindent" > <img 
+src="figures/rectify-.png" width="500px"   ></div>
+<a 
+ id="x1-74r5"></a>
+<span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;5. (a) Snapshot of the rectifying geometry, as visualized with </span><span class="lstinline"></span><span 
+class="cmtt-9">ParaView</span><span 
+class="cmr-9">. (b) Final state for the system with 500 particles</span>
+<span 
+class="cmr-9">and </span><span class="lstinline"></span><span 
+class="cmtt-9">vel</span><span 
+class="cmtt-9">=5.0</span><span 
+class="cmr-9">. Note that there are more particles in the left-hand chamber, due to the rectification.</span>
+                                                                                                 
+                                                                                                 
+<!--l. 514--><p class="indent" >  </div><hr class="endfigure">
+<!--l. 516--><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">B.</span>
+<span 
+class="cmssbx-10x-x-90">The</span>
+<span 
+class="cmssbx-10x-x-90">Rectification</span>
+<span 
+class="cmssbx-10x-x-90">Tutorial</span>
+<a 
+ id="Q1-1-5"></a>
+ </p><p class="noindent" >
+Now we will study the effectiveness of our rectifying geometry. In the folder EXERCISES you will find the
+<span class="lstinline"></span><span 
+class="cmtt-9">rectification_simulation</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">py</span> file. This Python script will allow the user to appreciate the differences between a passive and an
+active &#8216;ideal gas&#8217; in the above geometry. Again, you will have to complete the exercises to obtain a functioning script. N.B.
+Once up and running, the simulation takes quite a while (<span 
+class="cmsy-10">~ </span>20 min) on a modern desktop. We recommend that you proceed
+with the final exercise while the simulation is running.
+  The first block of the script introduces a procedure to convert a rotation given in spherical coordinates by the azimuthal
+and polar angle <span 
+class="cmmi-10">&#x03B8; </span>and <span 
+class="cmmi-10">&#x03D5;</span>, respectively, to a quaternion. The code
+    <!--l. 530--><pre class="listings"><span class="label"><a 
+ id="x1-75r1"></a></span><span 
+class="cmtt-9">def</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">a2quat</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">phi</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">theta</span><span 
+class="cmtt-9">):</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-76r2"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-77r3"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q1w</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">cos</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">theta</span><span 
+class="cmtt-9">/2.0)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-78r4"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q1x</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">0</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-79r5"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q1y</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">sin</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">theta</span><span 
+class="cmtt-9">/2.0)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-80r6"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q1z</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">0</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-81r7"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-82r8"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q2w</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">cos</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">phi</span><span 
+class="cmtt-9">/2.0)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-83r9"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q2x</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">0</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-84r10"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q2y</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">0</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-85r11"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q2z</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">sin</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">phi</span><span 
+class="cmtt-9">/2.0)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-86r12"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-87r13"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q3w</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">q1w</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2w</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">q1x</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2x</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">q1y</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2y</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">q1z</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2z</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-88r14"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q3x</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">q1w</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2x</span><span 
+class="cmtt-9">+</span><span 
+class="cmtt-9">q1x</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2w</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">q1y</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2z</span><span 
+class="cmtt-9">+</span><span 
+class="cmtt-9">q1z</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2y</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-89r15"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q3y</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">q1w</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2y</span><span 
+class="cmtt-9">+</span><span 
+class="cmtt-9">q1x</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2z</span><span 
+class="cmtt-9">+</span><span 
+class="cmtt-9">q1y</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2w</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">q1z</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2x</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-90r16"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">q3z</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">=</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">q1w</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2z</span><span 
+class="cmtt-9">-</span><span 
+class="cmtt-9">q1x</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2y</span><span 
+class="cmtt-9">+</span><span 
+class="cmtt-9">q1y</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2x</span><span 
+class="cmtt-9">+</span><span 
+class="cmtt-9">q1z</span><span 
+class="cmtt-9">*</span><span 
+class="cmtt-9">q2w</span><span 
+class="cmtt-9">)</span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-91r17"></a></span><span 
+class="cmtt-9">&#x00A0;</span><br /><span class="label"><a 
+ id="x1-92r18"></a></span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">return</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">[</span><span 
+class="cmtt-9">q3w</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">q3x</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">q3y</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">q3z</span><span 
+class="cmtt-9">]</span>
+<span class="label"><a 
+ id="x1-93r19"></a></span></pre>
+<!--l. 550--><p class="noindent" >essentially implements the geometric relation
+  <table 
+class="equation"><tr><td><a 
+ id="x1-94r7"></a>
+  <center class="math-display" >
+<img 
+src="figures/06-active_matter5x.png" class="math-display" ></center></td><td class="equation-label">(7)</td></tr></table>
+<!--l. 562--><p class="nopar" >
+where <span 
+class="cmmi-10">&#x03B1; </span>is the angle and <span 
+class="cmbx-10">n </span>= (<span 
+class="cmmi-10">n</span><sub><span 
+class="cmmi-7">x</span></sub><span 
+class="cmmi-10">,n</span><sub><span 
+class="cmmi-7">y</span></sub><span 
+class="cmmi-10">,n</span><sub><span 
+class="cmmi-7">z</span></sub>) is the axis of rotation. This relation is used for both rotation axes and subsequently
+the two expressions are quaternion multiplied to obtain the full rotation. This procedure will be used later to draw (almost)
+random quaternions. The rest of the block deals with standard input and output and parameter/simulation
+definitions.
+<!--l. 570--><p class="indent" >  The second block of the script uses the geometric parameters from the <span class="lstinline"></span><span 
+class="cmtt-9">rectification_geometry</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">py</span> script to establish
+the constraints that keep the particles inside of the confining geometry. The relevant <span 
+class="cmss-10">ESPResSo</span> command is
+<span class="lstinline"></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">constraints</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">add</span><span 
+class="cmtt-9">()</span> and has already been introduced in the basic tutorial. Next we set up interactions between the
+geometry and the particles &#8212; in this case the almost-hard WCA interaction &#8212; to ensure that they are trapped. In the fourth
+block, the geometry is seeded with particles, two clouds of equal size in the respective chambers. This is done to ensure that
+the equilibration time for the system is limited. That is, if you had set up all particles in a single chamber, there would
+obviously be flow from the full chamber to the empty one, despite the system being passive (in equilibrium), as the density is
+homogenized.
+<!--l. 583--><p class="indent" >  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 584--><p class="noindent" >
+<!--l. 585--><p class="noindent" > <img 
+src="figures/rectification-.png" width="500px"  
+></div>
+<a 
+ id="x1-95r6"></a>
+<span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;6. The change in the position of the CMS for the rectifying geometry with particles. The passive system fluctuates around</span>
+<span 
+class="cmr-9">zero (mid-way in the box), while the active one shows an accumulation of particles in one of the chambers.</span>
+                                                                                                 
+                                                                                                 
+<!--l. 591--><p class="indent" >  </div><hr class="endfigure">
+<!--l. 593--><p class="indent" >  The final block is concerned with measuring the rectifying properties of this geometry. We do so with a
+convenient parameter, namely the center of mass (CMS) of the system. You can use the <span 
+class="cmss-10">ESPResSo</span> command
+<span class="lstinline"></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">galilei</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">system_CMS</span><span 
+class="cmtt-9">()</span> to determine it directly&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem31"><span 
+class="cmr-9">31</span></a></sup>. If the system is passive, then the CMS should fluctuate around
+the center of the box. However, if there is rectification, this can be seen as a deviation of the CMS from this
+center. Figure&#x00A0;<a 
+href="#x1-95r6">6<!--tex4ht:ref: fig:rectification --></a> shows the evolution of the CMS as a function of time for passive and active (a velocity of 5.0)
+particles in the system. The script also outputs a snapshot of the final coordinates of the particles using the
+line
+    <!--l. 603--><pre class="listings"><span class="label"><a 
+ id="x1-96r1"></a></span><span 
+class="cmtt-9">system</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">part</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">writevtk</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">{}/</span><span 
+class="cmtt-9">points_</span><span 
+class="cmtt-9">{}.</span><span 
+class="cmtt-9">vtk</span><span 
+class="cmtt-9">"</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">format</span><span 
+class="cmtt-9">(</span><span 
+class="cmtt-9">outdir</span><span 
+class="cmtt-9">,</span><span 
+class="cmtt-9">vel</span><span 
+class="cmtt-9">),</span><span 
+class="cmtt-9">types</span><span 
+class="cmtt-9">=[0])</span>
+<span class="label"><a 
+ id="x1-97r2"></a></span></pre>
+<!--l. 606--><p class="noindent" >The <span class="lstinline"></span><span 
+class="cmtt-9">writevtk</span> command outputs the coordinates of the particles of type 0 to a file that is ParaView readable. You can now show
+how the particles are distributed in the geometry that you visualized in the previous section. To do so, choose the relevant
+<span class="lstinline"></span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">vtk</span> file,&#x00A0;<span 
+class="cmti-10">e.g.</span>, <span class="lstinline"></span><span 
+class="cmtt-9">points_5</span><span 
+class="cmtt-9">.0.</span><span 
+class="cmtt-9">vtk</span> and load it into ParaView. Now add a <span class="lstinline"></span><span 
+class="cmtt-9">Glyph</span> from the ribbon just above the Pipeline Browser to
+the highlighted <span class="lstinline"></span><span 
+class="cmtt-9">points_5</span><span 
+class="cmtt-9">.0.</span><span 
+class="cmtt-9">vtk</span> entry. Select <span class="lstinline"></span><span 
+class="cmtt-9">Sphere</span> from the <span class="lstinline"></span><span 
+class="cmtt-9">Glyph</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Type</span> drop down. Scroll down and select <span class="lstinline"></span><span 
+class="cmtt-9">off</span> in the
+<span class="lstinline"></span><span 
+class="cmtt-9">Scale</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Mode</span> drop down. Tick the <span class="lstinline"></span><span 
+class="cmtt-9">Edit</span> box and set the scale factor to 1.0, then select <span class="lstinline"></span><span 
+class="cmtt-9">All</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Points</span> from the <span class="lstinline"></span><span 
+class="cmtt-9">Glyph</span><span 
+class="cmtt-9">&#x00A0;</span><span 
+class="cmtt-9">Mode</span> drop
+down. As you can see, there are clearly far more particles in the &#8216;front&#8217; chamber, than there are in the other, see Fig.&#x00A0;<a 
+href="#x1-74r5">5<!--tex4ht:ref: fig:rectify --></a>(b).
+This can be explained by the fact that the activity makes it easier to take the barrier in one direction than in the
+other. Or in technical terms: the equivalence between thermodynamic pressure and mechanical pressure is
+lost.
+<!--l. 622--><p class="noindent" ><span 
+class="cmssbx-10x-x-90">V.</span>  <span 
+class="cmssbx-10x-x-90">FLOW</span>
+<span 
+class="cmssbx-10x-x-90">FIELD</span>
+<span 
+class="cmssbx-10x-x-90">AROUND</span>
+<span 
+class="cmssbx-10x-x-90">A</span>
+<span 
+class="cmssbx-10x-x-90">SWIMMER</span>
+<a 
+ id="Q1-1-6"></a>
+ </p><p class="noindent" >
+As previously discussed, the flow field around an active particle should not contain a monopolar term. At least, not when
+there are no other forces acting on the particle. In this tutorial, we will examine the flow field around the two basic types of
+active swimmer: pushers and pullers. The nature of these flow fields ultimately determine how particles interact with their
+surroundings. That is, whether they are attracted to walls or repelled by them&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem44"><span 
+class="cmr-9">44</span></a></sup>, how they stir tracer beads in the fluid&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem45"><span 
+class="cmr-9">45</span></a></sup>,
+and how they move collectively&#x00A0;<sup class="textsuperscript"><a 
+href="#bibitem46"><span 
+class="cmr-9">46</span></a></sup>. However, it goes beyond the scope of this tutorial to discuss all of these points in
+detail.
+</p><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">A.</span>
+<span 
+class="cmssbx-10x-x-90">The</span>
+<span 
+class="cmssbx-10x-x-90">Flow-Field</span>
+<span 
+class="cmssbx-10x-x-90">Tutorial</span>
+<a 
+ id="Q1-1-6"></a>
+ </p><p class="noindent" >
+Now we will study the flow field around a simple pusher and puller particle in <span 
+class="cmss-10">ESPResSo</span>. In the folder EXERCISES you will
+find the <span class="lstinline"></span><span 
+class="cmtt-9">flow_field</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">py</span> file. Once again, you will have to complete the excercises to obtain a functioning script.
+The structure of the blocks and their content should by now be straightforward for you to understand on the
+basis of the previous tutorials and the information provided here. We will therefore focus on the use of this
+script.
+  <hr class="figure"><div class="figure" 
+>
+                                                                                                 
+                                                                                                 
+                                                                                                 
+                                                                                                 
+<div class="center" 
+>
+<!--l. 646--><p class="noindent" >
+<!--l. 647--><p class="noindent" > <img 
+src="figures/flow_field-.png" width="400px"   ></div>
+<a 
+ id="x1-98r7"></a>
+              <span 
+class="cmr-9">FIG.</span><span 
+class="cmr-9">&#x00A0;7. (a) Snapshot of the flow field around a pusher particle visualized with ParaView.</span>
+                                                                                                 
+                                                                                                 
+  </div><hr class="endfigure">
+  First run the simulation for a puller particle and a position of 0.0. This will generate output in the directory that you have
+set up. Examine the content of this folder and, in particular, the <span class="lstinline"></span><span 
+class="cmtt-9">trajectory</span><span 
+class="cmtt-9">.</span><span 
+class="cmtt-9">dat</span> file. From the final line of this file, you can
+determine the position of the swimmer at the end of the run. Now rerun the script with a modified position value,
+such that the particle ends up in the center of the box. This generates a second directory. Now go into this
+directory and open ParaView. Using the techniques you have learned in the above tutorial, you can visualize the
+particle, and using the methods you have picked up in the Electrokinetics tutorial, you can visualize the fluid flow
+around this particle using,&#x00A0;<span 
+class="cmti-10">e.g.</span>, stream lines, a slice, or arrows. When you are done, the result could look like
+Fig.&#x00A0;<a 
+href="#x1-98r7">7<!--tex4ht:ref: fig:flow_field --></a>.
+</p><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">VI.</span>  <span 
+class="cmssbx-10x-x-90">CONCLUDING</span>
+<span 
+class="cmssbx-10x-x-90">REMARKS</span>
+<a 
+ id="Q1-1-7"></a>
+ </p><p class="noindent" >
+With that, you have come to the end of this tutorial. We hope you found it informative and that you have
+a sufficient understanding of the way to deal with active matter in <span 
+class="cmss-10">ESPResSo</span> to set up simulations on your
+own.
+</p><p class="noindent" >
+<span 
+class="cmssbx-10x-x-90">BIBLIOGRAPHY</span>
+<a 
+ id="Q1-1-7"></a>
+ </p><p class="noindent" ><a 
+ id="bibitem1"></a><sup class="textsuperscript"><span 
+class="cmr-9">1</span></sup><span 
+class="cmr-8">M.</span><span 
+class="cmr-8">&#x00A0;Ballerini,  N.</span><span 
+class="cmr-8">&#x00A0;Cabibbo,  R.</span><span 
+class="cmr-8">&#x00A0;Candelier,  A.</span><span 
+class="cmr-8">&#x00A0;Cavagna,  E.</span><span 
+class="cmr-8">&#x00A0;Cisbani,  I.</span><span 
+class="cmr-8">&#x00A0;Giardina,  V.</span><span 
+class="cmr-8">&#x00A0;Lecomte,  A.</span><span 
+class="cmr-8">&#x00A0;Orlandi,  G.</span><span 
+class="cmr-8">&#x00A0;Parisi,  A.</span><span 
+class="cmr-8">&#x00A0;Procaccini,</span>
+ <span 
+class="cmr-8">M.</span><span 
+class="cmr-8">&#x00A0;Viale, and V.</span><span 
+class="cmr-8">&#x00A0;Zdravkovic. Interaction ruling animal collective behavior depends on topological rather than metric distance: Evidence</span>
+ <span 
+class="cmr-8">from a field study. </span><span 
+class="cmti-8">Proc. Natl. Acad. Sci.</span><span 
+class="cmr-8">, 105:1232, 2008.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem2"></a><sup class="textsuperscript"><span 
+class="cmr-9">2</span></sup><span 
+class="cmr-8">Y.</span><span 
+class="cmr-8">&#x00A0;Katz, K.</span><span 
+class="cmr-8">&#x00A0;Tunstrøm, C.C. Ioannou, C.</span><span 
+class="cmr-8">&#x00A0;Huepe, and I.D. Couzin.  Inferring the structure and dynamics of interactions in schooling</span>
+ <span 
+class="cmr-8">fish. </span><span 
+class="cmti-8">Proc. Nat. Acad. Sci.</span><span 
+class="cmr-8">, 108(46):18720, 2011.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem3"></a><sup class="textsuperscript"><span 
+class="cmr-9">3</span></sup><span 
+class="cmr-8">D.</span><span 
+class="cmr-8">&#x00A0;Helbing, I.</span><span 
+class="cmr-8">&#x00A0;Farkas, and T.</span><span 
+class="cmr-8">&#x00A0;Vicsek. Simulating dynamical features of escape panic. </span><span 
+class="cmti-8">Nature</span><span 
+class="cmr-8">, 407:487, 2000.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem4"></a><sup class="textsuperscript"><span 
+class="cmr-9">4</span></sup><span 
+class="cmr-8">J.</span><span 
+class="cmr-8">&#x00A0;Zhang, W.</span><span 
+class="cmr-8">&#x00A0;Klingsch, A.</span><span 
+class="cmr-8">&#x00A0;Schadschneider, and A.</span><span 
+class="cmr-8">&#x00A0;Seyfried. Experimental study of pedestrian flow through a t-junction. In Valery</span><span 
+class="cmr-8">&#x00A0;V.</span>
+ <span 
+class="cmr-8">Kozlov, Alexander</span><span 
+class="cmr-8">&#x00A0;P. Buslaev, Alexander</span><span 
+class="cmr-8">&#x00A0;S. Bugaev, Marina</span><span 
+class="cmr-8">&#x00A0;V. Yashina, Andreas Schadschneider, and Michael Schreckenberg, editors,</span>
+ <span 
+class="cmti-8">Traffic and Granular Flow &#8217;11</span><span 
+class="cmr-8">, page 241. Springer (Berlin/Heidelberg), 2013.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem5"></a><sup class="textsuperscript"><span 
+class="cmr-9">5</span></sup><span 
+class="cmr-8">J.L. Silverberg, M.</span><span 
+class="cmr-8">&#x00A0;Bierbaum, J.P. Sethna, and I.</span><span 
+class="cmr-8">&#x00A0;Cohen. Collective motion of humans in mosh and circle pits at heavy metal concerts.</span>
+ <span 
+class="cmti-8">Phys. Rev. Lett.</span><span 
+class="cmr-8">, 110:228701, 2013.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem6"></a><sup class="textsuperscript"><span 
+class="cmr-9">6</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Sokolov, I.S. Aranson, J.O. Kessler, and R.E. Goldstein. Concentration dependence of the collective dynamics of swimming bacteria.</span>
+ <span 
+class="cmti-8">Phys. Rev. Lett.</span><span 
+class="cmr-8">, 98:158102, 2007.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem7"></a><sup class="textsuperscript"><span 
+class="cmr-9">7</span></sup><span 
+class="cmr-8">J.</span><span 
+class="cmr-8">&#x00A0;Schwarz-Linek, C.</span><span 
+class="cmr-8">&#x00A0;Valeriani, A.</span><span 
+class="cmr-8">&#x00A0;Cacciuto, M.</span><span 
+class="cmr-8">&#x00A0;E. Cates, D.</span><span 
+class="cmr-8">&#x00A0;Marenduzzo, A.</span><span 
+class="cmr-8">&#x00A0;N. Morozov, and W.</span><span 
+class="cmr-8">&#x00A0;C.</span><span 
+class="cmr-8">&#x00A0;K. Poon.  Phase separation</span>
+ <span 
+class="cmr-8">and rotor self-assembly in active particle suspensions. </span><span 
+class="cmti-8">Proc. Nat. Acad. Sci.</span><span 
+class="cmr-8">, 109:4052, 2012.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem8"></a><sup class="textsuperscript"><span 
+class="cmr-9">8</span></sup><span 
+class="cmr-8">M.</span><span 
+class="cmr-8">&#x00A0;Reufer,  R.</span><span 
+class="cmr-8">&#x00A0;Besseling,  J.</span><span 
+class="cmr-8">&#x00A0;Schwarz-Linek,  V.A.  Martinez,  A.N.  Morozov,  J.</span><span 
+class="cmr-8">&#x00A0;Arlt,  D.</span><span 
+class="cmr-8">&#x00A0;Trubitsyn,  F.B.  Ward,  and  W.C.K.  Poon.</span>
+ <span 
+class="cmr-8">Switching of swimming modes in magnetospirillium gryphiswaldense. </span><span 
+class="cmti-8">Biophys. J.</span><span 
+class="cmr-8">, 106:37, 2014.</span>
+ </p><p class="noindent" ><a 
+ id="bibitem9"></a><sup class="textsuperscript"><span 
+class="cmr-9">9</span></sup><span 
+class="cmr-8">D.M. Woolley. Motility of spermatozoa at surfaces. </span><span 
+class="cmti-8">Reproduction</span><span 
+class="cmr-8">, 126:259, 2003.</span>
+</p><p class="noindent" ><a 
+ id="bibitem10"></a><sup class="textsuperscript"><span 
+class="cmr-9">10</span></sup><span 
+class="cmr-8">I.H. Riedel, K.</span><span 
+class="cmr-8">&#x00A0;Kruse, and J.</span><span 
+class="cmr-8">&#x00A0;Howard. A self-organized vortex array of hydrodynamically entrained sperm cells. </span><span 
+class="cmti-8">Science</span><span 
+class="cmr-8">, 309(5732):300,</span>
+ <span 
+class="cmr-8">2005.</span>
+</p><p class="noindent" ><a 
+ id="bibitem11"></a><sup class="textsuperscript"><span 
+class="cmr-9">11</span></sup><span 
+class="cmr-8">R.</span><span 
+class="cmr-8">&#x00A0;Ma, G.S. Klindt, I.H. Riedel-Kruse, F.</span><span 
+class="cmr-8">&#x00A0;J</span><span 
+class="cmr-8">ülicher, and B.M. Friedrich.  Active phase and amplitude fluctuations of flagellar beating.</span>
+ <span 
+class="cmti-8">Phys. Rev. Lett.</span><span 
+class="cmr-8">, 113:048101, 2014.</span>
+</p><p class="noindent" ><a 
+ id="bibitem12"></a><sup class="textsuperscript"><span 
+class="cmr-9">12</span></sup><span 
+class="cmr-8">M.</span><span 
+class="cmr-8">&#x00A0;Polin, I.</span><span 
+class="cmr-8">&#x00A0;Tuval, K.</span><span 
+class="cmr-8">&#x00A0;Drescher, J.P. Gollub, and R.E. Goldstein. Chlamydomonas swims with two &#8220;gears&#8221; in a eukaryotic version of</span>
+ <span 
+class="cmr-8">run-and-tumble locomotion. </span><span 
+class="cmti-8">Science</span><span 
+class="cmr-8">, 325:487, 2009.</span>
+</p><p class="noindent" ><a 
+ id="bibitem13"></a><sup class="textsuperscript"><span 
+class="cmr-9">13</span></sup><span 
+class="cmr-8">V.F. Geyer, F.</span><span 
+class="cmr-8">&#x00A0;J</span><span 
+class="cmr-8">ülicher, J.</span><span 
+class="cmr-8">&#x00A0;Howard, and B.M. Friedrich. Cell-body rocking is a dominant mechanism for flagellar synchronization in a</span>
+ <span 
+class="cmr-8">swimming alga. </span><span 
+class="cmti-8">Proc. Nat. Acad. Sci.</span><span 
+class="cmr-8">, 110:18058, 2013.</span>
+</p><p class="noindent" ><a 
+ id="bibitem14"></a><sup class="textsuperscript"><span 
+class="cmr-9">14</span></sup><span 
+class="cmr-8">D.</span><span 
+class="cmr-8">&#x00A0;Mizuno, C.</span><span 
+class="cmr-8">&#x00A0;Tardin, C.F. Schmidt, and F.C. MacKintosh.   Nonequilibrium mechanics of active cytoskeletal networks.   </span><span 
+class="cmti-8">Science</span><span 
+class="cmr-8">,</span>
+ <span 
+class="cmr-8">315:370, 2007.</span>
+                                                                                                 
+                                                                                                 
+</p><p class="noindent" ><a 
+ id="bibitem15"></a><sup class="textsuperscript"><span 
+class="cmr-9">15</span></sup><span 
+class="cmr-8">R.F. Ismagilov, A.</span><span 
+class="cmr-8">&#x00A0;Schwartz, N.</span><span 
+class="cmr-8">&#x00A0;Bowden, and G.M. Whitesides.  Autonomous movement and self-assembly.  </span><span 
+class="cmti-8">Angew. Chem. Int. Ed.</span><span 
+class="cmr-8">,</span>
+ <span 
+class="cmr-8">41:652, 2002.</span>
+</p><p class="noindent" ><a 
+ id="bibitem16"></a><sup class="textsuperscript"><span 
+class="cmr-9">16</span></sup><span 
+class="cmr-8">W.</span><span 
+class="cmr-8">&#x00A0;F. Paxton, K.</span><span 
+class="cmr-8">&#x00A0;C. Kistler, C.</span><span 
+class="cmr-8">&#x00A0;C. Olmeda, A.</span><span 
+class="cmr-8">&#x00A0;Sen, S.</span><span 
+class="cmr-8">&#x00A0;K. St.</span><span 
+class="cmr-8">&#x00A0;Angelo, Y.</span><span 
+class="cmr-8">&#x00A0;Cao, T.</span><span 
+class="cmr-8">&#x00A0;E. Mallouk, P.</span><span 
+class="cmr-8">&#x00A0;E. Lammert, and V.</span><span 
+class="cmr-8">&#x00A0;H. Crespi.</span>
+ <span 
+class="cmr-8">Catalytic nanomotors: Autonomous movement of striped nanorods. </span><span 
+class="cmti-8">J. Am. Chem. Soc.</span><span 
+class="cmr-8">, 126:13424, 2004.</span>
+</p><p class="noindent" ><a 
+ id="bibitem17"></a><sup class="textsuperscript"><span 
+class="cmr-9">17</span></sup><span 
+class="cmr-8">Y.</span><span 
+class="cmr-8">&#x00A0;Wang,  R.</span><span 
+class="cmr-8">&#x00A0;M.  Hernandez,  D.</span><span 
+class="cmr-8">&#x00A0;J.  Bartlett,  J.</span><span 
+class="cmr-8">&#x00A0;M.  Bingham,  T.</span><span 
+class="cmr-8">&#x00A0;R.  Kline,  A.</span><span 
+class="cmr-8">&#x00A0;Sen,  and  T.</span><span 
+class="cmr-8">&#x00A0;E.  Mallouk.   Bipolar  electrochemical</span>
+ <span 
+class="cmr-8">mechanism for the propulsion of catalytic nanomotors in hydrogen peroxide solutions. </span><span 
+class="cmti-8">Langmuir</span><span 
+class="cmr-8">, 22:10451, 2006.</span>
+</p><p class="noindent" ><a 
+ id="bibitem18"></a><sup class="textsuperscript"><span 
+class="cmr-9">18</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Brown and W.</span><span 
+class="cmr-8">&#x00A0;Poon. Ionic effects in self-propelled pt-coated janus swimmers. </span><span 
+class="cmti-8">Soft Matter</span><span 
+class="cmr-8">, 10:4016&#8211;4027, 2014.</span>
+</p><p class="noindent" ><a 
+ id="bibitem19"></a><sup class="textsuperscript"><span 
+class="cmr-9">19</span></sup><span 
+class="cmr-8">S.</span><span 
+class="cmr-8">&#x00A0;Ebbens, D.A. Gregory, G.</span><span 
+class="cmr-8">&#x00A0;Dunderdale, J.R. Howse, Y.</span><span 
+class="cmr-8">&#x00A0;Ibrahim, T.B. Liverpool, and R.</span><span 
+class="cmr-8">&#x00A0;Golestanian.   Electrokinetic effects in</span>
+ <span 
+class="cmr-8">catalytic platinum-insulator janus swimmers. </span><span 
+class="cmti-8">Euro. Phys. Lett.</span><span 
+class="cmr-8">, 106:58003, 2014.</span>
+</p><p class="noindent" ><a 
+ id="bibitem20"></a><sup class="textsuperscript"><span 
+class="cmr-9">20</span></sup><span 
+class="cmr-8">S.</span><span 
+class="cmr-8">&#x00A0;Ebbens, M.-H. Tu, J.</span><span 
+class="cmr-8">&#x00A0;R. Howse, and R.</span><span 
+class="cmr-8">&#x00A0;Golestanian. Size dependence of the propulsion velocity for catalytic janus-sphere swimmers.</span>
+ <span 
+class="cmti-8">Phys. Rev. E</span><span 
+class="cmr-8">, 85:020401, 2012.</span>
+</p><p class="noindent" ><a 
+ id="bibitem21"></a><sup class="textsuperscript"><span 
+class="cmr-9">21</span></sup><span 
+class="cmr-8">J.</span><span 
+class="cmr-8">&#x00A0;R. Howse, R.</span><span 
+class="cmr-8">&#x00A0;A.</span><span 
+class="cmr-8">&#x00A0;L. Jones, A.</span><span 
+class="cmr-8">&#x00A0;J. Ryan, T.</span><span 
+class="cmr-8">&#x00A0;Gough, R.</span><span 
+class="cmr-8">&#x00A0;Vafabakhsh, and R.</span><span 
+class="cmr-8">&#x00A0;Golestanian. Self-motile colloidal particles: From directed</span>
+ <span 
+class="cmr-8">propulsion to random walk. </span><span 
+class="cmti-8">Phys. Rev. Lett.</span><span 
+class="cmr-8">, 99:048102, 2007.</span>
+</p><p class="noindent" ><a 
+ id="bibitem22"></a><sup class="textsuperscript"><span 
+class="cmr-9">22</span></sup><span 
+class="cmr-8">L.</span><span 
+class="cmr-8">&#x00A0;F. Valadares, Y.-G. Tao, N.</span><span 
+class="cmr-8">&#x00A0;S. Zacharia, V.</span><span 
+class="cmr-8">&#x00A0;Kitaev, F.</span><span 
+class="cmr-8">&#x00A0;Galembeck, R.</span><span 
+class="cmr-8">&#x00A0;Kapral, and G.</span><span 
+class="cmr-8">&#x00A0;A. Ozin. Catalytic nanomotors: Self-propelled</span>
+ <span 
+class="cmr-8">sphere dimers. </span><span 
+class="cmti-8">Small</span><span 
+class="cmr-8">, 6:565, 2010.</span>
+</p><p class="noindent" ><a 
+ id="bibitem23"></a><sup class="textsuperscript"><span 
+class="cmr-9">23</span></sup><span 
+class="cmr-8">J.</span><span 
+class="cmr-8">&#x00A0;Simmchen, V.</span><span 
+class="cmr-8">&#x00A0;Magdanz, S.</span><span 
+class="cmr-8">&#x00A0;Sanchez, S.</span><span 
+class="cmr-8">&#x00A0;Chokmaviroj, D.</span><span 
+class="cmr-8">&#x00A0;Ruiz-Molina, A.</span><span 
+class="cmr-8">&#x00A0;Baeza, and O.G. Schmidt.  Effect of surfactants on the</span>
+ <span 
+class="cmr-8">performance of tubular and spherical micromotors &#8211; a comparative study. </span><span 
+class="cmti-8">RSC Adv.</span><span 
+class="cmr-8">, 4:20334, 2014.</span>
+</p><p class="noindent" ><a 
+ id="bibitem24"></a><sup class="textsuperscript"><span 
+class="cmr-9">24</span></sup><span 
+class="cmr-8">H.-R. Jiang, N.</span><span 
+class="cmr-8">&#x00A0;Yoshinaga, and M.</span><span 
+class="cmr-8">&#x00A0;Sano.  Active motion of a janus particle by self-thermophoresis in a defocused laser beam.  </span><span 
+class="cmti-8">Phys.</span>
+ <span 
+class="cmti-8">Rev. Lett.</span><span 
+class="cmr-8">, 105:268302, 2010.</span>
+</p><p class="noindent" ><a 
+ id="bibitem25"></a><sup class="textsuperscript"><span 
+class="cmr-9">25</span></sup><span 
+class="cmr-8">L.</span><span 
+class="cmr-8">&#x00A0;Baraban, R.</span><span 
+class="cmr-8">&#x00A0;Streubel, D.</span><span 
+class="cmr-8">&#x00A0;Makarov, L.</span><span 
+class="cmr-8">&#x00A0;Han, D.</span><span 
+class="cmr-8">&#x00A0;Karnaushenko, O.</span><span 
+class="cmr-8">&#x00A0;G. Schmidt, and G.</span><span 
+class="cmr-8">&#x00A0;Cuniberti.  Fuel-free locomotion of janus</span>
+ <span 
+class="cmr-8">motors: Magnetically induced thermophoresis. </span><span 
+class="cmti-8">ACS Nano</span><span 
+class="cmr-8">, 7:1360, 2013.</span>
+</p><p class="noindent" ><a 
+ id="bibitem26"></a><sup class="textsuperscript"><span 
+class="cmr-9">26</span></sup><span 
+class="cmr-8">I.</span><span 
+class="cmr-8">&#x00A0;Buttinoni, G.</span><span 
+class="cmr-8">&#x00A0;Volpe, F.</span><span 
+class="cmr-8">&#x00A0;K</span><span 
+class="cmr-8">ümmel, G.</span><span 
+class="cmr-8">&#x00A0;Volpe, and C.</span><span 
+class="cmr-8">&#x00A0;Bechinger. Active brownian motion tunable by light. </span><span 
+class="cmti-8">J. Phys.: Condens. Matter</span><span 
+class="cmr-8">,</span>
+ <span 
+class="cmr-8">24:284129, 2012.</span>
+</p><p class="noindent" ><a 
+ id="bibitem27"></a><sup class="textsuperscript"><span 
+class="cmr-9">27</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;A. Solovev, Y.</span><span 
+class="cmr-8">&#x00A0;Mei, E.</span><span 
+class="cmr-8">&#x00A0;Berm</span><span 
+class="cmr-8">údez Ure</span><span 
+class="cmr-8">ña, G.</span><span 
+class="cmr-8">&#x00A0;Huang, and O.</span><span 
+class="cmr-8">&#x00A0;G. Schmidt.   Catalytic microtubular jet engines self-propelled by</span>
+ <span 
+class="cmr-8">accumulated gas bubbles. </span><span 
+class="cmti-8">Small</span><span 
+class="cmr-8">, 5:1688, 2009.</span>
+</p><p class="noindent" ><a 
+ id="bibitem28"></a><sup class="textsuperscript"><span 
+class="cmr-9">28</span></sup><span 
+class="cmr-8">Y.</span><span 
+class="cmr-8">&#x00A0;Mei, A.</span><span 
+class="cmr-8">&#x00A0;A. Solovev, S.</span><span 
+class="cmr-8">&#x00A0;Sanchez, and O.</span><span 
+class="cmr-8">&#x00A0;G. Schmidt.  Rolled-up nanotech on polymers: from basic perception to self-propelled</span>
+ <span 
+class="cmr-8">catalytic microengines. </span><span 
+class="cmti-8">Chem. Soc. Rev.</span><span 
+class="cmr-8">, 40:2109, 2011.</span>
+</p><p class="noindent" ><a 
+ id="bibitem29"></a><sup class="textsuperscript"><span 
+class="cmr-9">29</span></sup><span 
+class="cmr-8">M.E. Cates.  Diffusive transport without detailed balance in motile bacteria: does microbiology need statistical physics?  </span><span 
+class="cmti-8">Rep. Prog.</span>
+ <span 
+class="cmti-8">Phys.</span><span 
+class="cmr-8">, 75:042601, 2012.</span>
+</p><p class="noindent" ><a 
+ id="bibitem30"></a><sup class="textsuperscript"><span 
+class="cmr-9">30</span></sup><span 
+class="cmr-8">M.E. Cates and J.</span><span 
+class="cmr-8">&#x00A0;Tailleur. Motility-induced phase separation. </span><span 
+class="cmti-8">Annu. Rev. Condens. Matter Phys.</span><span 
+class="cmr-8">, 6:219, 2015.</span>
+</p><p class="noindent" ><a 
+ id="bibitem31"></a><sup class="textsuperscript"><span 
+class="cmr-9">31</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Arnold</span><span 
+class="cmr-8">&#x00A0;et al. Espresso user guide. </span><span 
+class="cmti-8">User Guide: ESPResSo git repository</span><span 
+class="cmr-8">, 3.4-dev-1404-g32d3874:1, 2015.</span>
+</p><p class="noindent" ><a 
+ id="bibitem32"></a><sup class="textsuperscript"><span 
+class="cmr-9">32</span></sup><span 
+class="cmr-8">H.</span><span 
+class="cmr-8">&#x00A0;J. Limbach, A.</span><span 
+class="cmr-8">&#x00A0;Arnold, B.</span><span 
+class="cmr-8">&#x00A0;A. Mann, and C.</span><span 
+class="cmr-8">&#x00A0;Holm.  ESPResSo &#8211; an extensible simulation package for research on soft matter</span>
+ <span 
+class="cmr-8">systems. </span><span 
+class="cmti-8">Comp. Phys. Comm.</span><span 
+class="cmr-8">, 174:704, 2006.</span>
+</p><p class="noindent" ><a 
+ id="bibitem33"></a><sup class="textsuperscript"><span 
+class="cmr-9">33</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Arnold, O.</span><span 
+class="cmr-8">&#x00A0;Lenz, S.</span><span 
+class="cmr-8">&#x00A0;Kesselheim, R.</span><span 
+class="cmr-8">&#x00A0;Weeber, F.</span><span 
+class="cmr-8">&#x00A0;Fahrenberger, D.</span><span 
+class="cmr-8">&#x00A0;Roehm, P.</span><span 
+class="cmr-8">&#x00A0;Ko</span><span 
+class="cmr-8">&#353;ovan, and C.</span><span 
+class="cmr-8">&#x00A0;Holm. ESPResSo 3.1 &#8212; Molecular</span>
+ <span 
+class="cmr-8">Dynamics Software for Coarse-Grained Models. In M.</span><span 
+class="cmr-8">&#x00A0;Griebel and M.</span><span 
+class="cmr-8">&#x00A0;A. Schweitzer, editors, </span><span 
+class="cmti-8">Meshfree Methods for Partial Differential</span>
+ <span 
+class="cmti-8">Equations VI</span><span 
+class="cmr-8">, volume</span><span 
+class="cmr-8">&#x00A0;89 of </span><span 
+class="cmti-8">Lecture Notes in Computational Science and Engineering</span><span 
+class="cmr-8">, page</span><span 
+class="cmr-8">&#x00A0;1. Springer, 2013.</span>
+</p><p class="noindent" ><a 
+ id="bibitem34"></a><sup class="textsuperscript"><span 
+class="cmr-9">34</span></sup><span 
+class="cmr-8">Sven</span><span 
+class="cmr-8">&#x00A0;Erik Ilse, Christian Holm, and Joost de</span><span 
+class="cmr-8">&#x00A0;Graaf. Surface roughness stabilizes the clustering of self-propelled triangles. </span><span 
+class="cmti-8">The Journal</span>
+ <span 
+class="cmti-8">of Chemical Physics</span><span 
+class="cmr-8">, 145(13):134904, 2016.</span>
+</p><p class="noindent" ><a 
+ id="bibitem35"></a><sup class="textsuperscript"><span 
+class="cmr-9">35</span></sup><span 
+class="cmr-8">V.</span><span 
+class="cmr-8">&#x00A0;Lobaskin and B.</span><span 
+class="cmr-8">&#x00A0;D</span><span 
+class="cmr-8">ünweg. A new model of simulating colloidal dynamics. </span><span 
+class="cmti-8">New J. Phys.</span><span 
+class="cmr-8">, 6:54, 2004.</span>
+</p><p class="noindent" ><a 
+ id="bibitem36"></a><sup class="textsuperscript"><span 
+class="cmr-9">36</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Chatterji and J.</span><span 
+class="cmr-8">&#x00A0;Horbach. Combining molecular dynamics with lattice boltzmann: A hybrid method for the simulation of (charged)</span>
+ <span 
+class="cmr-8">colloidal systems. </span><span 
+class="cmti-8">J. Chem. Phys.</span><span 
+class="cmr-8">, 122:184903, 2005.</span>
+</p><p class="noindent" ><a 
+ id="bibitem37"></a><sup class="textsuperscript"><span 
+class="cmr-9">37</span></sup><span 
+class="cmr-8">L.P. Fischer, T.</span><span 
+class="cmr-8">&#x00A0;Peter, C.</span><span 
+class="cmr-8">&#x00A0;Holm, and J.</span><span 
+class="cmr-8">&#x00A0;de</span><span 
+class="cmr-8">&#x00A0;Graaf. The raspberry model for hydrodynamic interactions revisited. i. periodic arrays of</span>
+ <span 
+class="cmr-8">spheres and dumbbells. </span><span 
+class="cmti-8">J. Chem. Phys.</span><span 
+class="cmr-8">, 143:084107, 2015.</span>
+</p><p class="noindent" ><a 
+ id="bibitem38"></a><sup class="textsuperscript"><span 
+class="cmr-9">38</span></sup><span 
+class="cmr-8">J.</span><span 
+class="cmr-8">&#x00A0;de</span><span 
+class="cmr-8">&#x00A0;Graaf, T.</span><span 
+class="cmr-8">&#x00A0;Peter, L.P. Fischer, and C.</span><span 
+class="cmr-8">&#x00A0;Holm.   The raspberry model for hydrodynamic interactions revisited. ii. the effect of</span>
+ <span 
+class="cmr-8">confinement. </span><span 
+class="cmti-8">J. Chem. Phys.</span><span 
+class="cmr-8">, 143:084108, 2015.</span>
+                                                                                                 
+                                                                                                 
+</p><p class="noindent" ><a 
+ id="bibitem39"></a><sup class="textsuperscript"><span 
+class="cmr-9">39</span></sup><span 
+class="cmr-8">Joost de</span><span 
+class="cmr-8">&#x00A0;Graaf, Arnold</span><span 
+class="cmr-8">&#x00A0;JTM Mathijssen, Marc Fabritius, Henri Menke, Christian Holm, and Tyler</span><span 
+class="cmr-8">&#x00A0;N Shendruk.  Understanding the</span>
+ <span 
+class="cmr-8">onset of oscillatory swimming in microchannels. </span><span 
+class="cmti-8">Soft Matter</span><span 
+class="cmr-8">, 12(21):4704&#8211;4708, 2016.</span>
+</p><p class="noindent" ><a 
+ id="bibitem40"></a><sup class="textsuperscript"><span 
+class="cmr-9">40</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Einstein. Eine neue bestimmung der molek</span><span 
+class="cmr-8">üldimension. </span><span 
+class="cmti-8">Ann. Phys.</span><span 
+class="cmr-8">, 19:289, 1906.</span>
+</p><p class="noindent" ><a 
+ id="bibitem41"></a><sup class="textsuperscript"><span 
+class="cmr-9">41</span></sup><a 
+href="https://github.com/espressomd/espresso" class="url" ><span 
+class="cmtt-8">https://github.com/espressomd/espresso</span></a><span 
+class="cmr-8">.</span>
+</p><p class="noindent" ><a 
+ id="bibitem42"></a><sup class="textsuperscript"><span 
+class="cmr-9">42</span></sup><span 
+class="cmr-8">I.</span><span 
+class="cmr-8">&#x00A0;Berdakin, Y.</span><span 
+class="cmr-8">&#x00A0;Jeyaram, V.V. Moshchalkov, L.</span><span 
+class="cmr-8">&#x00A0;Venken, S.</span><span 
+class="cmr-8">&#x00A0;Dierckx, S.J. Vanderleyden, A.V. Silhanek, C.A. Condat, and V.I. Marconi.</span>
+ <span 
+class="cmr-8">Influence of swimming strategy on microorganism separation by asymmetric obstacles. </span><span 
+class="cmti-8">Phys. Rev. E</span><span 
+class="cmr-8">, 87:052702, 2013.</span>
+</p><p class="noindent" ><a 
+ id="bibitem43"></a><sup class="textsuperscript"><span 
+class="cmr-9">43</span></sup><span 
+class="cmr-8">I.</span><span 
+class="cmr-8">&#x00A0;Berdakin,  A.V.  Silhanek,  H.N.  Moyano,  V.I.  Marconi,  and  C.A.  Condat.   Quantifying  the  sorting  efficiency  of  self-propelled</span>
+ <span 
+class="cmr-8">run-and-tumble swimmers by geometrical ratchets. </span><span 
+class="cmti-8">Central Euro. J. Phys.</span><span 
+class="cmr-8">, 12:1653, 2013.</span>
+</p><p class="noindent" ><a 
+ id="bibitem44"></a><sup class="textsuperscript"><span 
+class="cmr-9">44</span></sup><span 
+class="cmr-8">S.E. Spagnolie and E.</span><span 
+class="cmr-8">&#x00A0;Lauga. Hydrodynamics of self-propulsion near a boundary: predictions and accuracy of far-field approximations.</span>
+ <span 
+class="cmti-8">J. Fluid Mech.</span><span 
+class="cmr-8">, 700:105, 2012.</span>
+</p><p class="noindent" ><a 
+ id="bibitem45"></a><sup class="textsuperscript"><span 
+class="cmr-9">45</span></sup><span 
+class="cmr-8">A.</span><span 
+class="cmr-8">&#x00A0;Morozov and D.</span><span 
+class="cmr-8">&#x00A0;Marenduzzo. Enhanced diffusion of tracer particles in dilute bacterial suspensions. </span><span 
+class="cmti-8">Soft Matter</span><span 
+class="cmr-8">, 10:2748, 2014.</span>
+</p><p class="noindent" ><a 
+ id="bibitem46"></a><sup class="textsuperscript"><span 
+class="cmr-9">46</span></sup><span 
+class="cmr-8">Andreas  Z</span><span 
+class="cmr-8">öttl  and  Holger  Stark.     Hydrodynamics  determines  collective  motion  and  phase  behavior  of  active  colloids  in</span>
+ <span 
+class="cmr-8">quasi-two-dimensional confinement. </span><span 
+class="cmti-8">Phys. Rev. Lett.</span><span 
+class="cmr-8">, 112:118101, 2014.</span>
+</p>
+</div>   
+</body></html> 
+
+                                                                                                 
+
+

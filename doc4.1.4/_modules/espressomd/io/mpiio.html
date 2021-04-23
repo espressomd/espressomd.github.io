@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>espressomd.io.mpiio &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bibtex.css" />
+    
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../espressomd.html" accesskey="U">espressomd</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">espressomd.io.mpiio</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.io.mpiio</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2019 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">..script_interface</span> <span class="kn">import</span> <span class="n">PScriptInterface</span>
+
+
+<div class="viewcode-block" id="Mpiio"><a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.mpiio.Mpiio">[docs]</a><span class="k">class</span> <span class="nc">Mpiio</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;MPI-IO object.</span>
+
+<span class="sd">    Used to output particle data using MPI-IO to binary files.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        See the :meth:`write` and :meth:`read` methods for documentation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_instance</span> <span class="o">=</span> <span class="n">PScriptInterface</span><span class="p">(</span>
+            <span class="s2">&quot;ScriptInterface::MPIIO::MPIIOScript&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Mpiio.write"><a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.mpiio.Mpiio.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">velocities</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+              <span class="n">types</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bonds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;MPI-IO write.</span>
+
+<span class="sd">        Outputs binary data using MPI-IO to several files starting with prefix.</span>
+<span class="sd">        Suffixes are:</span>
+
+<span class="sd">        - head: Information about fields that are dumped,</span>
+<span class="sd">        - pref: Information about processes: 1 int per process,</span>
+<span class="sd">        - id: Particle ids: 1 int per particle,</span>
+<span class="sd">        - pos: Position information (if dumped): 3 doubles per particle,</span>
+<span class="sd">        - vel: Velocity information (if dumped): 3 doubles per particle,</span>
+<span class="sd">        - typ: Type information (if dumped): 1 int per particle,</span>
+<span class="sd">        - bond: Bond information (if dumped): variable amount of data,</span>
+<span class="sd">        - boff: Bond offset information (if bonds are dumped): 1 int per particle.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            Do not read the files on a machine with a different architecture!</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prefix : :obj:`str`</span>
+<span class="sd">            Common prefix for the filenames.</span>
+<span class="sd">        positions : :obj:`bool`, optional</span>
+<span class="sd">            Indicates if positions should be dumped.</span>
+<span class="sd">        velocities : :obj:`bool`, optional</span>
+<span class="sd">            Indicates if velocities should be dumped.</span>
+<span class="sd">        types : :obj:`bool`, optional</span>
+<span class="sd">            Indicates if types should be dumped.</span>
+<span class="sd">        bonds : :obj:`bool`, optional</span>
+<span class="sd">            Indicates if bonds should be dumped.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no prefix was given or none of the output fields are chosen.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Need to supply output prefix via &#39;prefix&#39; argument.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">positions</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">velocities</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">types</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bonds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No output fields chosen.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_instance</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;write&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">vel</span><span class="o">=</span><span class="n">velocities</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="n">types</span><span class="p">,</span> <span class="n">bond</span><span class="o">=</span><span class="n">bonds</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Mpiio.read"><a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.mpiio.Mpiio.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">velocities</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+             <span class="n">types</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bonds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;MPI-IO read.</span>
+
+<span class="sd">        This function reads data dumped by :meth`write`. See the :meth`write`</span>
+<span class="sd">        documentation for details.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            The files must be read on the same number of processes that wrote</span>
+<span class="sd">            the data. The data must be read on a machine with the same</span>
+<span class="sd">            architecture (otherwise, this might silently fail).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Need to supply output prefix via &#39;prefix&#39; argument.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">positions</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">velocities</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">types</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bonds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No output fields chosen.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_instance</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">vel</span><span class="o">=</span><span class="n">velocities</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="n">types</span><span class="p">,</span> <span class="n">bond</span><span class="o">=</span><span class="n">bonds</span><span class="p">)</span></div></div>
+
+
+<span class="n">mpiio</span> <span class="o">=</span> <span class="n">Mpiio</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../espressomd.html" >espressomd</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">espressomd.io.mpiio</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2020, The ESPResSo project.
+      Last updated on Oct 19, 2020.
+    </div>
+  </body>
+</html>
