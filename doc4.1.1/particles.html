@@ -1,0 +1,579 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>4. Setting up particles &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Running the simulation" href="running.html" />
+    <link rel="prev" title="3. Setting up the system" href="system_setup.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="5. Running the simulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="system_setup.html" title="3. Setting up the system"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-particles">
+<span id="id1"></span><h1>4. Setting up particles<a class="headerlink" href="#setting-up-particles" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview-of-the-relevant-python-classes">
+<span id="id2"></span><h2>4.1. Overview of the relevant Python classes<a class="headerlink" href="#overview-of-the-relevant-python-classes" title="Permalink to this headline">¶</a></h2>
+<p>For understanding this chapter, it is helpful to be aware of the Python classes provided by <em>ESPResSo</em> to interact with particles:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle" title="espressomd.particle_data.ParticleHandle"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle</span></code></a> provides access to a single particle in the simulation.</p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList" title="espressomd.particle_data.ParticleList"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList</span></code></a> provides access to all particles in the simulation</p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleSlice" title="espressomd.particle_data.ParticleSlice"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleSlice</span></code></a> provides access to a subset of particles in the simulation identified by a list of ids.</p></li>
+</ul>
+<p>in almost no case have these classes to be instantiated explicitly by the user.
+Rather, access is provided via the <a class="reference internal" href="espressomd.html#espressomd.system.System.part" title="espressomd.system.System.part"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.part</span></code></a> attribute.
+The details are explained in the following sections.</p>
+</div>
+<div class="section" id="adding-particles">
+<span id="id3"></span><h2>4.2. Adding particles<a class="headerlink" href="#adding-particles" title="Permalink to this headline">¶</a></h2>
+<p>In order to add particles to the system, call
+<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.add" title="espressomd.particle_data.ParticleList.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList.add()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This command adds a single particle to the system with properties given
+as arguments. The pos property is required, the id can be omitted, in which case it is chosen automatically.
+All available particle properties are members of <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle" title="espressomd.particle_data.ParticleHandle"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle</span></code></a>.</p>
+<p>It is also possible to add several particles at once:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">box_length</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Furthermore, the <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.add" title="espressomd.particle_data.ParticleList.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList.add()</span></code></a> method returns the added particle(s):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tracer</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tracer</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the instance of <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle" title="espressomd.particle_data.ParticleHandle"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle</span></code></a> returned by <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.add" title="espressomd.particle_data.ParticleList.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList.add()</span></code></a> are handles for the live particles in the simulation, rather than offline copies. Changing their properties will affect the simulation.</p>
+</div>
+<div class="section" id="accessing-particle-properties">
+<span id="id4"></span><h2>4.3. Accessing particle properties<a class="headerlink" href="#accessing-particle-properties" title="Permalink to this headline">¶</a></h2>
+<p>Particle properties can be accessed like a class member.</p>
+<p>To access property <code class="docutils literal notranslate"><span class="pre">PROPERTY</span></code> of the particle with index <code class="docutils literal notranslate"><span class="pre">INDEX</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="o">&lt;</span><span class="n">INDEX</span><span class="o">&gt;</span><span class="p">]</span><span class="o">.&lt;</span><span class="n">PROPERTY</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>For example, to print the current position of the particle with index 0 in the system, call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Similarly, the position can be set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="vectorial-properties">
+<span id="id5"></span><h3>4.3.1. Vectorial properties<a class="headerlink" href="#vectorial-properties" title="Permalink to this headline">¶</a></h3>
+<p>For vectorial particle properties, component-wise manipulation like <code class="docutils literal notranslate"><span class="pre">system.part[0].pos[0]</span>
+<span class="pre">=</span> <span class="pre">1</span></code> or in-place operators like <code class="docutils literal notranslate"><span class="pre">+=</span></code> or <code class="docutils literal notranslate"><span class="pre">*=</span></code> are not allowed and result in an error.
+This behavior is inherited, so the same applies to <code class="docutils literal notranslate"><span class="pre">a</span></code> after <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span>
+<span class="pre">system.part[0].pos</span></code>. If you want to use a vectorial property for further
+calculations, you should explicitly make a copy e.g. via
+<code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">numpy.copy(system.part[0].pos)</span></code>.</p>
+</div>
+</div>
+<div class="section" id="interacting-with-groups-of-particles">
+<span id="id6"></span><h2>4.4. Interacting with groups of particles<a class="headerlink" href="#interacting-with-groups-of-particles" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList" title="espressomd.particle_data.ParticleList"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList</span></code></a> support slicing similarly to lists and NumPy arrays. To access all existing particles, use a colon:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">sysstem</span><span class="o">.</span><span class="n">part</span><span class="p">[:]</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[:]</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>To access particles with indices ranging from 0 to 9, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span>
+</pre></div>
+</div>
+<p>Note that, like in other cases in Python, the lower bound is inclusive and the upper bound is non-inclusive.
+Setting slices can be done by</p>
+<ul>
+<li><p>supplying a <em>single value</em> that is assigned to each entry of the slice, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">ext_force</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>supplying an <em>array of values</em> that matches the length of the slice which sets each entry individually, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">ext_force</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>For list properties that have no fixed length like <code class="docutils literal notranslate"><span class="pre">exclusions</span></code> or <code class="docutils literal notranslate"><span class="pre">bonds</span></code>, some care has to be taken.
+There, <em>single value</em> assignment also accepts lists/tuples just like setting the property of an individual particle. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">exclusions</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>would both exclude short-range interactions of the particle pairs <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;-&gt;</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;-&gt;</span> <span class="pre">2</span></code>.
+Similarly, a list can also be assigned to each entry of the slice:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">exclusions</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This would exclude interactions between <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">&lt;-&gt;</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">&lt;-&gt;</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">&lt;-&gt;</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">&lt;-&gt;</span> <span class="pre">1</span></code>.
+Now when it is desired to supply an <em>array of values</em> with individual values for each slice entry, the distinction can no longer be done
+by the length of the input, as slice length and input length can be equal. Here, the nesting level of the input is the distinctive criterion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">exclusions</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>The above code snippet would lead to the same exclusions as the one before.
+The same accounts for the <code class="docutils literal notranslate"><span class="pre">bonds</span></code> property by interchanging the integer entries of the exclusion list with
+the tuple <code class="docutils literal notranslate"><span class="pre">(bond,</span> <span class="pre">partners)</span></code>.</p>
+<p>You can select a subset of particles via using the select method. For example you can obtain a list of particles with charge -1 via using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">q</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For further information on how to use selections see <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.select" title="espressomd.particle_data.ParticleList.select"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList.select()</span></code></a>.</p>
+</div>
+<div class="section" id="deleting-particles">
+<span id="id7"></span><h2>4.5. Deleting particles<a class="headerlink" href="#deleting-particles" title="Permalink to this headline">¶</a></h2>
+<p>Particles can be easily deleted in Python using particle ids or ranges of particle ids.
+For example, to delete all particles with particle index greater than 10, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To delete all particles, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="iterating-over-particles-and-pairs-of-particles">
+<span id="id8"></span><h2>4.6. Iterating over particles and pairs of particles<a class="headerlink" href="#iterating-over-particles-and-pairs-of-particles" title="Permalink to this headline">¶</a></h2>
+<p>You can iterate over all particles or over a subset of particles as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can iterate over all pairs of particles using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">pairs</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="exclusions">
+<span id="id9"></span><h2>4.7. Exclusions<a class="headerlink" href="#exclusions" title="Permalink to this headline">¶</a></h2>
+<p>Particles can have an exclusion list of all other particles where non-bonded interactions are ignored.
+This is typically used in atomistic simulations,
+where nearest and next nearest neighbor interactions along the chain have to be omitted since they are included in the bonding potentials.
+Exclusions do not apply to the short range part of electrostatics and magnetostatics methods, e.g. to P3M.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_exclusion</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Create exclusions for particles pairs 0 and 1.</p>
+<p>To delete the exclusion, simply use</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">delete_exclusion</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.exclusions" title="espressomd.particle_data.ParticleHandle.exclusions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.exclusions</span></code></a></p>
+</div>
+<div class="section" id="create-particular-particle-configurations">
+<span id="id10"></span><h2>4.8. Create particular particle configurations<a class="headerlink" href="#create-particular-particle-configurations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="setting-up-polymer-chains">
+<span id="id11"></span><h3>4.8.1. Setting up polymer chains<a class="headerlink" href="#setting-up-polymer-chains" title="Permalink to this headline">¶</a></h3>
+<p>If you want to have polymers in your system, you can use the function
+<a class="reference internal" href="espressomd.html#espressomd.polymer.positions" title="espressomd.polymer.positions"><code class="xref py py-func docutils literal notranslate"><span class="pre">espressomd.polymer.positions()</span></code></a> to determine suitable positions.</p>
+<p>Required arguments are the desired number of polymers <code class="docutils literal notranslate"><span class="pre">n_polymers</span></code>, the
+number of monomers per polymer chain <code class="docutils literal notranslate"><span class="pre">beads_per_chain</span></code>, and the parameter
+<code class="docutils literal notranslate"><span class="pre">bond_length</span></code>, which determines the distance between adjacent monomers
+within the polymer chains.
+Determining suitable particle positions pseudo-randomly requires the use of
+a pseudo-random number generator, which has to be seeded. This <code class="docutils literal notranslate"><span class="pre">seed</span></code>
+is therefore also a mandatory parameter.</p>
+<p>The function <a class="reference internal" href="espressomd.html#espressomd.polymer.positions" title="espressomd.polymer.positions"><code class="xref py py-func docutils literal notranslate"><span class="pre">espressomd.polymer.positions()</span></code></a> returns a
+three-dimensional numpy array, namely a list of polymers containing the
+positions of monomers (x, y, z). A quick example of how to set up polymers:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">polymer</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">])</span>
+<span class="n">polymers</span> <span class="o">=</span> <span class="n">polymer</span><span class="o">.</span><span class="n">positions</span><span class="p">(</span><span class="n">n_polymers</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                             <span class="n">beads_per_chain</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                             <span class="n">bond_length</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">23</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">polymers</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+       <span class="nb">id</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">)</span>
+       <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
+       <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+           <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="o">&lt;</span><span class="n">BOND_TYPE</span><span class="o">&gt;</span><span class="p">,</span> <span class="nb">id</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>If there are constraints present in your system which you want to be taken
+into account when creating the polymer positions, you can set the optional
+boolean parameter <code class="docutils literal notranslate"><span class="pre">respect_constraint=True</span></code>.
+To simulate excluded volume while drawing the polymer positions, a minimum
+distance between all particles can be set via <code class="docutils literal notranslate"><span class="pre">min_distance</span></code>. This will
+also respect already existing particles in the system.
+Both when setting <code class="docutils literal notranslate"><span class="pre">respect_constraints</span></code> and choosing a <code class="docutils literal notranslate"><span class="pre">min_distance</span></code>
+trial positions are pseudo-randomly chosen and only accepted if the
+requested requirement is fulfilled. Otherwise, a new attempt will be made,
+up to <code class="docutils literal notranslate"><span class="pre">max_tries</span></code> times per monomer and if this fails <code class="docutils literal notranslate"><span class="pre">max_tries</span></code> per
+polymer. The default value is <code class="docutils literal notranslate"><span class="pre">max_tries=1000</span></code>. Depending on the total
+number of beads and constraints, this value may need to be adapted. If
+determining suitable polymer positions within this limit fails, a runtime
+error is thrown.</p>
+<p>Note that the distance between adjacent monomers
+during the course of the simulation depends on the applied potentials.
+For fixed bond length please refer to the Rattle Shake
+algorithm<a class="bibtex reference internal" href="zreferences.html#andersen83a" id="id12">[And83]</a>. The algorithm is based on
+Verlet algorithm and satisfy internal constraints for molecular models
+with internal constraints, using Lagrange multipliers.</p>
+</div>
+<div class="section" id="setting-up-diamond-polymer-networks">
+<span id="id13"></span><h3>4.8.2. Setting up diamond polymer networks<a class="headerlink" href="#setting-up-diamond-polymer-networks" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">diamond</span>
+</pre></div>
+</div>
+<p>Creates a diamond-structured polymer network with 8 tetra-functional nodes
+connected by <span class="math notranslate nohighlight">\(2*8\)</span> polymer chains of length (MPC) in a unit cell
+of length <span class="math notranslate nohighlight">\(a\)</span>. The diamond command creates 16*MPC+8 many particles
+which are connected via the provided bond type (the term plus 8 stems from adding 8 nodes which are connecting the chains).
+Chain monomers are placed at a mutual distance along the
+vector connecting network nodes. The polymer is created starting from
+particle ID 0. Nodes are assigned type 0, monomers (both charged and
+uncharged) are type 1 and counterions type 2. For inter-particle bonds
+interaction <span class="math notranslate nohighlight">\(0\)</span> is taken which must be a two-particle bond.</p>
+<div class="figure align-center" id="id22">
+<span id="diamond"></span><a class="reference internal image-reference" href="_images/diamond.png"><img alt="Diamond-like polymer network with MPC=15." src="_images/diamond.png" style="height: 6.00000cm;" /></a>
+<p class="caption"><span class="caption-text">Diamond-like polymer network with MPC=15.</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
+</div>
+<p>See <a class="reference internal" href="espressomd.html#espressomd.diamond.Diamond" title="espressomd.diamond.Diamond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.diamond.Diamond</span></code></a> for more details. For simulating compressed or stretched gels the function
+<a class="reference internal" href="espressomd.html#espressomd.system.System.change_volume_and_rescale_particles" title="espressomd.system.System.change_volume_and_rescale_particles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.system.System.change_volume_and_rescale_particles()</span></code></a> may be used.</p>
+</div>
+</div>
+<div class="section" id="virtual-sites">
+<span id="id14"></span><h2>4.9. Virtual sites<a class="headerlink" href="#virtual-sites" title="Permalink to this headline">¶</a></h2>
+<p>Virtual sites are particles, the positions and velocities of which are
+not obtained by integrating an equation of motion. Rather, their
+coordinates are obtained from the position (and orientation) of one or
+more other particles. In this way, rigid arrangements of particles can
+be constructed and a particle can be placed in the center of mass of a
+set of other particles. Virtual sites can interact with other particles
+in the system by means of interactions. Forces are added to them
+according to their respective particle type. Before the next integration
+step, the forces accumulated on a virtual site are distributed back to
+those particles, from which the virtual site was derived.</p>
+<p>There are different schemes for virtual sites, described in the
+following sections.
+To switch the active scheme, the attribute <a class="reference internal" href="espressomd.html#espressomd.system.System.virtual_sites" title="espressomd.system.System.virtual_sites"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.virtual_sites</span></code></a> of the system class can be used:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.virtual_sites</span> <span class="k">import</span> <span class="n">VirtualSitesOff</span><span class="p">,</span> <span class="n">VirtualSitesRelative</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">virtual_sites</span> <span class="o">=</span> <span class="n">VirtualSitesRelative</span><span class="p">(</span><span class="n">have_velocity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">have_quaternion</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># or</span>
+<span class="n">s</span><span class="o">.</span><span class="n">virtual_sites</span> <span class="o">=</span> <span class="n">VirtualSitesOff</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>By default, <a class="reference internal" href="espressomd.html#espressomd.virtual_sites.VirtualSitesOff" title="espressomd.virtual_sites.VirtualSitesOff"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.virtual_sites.VirtualSitesOff</span></code></a> is selected. This means that virtual particles are not touched during integration.
+The <code class="docutils literal notranslate"><span class="pre">have_velocity</span></code> parameter determines whether or not the velocity of virtual sites is calculated, which carries a performance cost.
+The <code class="docutils literal notranslate"><span class="pre">have_quaternion</span></code> parameter determines whether the quaternion of the virtual particle is updated (useful in combination with the
+<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.vs_quat" title="espressomd.particle_data.ParticleHandle.vs_quat"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.vs_quat</span></code></a> property of the virtual particle which defines the orientation of the virtual particle
+in the body fixed frame of the related real particle.</p>
+<div class="section" id="rigid-arrangements-of-particles">
+<span id="id15"></span><h3>4.9.1. Rigid arrangements of particles<a class="headerlink" href="#rigid-arrangements-of-particles" title="Permalink to this headline">¶</a></h3>
+<p>The relative implementation of virtual sites allows for the simulation
+of rigid arrangements of particles. It can be used, for extended
+dipoles and raspberry-particles, but also for more complex
+configurations. Position and velocity of a virtual site are obtained
+from the position and orientation of exactly one non-virtual particle,
+which has to be placed in the center of mass of the rigid body. Several
+virtual sites can be related to one and the same non-virtual particle.
+The position of the virtual site is given by</p>
+<div class="math notranslate nohighlight">
+\[\vec{x_v} =\vec{x_n} +O_n (O_v \vec{E_z}) d,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\vec{x_n}\)</span> is the position of the non-virtual particle,
+<span class="math notranslate nohighlight">\(O_n\)</span> is the orientation of the non-virtual particle, <span class="math notranslate nohighlight">\(O_v\)</span>
+denotes the orientation of the vector <span class="math notranslate nohighlight">\(\vec{x_v}-\vec{x_n}\)</span> with
+respect to the non-virtual particles body fixed frame and <span class="math notranslate nohighlight">\(d\)</span> the
+distance between virtual and non-virtual particle. In words: The virtual
+site is placed at a fixed distance from the non-virtual particle. When
+the non-virtual particle rotates, the virtual sites rotates on an orbit
+around the non-virtual particles center.</p>
+<p>To use this implementation of virtual sites, activate the feature
+<code class="docutils literal notranslate"><span class="pre">VIRTUAL_SITES_RELATIVE</span></code>. Furthermore, an instance of
+<a class="reference internal" href="espressomd.html#espressomd.virtual_sites.VirtualSitesRelative" title="espressomd.virtual_sites.VirtualSitesRelative"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.virtual_sites.VirtualSitesRelative</span></code></a> has to be set as the
+active virtual sites scheme (see above). To set up a virtual site,</p>
+<ol class="arabic">
+<li><p>Place the particle to which the virtual site should be related. It
+needs to be in the center of mass of the rigid arrangement of
+particles you create. Let its particle id be n.</p></li>
+<li><p>Place a particle at the desired relative position, make it virtual
+and relate it to the first particle:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">p</span><span class="o">.</span><span class="n">vs_auto_relate_to</span><span class="p">(</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where &lt;ID&gt; is the id of the central particle. This will also set the
+<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.virtual" title="espressomd.particle_data.ParticleHandle.virtual"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.virtual</span></code></a> attribute on
+the particle to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</li>
+<li><p>Repeat the previous step with more virtual sites, if desired.</p></li>
+<li><p>To update the positions of all virtual sites, call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">recalc_forces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Please note:</p>
+<ul class="simple">
+<li><p>The relative position of the virtual site is defined by its distance
+from the non-virtual particle, the id of the non-virtual particle and
+a quaternion which defines the vector from non-virtual particle to
+virtual site in the non-virtual particles body-fixed frame. This
+information is saved in the virtual site’s <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.vs_relative" title="espressomd.particle_data.ParticleHandle.vs_relative"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.vs_relative</span></code></a> attribute.
+Take care, not to overwrite it after using <code class="docutils literal notranslate"><span class="pre">vs_auto_relate</span></code>.</p></li>
+<li><p>Virtual sites can not be placed relative to other virtual sites, as
+the order in which the positions of virtual sites are updated is not
+guaranteed. Always relate a virtual site to a non-virtual particle
+placed in the center of mass of the rigid arrangement of particles.</p></li>
+<li><p>In case you know the correct quaternions, you can also setup a virtual
+site using its <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.vs_relative" title="espressomd.particle_data.ParticleHandle.vs_relative"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.vs_relative</span></code></a>
+and <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.virtual" title="espressomd.particle_data.ParticleHandle.virtual"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.virtual</span></code></a> attributes.</p></li>
+<li><p>In a simulation on more than one CPU, the effective cell size needs
+to be larger than the largest distance between a non-virtual particle
+and its associated virtual sites. To this aim, when running on more than one core,
+you need to set the system’s <a class="reference internal" href="espressomd.html#espressomd.system.System.min_global_cut" title="espressomd.system.System.min_global_cut"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.min_global_cut</span></code></a>
+attribute to this largest distance.
+An error is generated when this requirement is not met.</p></li>
+<li><p>If the virtual sites represent actual particles carrying a mass, the
+inertia tensor of the non-virtual particle in the center of mass
+needs to be adapted.</p></li>
+<li><p>The presence of rigid bodies constructed by means of virtual sites
+adds a contribution to the pressure and stress tensor.</p></li>
+</ul>
+</div>
+<div class="section" id="inertialess-lattice-boltzmann-tracers">
+<span id="id16"></span><h3>4.9.2. Inertialess lattice-Boltzmann tracers<a class="headerlink" href="#inertialess-lattice-boltzmann-tracers" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.virtual_sites.VirtualSitesInertialessTracers" title="espressomd.virtual_sites.VirtualSitesInertialessTracers"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.virtual_sites.VirtualSitesInertialessTracers</span></code></a></p>
+<p>When this implementation is selected, the virtual sites follow the motion of a
+lattice-Boltzmann fluid (both, CPU and GPU). This is achieved by integrating
+their position using the fluid velocity at the virtual sites’ position.
+Forces acting on the virtual sites are directly transferred as force density
+onto the lattice-Boltzmann fluid, making the coupling free of inertia.
+The feature stems from the implementation of the
+<a class="reference internal" href="advanced_methods.html#immersed-boundary-method-for-soft-elastic-objects"><span class="std std-ref">Immersed Boundary Method for soft elastic objects</span></a>, but can be used independently.</p>
+<p>For correct results, the LB thermostat has to be deactivated for virtual sites:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">act_on_virtual</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Please note that the velocity attribute of the virtual particles does not carry valid information for this virtual sites scheme.</p>
+</div>
+</div>
+<div class="section" id="particle-number-counting-feature">
+<span id="id17"></span><h2>4.10. Particle number counting feature<a class="headerlink" href="#particle-number-counting-feature" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not use these methods with the <a class="reference internal" href="espressomd.html#module-espressomd.collision_detection" title="espressomd.collision_detection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.collision_detection</span></code></a> module since the collision detection may create or delete particles without the particle number counting feature being aware of this. Therefore also the <a class="reference internal" href="espressomd.html#module-espressomd.reaction_ensemble" title="espressomd.reaction_ensemble"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.reaction_ensemble</span></code></a> module may not be used with the collision detection.</p>
+</div>
+<p>Knowing the number of particles of a certain type in simulations where particle numbers can fluctuate is of interest.
+Particle ids can be stored in a map for each
+individual type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">setup_type_map</span><span class="p">([</span><span class="n">_type</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">number_of_particles</span><span class="p">(</span><span class="n">_type</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you want to keep track of particle ids of a certain type you have to
+initialize the method by calling</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">setup_type_map</span><span class="p">([</span><span class="n">_type</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>After that will keep track of particle ids of that type. Keeping track of particles of a given type is not enabled by default since it requires memory.
+The keyword
+<code class="docutils literal notranslate"><span class="pre">number_of_particles</span></code> as argument will return the number of
+particles which have the given type. For counting the number of particles of a given type you could also use <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.select" title="espressomd.particle_data.ParticleList.select"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleList.select()</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="n">number_of_particles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>However calling <code class="docutils literal notranslate"><span class="pre">select(type=type)</span></code> results in looping over all particles which is slow. In contrast, <a class="reference internal" href="espressomd.html#espressomd.system.System.number_of_particles" title="espressomd.system.System.number_of_particles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.system.System.number_of_particles()</span></code></a> directly can return the number of particles with that type.</p>
+</div>
+<div class="section" id="self-propelled-swimmers">
+<span id="id18"></span><h2>4.11. Self-propelled swimmers<a class="headerlink" href="#self-propelled-swimmers" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are using this feature, please cite <a class="bibtex reference internal" href="zreferences.html#degraaf16" id="id19">[dGMM+16]</a>.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.swimming" title="espressomd.particle_data.ParticleHandle.swimming"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.swimming</span></code></a></p>
+</div>
+<div class="section" id="langevin-swimmers">
+<span id="id20"></span><h3>4.11.1. Langevin swimmers<a class="headerlink" href="#langevin-swimmers" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">swimming</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;f_swim&#39;</span><span class="p">:</span> <span class="mf">0.03</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>This enables the particle to be self-propelled in the direction determined by
+its quaternion. For setting the particle’s quaternion see
+<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.quat" title="espressomd.particle_data.ParticleHandle.quat"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.quat</span></code></a>. The self-propulsion
+speed will relax to a constant velocity, that is specified by <code class="docutils literal notranslate"><span class="pre">v_swim</span></code>.
+Alternatively it is possible to achieve a constant velocity by imposing a
+constant force term <code class="docutils literal notranslate"><span class="pre">f_swim</span></code> that is balanced by friction of a (Langevin)
+thermostat. The way the velocity of the particle decays to the constant
+terminal velocity in either of these methods is completely determined by the
+friction coefficient. You may only set one of the possibilities <code class="docutils literal notranslate"><span class="pre">v_swim</span></code> <em>or</em>
+<code class="docutils literal notranslate"><span class="pre">f_swim</span></code> as you cannot relax to constant force <em>and</em> constant velocity at the
+same time. Note that there is no real difference between <code class="docutils literal notranslate"><span class="pre">v_swim</span></code> and
+<code class="docutils literal notranslate"><span class="pre">f_swim</span></code>, since the latter may always be chosen such that the same terminal
+velocity is achieved for a given friction coefficient.</p>
+</div>
+<div class="section" id="lattice-boltzmann-lb-swimmers">
+<span id="id21"></span><h3>4.11.2. Lattice-Boltzmann (LB) swimmers<a class="headerlink" href="#lattice-boltzmann-lb-swimmers" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">swimming</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;f_swim&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s1">&#39;mode&#39;</span><span class="p">:</span> <span class="s1">&#39;pusher&#39;</span><span class="p">,</span> <span class="s1">&#39;dipole_length&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>For an explanation of the parameters <code class="docutils literal notranslate"><span class="pre">v_swim</span></code> and <code class="docutils literal notranslate"><span class="pre">f_swim</span></code> see the previous
+item. In lattice-Boltzmann self-propulsion is less trivial than for regular MD,
+because the self-propulsion is achieved by a force-free mechanism, which has
+strong implications for the far-field hydrodynamic flow field induced by the
+self-propelled particle. In <em>ESPResSo</em> only the dipolar component of the flow field
+of an active particle is taken into account. This flow field can be generated
+by a <em>pushing</em> or a <em>pulling</em> mechanism, leading to change in the sign of the
+dipolar flow field with respect to the direction of motion. You can specify the
+nature of the particle’s flow field by using one of the modes: <code class="docutils literal notranslate"><span class="pre">pusher</span></code> or
+<code class="docutils literal notranslate"><span class="pre">puller</span></code>. You will also need to specify a <code class="docutils literal notranslate"><span class="pre">dipole_length</span></code> which determines
+the distance of the source of propulsion from the particle’s center. Note that
+you should not put this distance to zero; <em>ESPResSo</em> (currently) does not support
+mathematical dipole flow fields.</p>
+<p>You may ask: “Why are there two methods <code class="docutils literal notranslate"><span class="pre">v_swim</span></code> and <code class="docutils literal notranslate"><span class="pre">f_swim</span></code> for the
+self-propulsion using the lattice-Boltzmann algorithm?” The answer is
+straightforward. When a particle is accelerating, it has a monopolar flow-field
+contribution which vanishes when it reaches its terminal velocity (for which
+there will only be a dipolar flow field). The major difference between the
+above two methods is that with <code class="docutils literal notranslate"><span class="pre">v_swim</span></code> the flow field <em>only</em> has a monopolar
+moment and <em>only</em> while the particle is accelerating. As soon as the particle
+reaches a constant speed (given by <code class="docutils literal notranslate"><span class="pre">v_swim</span></code>) this monopolar moment is gone
+and the flow field is zero! In contrast, <code class="docutils literal notranslate"><span class="pre">f_swim</span></code> always, i.e., while
+accelerating <em>and</em> while swimming at constant force possesses a dipolar flow
+field.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">4. Setting up particles</a><ul>
+<li><a class="reference internal" href="#overview-of-the-relevant-python-classes">4.1. Overview of the relevant Python classes</a></li>
+<li><a class="reference internal" href="#adding-particles">4.2. Adding particles</a></li>
+<li><a class="reference internal" href="#accessing-particle-properties">4.3. Accessing particle properties</a><ul>
+<li><a class="reference internal" href="#vectorial-properties">4.3.1. Vectorial properties</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#interacting-with-groups-of-particles">4.4. Interacting with groups of particles</a></li>
+<li><a class="reference internal" href="#deleting-particles">4.5. Deleting particles</a></li>
+<li><a class="reference internal" href="#iterating-over-particles-and-pairs-of-particles">4.6. Iterating over particles and pairs of particles</a></li>
+<li><a class="reference internal" href="#exclusions">4.7. Exclusions</a></li>
+<li><a class="reference internal" href="#create-particular-particle-configurations">4.8. Create particular particle configurations</a><ul>
+<li><a class="reference internal" href="#setting-up-polymer-chains">4.8.1. Setting up polymer chains</a></li>
+<li><a class="reference internal" href="#setting-up-diamond-polymer-networks">4.8.2. Setting up diamond polymer networks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#virtual-sites">4.9. Virtual sites</a><ul>
+<li><a class="reference internal" href="#rigid-arrangements-of-particles">4.9.1. Rigid arrangements of particles</a></li>
+<li><a class="reference internal" href="#inertialess-lattice-boltzmann-tracers">4.9.2. Inertialess lattice-Boltzmann tracers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#particle-number-counting-feature">4.10. Particle number counting feature</a></li>
+<li><a class="reference internal" href="#self-propelled-swimmers">4.11. Self-propelled swimmers</a><ul>
+<li><a class="reference internal" href="#langevin-swimmers">4.11.1. Langevin swimmers</a></li>
+<li><a class="reference internal" href="#lattice-boltzmann-lb-swimmers">4.11.2. Lattice-Boltzmann (LB) swimmers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="5. Running the simulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="system_setup.html" title="3. Setting up the system"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Nov 13, 2019.
+    </div>
+  </body>
+</html>

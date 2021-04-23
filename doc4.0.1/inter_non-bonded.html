@@ -1,0 +1,819 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>6. Non-bonded interactions &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="7. Bonded interactions" href="inter_bonded.html" />
+    <link rel="prev" title="5. Running the simulation" href="running.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="inter_bonded.html" title="7. Bonded interactions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="5. Running the simulation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="non-bonded-interactions">
+<span id="id1"></span><h1>6. Non-bonded interactions<a class="headerlink" href="#non-bonded-interactions" title="Permalink to this headline">¶</a></h1>
+<p>In <cite>ESPResSo</cite>, interactions are set up and investigated by the <a class="reference internal" href="espressomd.html#module-espressomd.interactions" title="espressomd.interactions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.interactions</span></code></a> module. There are
+mainly two types of interactions: non-bonded and bonded interactions.</p>
+<p>Non-bonded interactions only depend on the <em>type</em> of the two particles
+involved. This also applies to the electrostatic interaction; however,
+due to its long-ranged nature, it requires special care and <cite>ESPResSo</cite> handles it
+separately with a number of state-of-the-art algorithms. To specify particle
+type and charge see <a class="reference internal" href="particles.html#setting-up-particles"><span class="std std-ref">Setting up particles</span></a>.</p>
+<p>A bonded interaction defines an interaction between a number of specific
+particles; it only applies to the set of particles for which it has been
+explicitly set. A bonded interaction between a set of particles has to
+be specified explicitly by the command, while the command is used to
+define the interaction parameters.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">IMPLEMENT: print interaction list</p>
+</div>
+<div class="section" id="isotropic-non-bonded-interactions">
+<span id="id2"></span><h2>6.1. Isotropic non-bonded interactions<a class="headerlink" href="#isotropic-non-bonded-interactions" title="Permalink to this headline">¶</a></h2>
+<p>Non-bonded interaction are configured via the <a class="reference internal" href="espressomd.html#espressomd.interactions.NonBondedInteraction" title="espressomd.interactions.NonBondedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.NonBondedInteraction</span></code></a> class, which is a member of <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This command defines an interaction between all particles of type <code class="docutils literal notranslate"><span class="pre">type1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">type2</span></code>. Possible interaction types and their parameters are
+listed below.</p>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Implement this functionality:
+If the interaction is omitted, the command returns the
+currently defined interaction between the two types using the syntax to
+define the interaction</p>
+</div>
+<p>For many non-bonded interactions, it is possible to artificially cap the
+forces, which often allows to equilibrate the system much faster. See
+the subsection <a class="reference internal" href="system_manipulation.html#capping-the-force-during-warmup"><span class="std std-ref">Capping the force during warmup</span></a> for more details.</p>
+<div class="section" id="tabulated-interaction">
+<span id="id3"></span><h3>6.1.1. Tabulated interaction<a class="headerlink" href="#tabulated-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">TABULATED</span></code> required.</p>
+</div>
+<p>The interface for tabulated interactions are implemented in the
+<a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedNonBonded" title="espressomd.interactions.TabulatedNonBonded"><code class="xref py py-class docutils literal notranslate"><span class="pre">TabulatedNonBonded</span></code></a> class. They can be configured
+via the following syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">tabulated</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+    <span class="nb">min</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="s1">&#39;force&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines an interaction between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">type2</span></code> according to an arbitrary tabulated pair potential by linear interpolation.
+<code class="docutils literal notranslate"><span class="pre">force</span></code> specifies the tabulated forces and <code class="docutils literal notranslate"><span class="pre">energy</span></code> the energies as a function of the
+separation distance. <code class="docutils literal notranslate"><span class="pre">force</span></code> and <code class="docutils literal notranslate"><span class="pre">energy</span></code> have to have the same length <span class="math notranslate">\(N_\mathrm{points}\)</span>.
+Take care when choosing the number of points, since a copy of each lookup
+table is kept on each node and must be referenced very frequently.
+The maximal tabulated separation distance also acts as the effective cutoff
+value for the potential.</p>
+<p>The values of <span class="math notranslate">\(r\)</span> are assumed to be equally distributed between
+<span class="math notranslate">\(r_\mathrm{min}\)</span> and <span class="math notranslate">\(r_\mathrm{max}\)</span> with a fixed distance
+of <span class="math notranslate">\((r_\mathrm{max}-r_\mathrm{min})/(N_\mathrm{points}-1)\)</span>.</p>
+</div>
+<div class="section" id="lennard-jones-interaction">
+<span id="id4"></span><h3>6.1.2. Lennard-Jones interaction<a class="headerlink" href="#lennard-jones-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LENNARD_JONES</span></code> required.</p>
+</div>
+<p>The interface for the Lennard-Jones interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesInteraction" title="espressomd.interactions.LennardJonesInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">LennardJonesInteraction</span></code></a>. The Lennard-Jones parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">lennard_jones</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This command defines the traditional (12-6)-Lennard-Jones interaction
+between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. For a description of the input arguments
+see <a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesInteraction" title="espressomd.interactions.LennardJonesInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">LennardJonesInteraction</span></code></a>. The potential is defined by</p>
+<div class="math notranslate">
+\[\begin{split}\label{eq:lj}
+  V_\mathrm{LJ}(r) =
+    \begin{cases}
+      4 \epsilon \left[ \left(\frac{\sigma}{r-r_\mathrm{off}}\right)^{12}
+      - \left(\frac{\sigma}{r-r_\mathrm{off}}\right)^6+c_\mathrm{shift}\right]
+      &amp; \mathrm{if~} r_\mathrm{min}+r_\mathrm{off} &lt; r &lt; r_\mathrm{cut}+r_\mathrm{off}\\
+      0
+      &amp; \mathrm{otherwise}
+    \end{cases}.\end{split}\]</div>
+<p>The traditional Lennard-Jones potential is the “work-horse” potential of
+particle–particle interactions in coarse-grained simulations. It is a
+simple model for the van-der-Waals interaction, and is attractive at
+large distance, but strongly repulsive at short distances.
+<span class="math notranslate">\(r_\mathrm{off} + \sigma\)</span> corresponds to the sum of
+the radii of the interaction particles. At this distance, the potential is
+<span class="math notranslate">\(V_\mathrm{LJ}(r_\mathrm{off} + \sigma) = 4 \epsilon c_\mathrm{shift}\)</span>.
+The minimum of the potential is at
+<span class="math notranslate">\(V_\mathrm{LJ}(r_\mathrm{off} +
+2^\frac{1}{6}\sigma) =
+-\epsilon + 4 \epsilon c_\mathrm{shift}\)</span>. Beyond this value the interaction is attractive.
+Beyond the distance <span class="math notranslate">\(r_\mathrm{cut}\)</span> the potential is cut off and the interaction force is zero.</p>
+<p>If <span class="math notranslate">\(c_\mathrm{shift}\)</span> is not set or it is set to the string <em>auto</em>, the shift will be
+automatically computed such that the potential is continuous at the
+cutoff radius. If is not set, it is set to <span class="math notranslate">\(0\)</span>.</p>
+<p>The net force on a particle can be capped by using force capping , see
+section <a class="reference internal" href="system_manipulation.html#capping-the-force-during-warmup"><span class="std std-ref">Capping the force during warmup</span></a></p>
+<p>An optional additional parameter can be used to restrict the interaction
+from a <em>minimal</em> distance <span class="math notranslate">\(r_\mathrm{min}\)</span>. This is an
+optional parameter, set to <span class="math notranslate">\(0\)</span> by default.</p>
+<p>A special case of the Lennard-Jones potential is the
+Weeks-Chandler-Andersen (WCA) potential, which one obtains by putting
+the cutoff into the minimum, choosing
+<span class="math notranslate">\(r_\mathrm{cut}=2^\frac{1}{6}\sigma\)</span>. The WCA
+potential is purely repulsive, and is often used to mimic hard sphere
+repulsion.</p>
+<p>When coupling particles to a Shan-Chen fluid, if the <em>affinity</em> interaction is set,
+the Lennard-Jones potential is multiplied by the function</p>
+<div class="math notranslate">
+\[\begin{split}\label{eq:lj-affinity}
+  A(r) =
+    \begin{cases}
+      \frac{(1-\alpha_1)}{2} \left[1+\tanh(2\phi)\right]  +  \frac{(1-\alpha_2)}{2} \left[1+\tanh(-2\phi)\right]
+      &amp; \mathrm{if~}  r &gt; r_\mathrm{cut}+2^{\frac{1}{6}}\sigma \\
+      1
+      &amp; \mathrm{otherwise}
+    \end{cases}\ ,\end{split}\]</div>
+<p>where <span class="math notranslate">\(\alpha_i\)</span> is the affinity to the <span class="math notranslate">\(i\)</span>-th fluid
+component (see <a class="reference internal" href="#affinity-interaction"><span class="std std-ref">Affinity interaction</span></a>), and the order parameter <span class="math notranslate">\(\phi\)</span> is
+calculated from the fluid component local density as
+<span class="math notranslate">\(\phi=\frac{\rho_1 -
+\rho_2}{\rho_1+\rho_2}\)</span>. For example, if the affinities are chosen so
+that the first component is a good solvent (<span class="math notranslate">\(\alpha_1=1\)</span>) and the
+second one is a bad solvent (<span class="math notranslate">\(\alpha_2=0\)</span>), then, if the two
+particles are both in a region rich in the first component, then
+<span class="math notranslate">\(\phi\simeq1\)</span>, and <span class="math notranslate">\(A(r)\simeq0\)</span> for
+<span class="math notranslate">\(r&gt;r_\mathrm{cut}+2^{\frac{1}{6}}\sigma\)</span>. Therefore, the
+interaction potential will be very close to the WCA one. Conversely, if
+both particles are in a region rich in the second component, then
+<span class="math notranslate">\(\phi\simeq-1\)</span>, and <span class="math notranslate">\(A(r)\simeq 1\)</span>, so that the potential
+will be very close to the full LJ one. If the cutoff has been set large
+enough, the particle will experience the attractive part of the
+potential, mimicking the effective attraction induced by the bad solvent.</p>
+</div>
+<div class="section" id="generic-lennard-jones-interaction">
+<span id="id5"></span><h3>6.1.3. Generic Lennard-Jones interaction<a class="headerlink" href="#generic-lennard-jones-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LENNARD_JONES_GENERIC</span></code> required.</p>
+</div>
+<p>The interface for the generic Lennard-Jones interactions is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.GenericLennardJonesInteraction" title="espressomd.interactions.GenericLennardJonesInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.GenericLennardJonesInteraction</span></code></a>. They
+are configured via the syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">generic_lennard_jones</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This command defines a generalized version of the Lennard-Jones
+interaction (see <a class="reference internal" href="#lennard-jones-interaction"><span class="std std-ref">Lennard-Jones interaction</span></a>) between particles of the
+types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. The potential is defined by</p>
+<div class="math notranslate">
+\[\begin{split}\label{eq:lj-generic}
+  V_\mathrm{LJ}(r) =
+    \begin{cases}
+      \epsilon\left[b_1\left(\frac{\sigma}{r-r_\mathrm{off}}\right)^{e_1}
+      -b_2\left(\frac{\sigma}{r-r_\mathrm{off}}\right)^{e_2}+c_\mathrm{shift}\right]
+      &amp; \mathrm{if~} r_\mathrm{min}+r_\mathrm{off} &lt; r &lt; r_\mathrm{cut}+r_\mathrm{off}\\
+      0
+      &amp; \mathrm{otherwise}
+    \end{cases}\ .\end{split}\]</div>
+<p>Note that the prefactor 4 of the standard LJ potential is missing, so
+the normal LJ potential is recovered for <span class="math notranslate">\(b_1=b_2=4\)</span>,
+<span class="math notranslate">\(e_1=12\)</span> and <span class="math notranslate">\(e_2=6\)</span>.</p>
+<p>The net force on a particle can be capped by using force capping <code class="docutils literal notranslate"><span class="pre">system.non_bonded_inter.set_force_cap(max)</span></code>, see
+section <a class="reference internal" href="system_manipulation.html#capping-the-force-during-warmup"><span class="std std-ref">Capping the force during warmup</span></a></p>
+<p>The optional <code class="docutils literal notranslate"><span class="pre">LJGEN_SOFTCORE</span></code> feature activates a softcore version of
+the potential, where the following transformations apply:
+<span class="math notranslate">\(\epsilon \rightarrow \lambda \epsilon\)</span> and
+<span class="math notranslate">\(r-r_\mathrm{off} \rightarrow \sqrt{(r-r_\mathrm{off})^2 +
+(1-\lambda) \delta \sigma^2}\)</span>. <span class="math notranslate">\(\lambda\)</span> allows to tune the strength of the
+interaction, while <span class="math notranslate">\(\delta\)</span> varies how smoothly the potential goes to zero as
+<span class="math notranslate">\(\lambda\rightarrow 0\)</span>. Such a feature allows one to perform
+alchemical transformations, where a group of atoms can be slowly turned
+on/off during a simulation.</p>
+</div>
+<div class="section" id="lennard-jones-cosine-interaction">
+<span id="id6"></span><h3>6.1.4. Lennard-Jones cosine interaction<a class="headerlink" href="#lennard-jones-cosine-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LJCOS</span></code> and/or <code class="docutils literal notranslate"><span class="pre">LJCOS2</span></code> required.</p>
+</div>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">lennard_jones_cos</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">lennard_jones_cos2</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesCosInteraction" title="espressomd.interactions.LennardJonesCosInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.LennardJonesCosInteraction</span></code></a> and
+<a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesCos2Interaction" title="espressomd.interactions.LennardJonesCos2Interaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.LennardJonesCos2Interaction</span></code></a> specifies
+a Lennard-Jones interaction with cosine tail <a class="reference internal" href="ug.html#soddeman01a" id="id7">[SDK01]</a>
+between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. The first variant
+behaves as follows: Until the minimum of the Lennard-Jones potential
+at <span class="math notranslate">\(r_\mathrm{min} = r_\mathrm{off} + 2^{\frac{1}{6}}\sigma\)</span>, it
+behaves identical to the unshifted Lennard-Jones potential
+(<span class="math notranslate">\(c_\mathrm{shift}=0\)</span>). Between <span class="math notranslate">\(r_\mathrm{min}\)</span> and <span class="math notranslate">\(r_\mathrm{cut}\)</span>, a cosine is used to
+smoothly connect the potential to 0, i.e.,</p>
+<div class="math notranslate">
+\[V(r)=\frac{1}{2}\epsilon\left(\cos\left[\alpha(r - r_\mathrm{off})^2 + \beta\right]-1\right),\]</div>
+<p>where <span class="math notranslate">\(\alpha = \pi\left[(r_\mathrm{cut} -
+r_\mathrm{off})^2-(r_\mathrm{min} - r_\mathrm{off})^2\right]^{-1}\)</span> and
+<span class="math notranslate">\(\beta = \pi - \left(r_\mathrm{min} -
+r_\mathrm{off}\right)^2\alpha\)</span>.</p>
+<p>In the second variant, the cutoff radius is
+<span class="math notranslate">\(r_\mathrm{cut}=r_\mathrm{min} + \omega\)</span>, where
+<span class="math notranslate">\(r_\mathrm{min} = r_\mathrm{off} + 2^{\frac{1}{6}}\sigma\)</span> as in
+the first variant. The potential between <span class="math notranslate">\(r_\mathrm{min}\)</span> and
+<span class="math notranslate">\(r_\mathrm{cut}\)</span> is given by</p>
+<div class="math notranslate">
+\[V(r)=-\epsilon\cos^2\left[\frac{\pi}{2\omega}(r - r_\mathrm{min})\right].\]</div>
+<p>For <span class="math notranslate">\(r &lt; r_\mathrm{min}\)</span>, <span class="math notranslate">\(V(r)\)</span> is implemented as normal
+<a class="reference internal" href="#lennard-jones-interaction"><span class="std std-ref">Lennard-Jones interaction</span></a> with <span class="math notranslate">\(c_\mathrm{shift} = 0\)</span>.</p>
+<p>The net force on a particle can be capped by using force capping, see
+section <a class="reference internal" href="system_manipulation.html#capping-the-force-during-warmup"><span class="std std-ref">Capping the force during warmup</span></a></p>
+</div>
+<div class="section" id="smooth-step-interaction">
+<span id="id8"></span><h3>6.1.5. Smooth step interaction<a class="headerlink" href="#smooth-step-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">SMOOTH_STEP</span></code> required.</p>
+</div>
+<p>The interface for the smooth-step interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.SmoothStepInteraction" title="espressomd.interactions.SmoothStepInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.SmoothStepInteraction</span></code></a>. The smooth-step parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">smooth_step</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines a smooth step interaction between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">type2</span></code>, for which the potential is</p>
+<div class="math notranslate">
+\[V(r)= \left(d/r\right)^n + \epsilon/(1 + \exp\left[2k_0 (r - \sigma)\right])\]</div>
+<p>for <span class="math notranslate">\(r&lt;r_\mathrm{cut}\)</span>, and <span class="math notranslate">\(V(r)=0\)</span> elsewhere. With
+<span class="math notranslate">\(n\)</span> around 10, the first term creates a short range repulsion
+similar to the Lennard-Jones potential, while the second term provides a
+much softer repulsion. This potential therefore introduces two length
+scales, the range of the first term, <span class="math notranslate">\(d\)</span>, and the range of
+the second one, <span class="math notranslate">\(\sigma\)</span>, where in general <span class="math notranslate">\(d&lt;\sigma\)</span>.</p>
+</div>
+<div class="section" id="bmhtf-potential">
+<span id="id9"></span><h3>6.1.6. BMHTF potential<a class="headerlink" href="#bmhtf-potential" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">BMHTF_NACL</span></code> required.</p>
+</div>
+<p>The interface for the smooth-step interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.BMHTFInteraction" title="espressomd.interactions.BMHTFInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.BMHTFInteraction</span></code></a>. The parameters of the BMHTF potential
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">bmhtf</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines an interaction with the <em>short-ranged part</em> of the
+Born-Meyer-Huggins-Tosi-Fumi potential between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">type2</span></code>, which is often used to simulate NaCl crystals. The potential is
+defined by:</p>
+<div class="math notranslate">
+\[V(r)= A\exp\left[B(\sigma - r)\right] -
+  C r^{-6} - D r^{-8} + \epsilon_\mathrm{shift},\]</div>
+<p>where <span class="math notranslate">\(\epsilon_\mathrm{shift}\)</span> is automatically chosen such that
+<span class="math notranslate">\(V(r_\mathrm{cut})=0\)</span>. For
+<span class="math notranslate">\(r\ge r_\mathrm{cut}\)</span>, the <span class="math notranslate">\(V(r)=0\)</span>.</p>
+<p>For NaCl, the parameters should be chosen as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="3%" />
+<col width="16%" />
+<col width="17%" />
+<col width="24%" />
+<col width="23%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">types</th>
+<th class="head"><span class="math notranslate">\(A\)</span> <span class="math notranslate">\(\left(\mathrm{kJ}/\mathrm{mol}\right)\)</span></th>
+<th class="head"><span class="math notranslate">\(B\)</span> <span class="math notranslate">\(\left(\mathring{\mathrm{A}}^{-1}\right)\)</span></th>
+<th class="head"><span class="math notranslate">\(C\)</span> <span class="math notranslate">\(\left(\mathring{\mathrm{A}}^6 \mathrm{kJ}/\mathrm{mol})\right)\)</span></th>
+<th class="head"><span class="math notranslate">\(D\)</span> <span class="math notranslate">\(\left(\mathring{\mathrm{A}}^8 \mathrm{kJ}/\mathrm{mol}\right)\)</span></th>
+<th class="head"><span class="math notranslate">\(\sigma\)</span> <span class="math notranslate">\(\left(\mathring{\mathrm{A}}\right)\)</span></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Na-Na</td>
+<td>25.4435</td>
+<td>3.1546</td>
+<td>101.1719</td>
+<td>48.1771</td>
+<td>2.34</td>
+</tr>
+<tr class="row-odd"><td>Na-Cl</td>
+<td>20.3548</td>
+<td>3.1546</td>
+<td>674.4793</td>
+<td>837.0770</td>
+<td>2.755</td>
+</tr>
+<tr class="row-even"><td>Cl-Cl</td>
+<td>15.2661</td>
+<td>3.1546</td>
+<td>6985.6786</td>
+<td>14031.5785</td>
+<td>3.170</td>
+</tr>
+</tbody>
+</table>
+<p>The cutoff can be chosen relatively freely because the potential decays
+fast; a value around 10 seems reasonable.</p>
+<p>In addition to this short ranged interaction, one needs to add a
+Coulombic, long-ranged part. If one uses elementary charges, a charge of
+<span class="math notranslate">\(q=+1\)</span> for the Na-particles, and <span class="math notranslate">\(q=-1\)</span> for the
+Cl-particles, the corresponding prefactor of the Coulomb interaction is
+<span class="math notranslate">\(\approx 1389.3549\,\mathrm{kJ}/\mathrm{mol}\)</span>.</p>
+</div>
+<div class="section" id="morse-interaction">
+<span id="id10"></span><h3>6.1.7. Morse interaction<a class="headerlink" href="#morse-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">MORSE</span></code> required.</p>
+</div>
+<p>The interface for the Morse interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.MorseInteraction" title="espressomd.interactions.MorseInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.MorseInteraction</span></code></a>. The Morse interaction parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">morse</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines an interaction using the Morse potential between particles
+of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. It serves similar purposes as the Lennard-Jones
+potential, but has a deeper minimum, around which it is harmonic. This
+models the potential energy in a diatomic molecule.</p>
+<p>For <span class="math notranslate">\(r &lt; r_\mathrm{cut}\)</span>, this potential is given by</p>
+<div class="math notranslate">
+\[V(r)=\epsilon\left(\exp\left[-2 \alpha \left(r - r_\mathrm{min}\right)\right]
+    - 2\exp\left[-\alpha\left(r - r_\mathrm{min}\right)\right]\right) -
+  \epsilon_\mathrm{shift},\]</div>
+<p>where is again chosen such that <span class="math notranslate">\(V(r_\mathrm{cut})=0\)</span>. For
+<span class="math notranslate">\(r\ge r_\mathrm{cut}\)</span>, the <span class="math notranslate">\(V(r)=0\)</span>.</p>
+</div>
+<div class="section" id="buckingham-interaction">
+<span id="id11"></span><h3>6.1.8. Buckingham interaction<a class="headerlink" href="#buckingham-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">BUCKINGHAM</span></code> required.</p>
+</div>
+<p>The interface for the Buckingham interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.BuckinghamInteraction" title="espressomd.interactions.BuckinghamInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.BuckinghamInteraction</span></code></a>. The Buckingham interaction parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">morse</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines a Buckingham interaction between particles of the types <em>type1</em> and <em>type2</em>,
+for which the potential is given by</p>
+<div class="math notranslate">
+\[V(r)= A \exp(-B r) - C r^{-6} - D r^{-4} + \epsilon_\mathrm{shift}\]</div>
+<p>for <span class="math notranslate">\(r_\mathrm{discont} &lt; r &lt; r_\mathrm{cut}\)</span>. Below <span class="math notranslate">\(r_\mathrm{discont}\)</span>,
+the potential is linearly continued towards <span class="math notranslate">\(r=0\)</span>, similarly to
+force capping, see below. Above <span class="math notranslate">\(r=r_\mathrm{cut}\)</span>, the
+potential is <span class="math notranslate">\(0\)</span>.</p>
+</div>
+<div class="section" id="soft-sphere-interaction">
+<span id="id12"></span><h3>6.1.9. Soft-sphere interaction<a class="headerlink" href="#soft-sphere-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">SOFT_SPHERE</span></code> required.</p>
+</div>
+<p>The interface for the Soft-sphere interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.SoftSphereInteraction" title="espressomd.interactions.SoftSphereInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.SoftSphereInteraction</span></code></a>. The Soft-sphere parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">soft_sphere</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines a soft sphere interaction between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">type2</span></code>, which is defined by a single power law:</p>
+<div class="math notranslate">
+\[V(r)=a\left(r-r_\mathrm{offset}\right)^{-n}\]</div>
+<p>for <span class="math notranslate">\(r&lt;r_\mathrm{cut}\)</span>, and <span class="math notranslate">\(V(r)=0\)</span> above. There is
+no shift implemented currently, which means that the potential is
+discontinuous at <span class="math notranslate">\(r=r_\mathrm{cut}\)</span>. Therefore energy
+calculations should be used with great caution.</p>
+</div>
+<div class="section" id="membrane-collision-interaction">
+<span id="id13"></span><h3>6.1.10. Membrane-collision interaction<a class="headerlink" href="#membrane-collision-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">MEMBRANE_COLLISION</span></code> required.</p>
+</div>
+<p>This defines a membrane collision interaction between particles of the
+types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>, where particle of <code class="docutils literal notranslate"><span class="pre">type1</span></code> belongs to one OIF or OIF-like object and
+particle of <code class="docutils literal notranslate"><span class="pre">type2</span></code> belongs to another such object.</p>
+<p>It is very similar to soft-sphere interaction, but it takes into account
+the local outward normal vectors on the surfaces of the two objects to
+determine the direction for repulsion of objects (i.e. determine whether
+the two membranes are intersected). It is inversely proportional to the
+distance of nodes of membranes that are not crossed and saturating with
+growing distance of nodes of crossed membranes.</p>
+<p>In order to work with the OIF objects, both OIF objects need to be created
+using OifCellType class with keyword <code class="docutils literal notranslate"><span class="pre">normal=1</span></code>, because this implicitly sets up the
+bonded out-direction interaction, which computes the outward normal
+vector.</p>
+<p>The membrane-collision interaction for non-intersected membranes is then
+defined by:</p>
+<div class="math notranslate">
+\[V(d)= a\frac{1}{1+e^{n\left(d-d_\mathrm{offset}\right)}},\]</div>
+<p>for <span class="math notranslate">\(d&lt;d_\mathrm{cut}\)</span> and <span class="math notranslate">\(V(d)=0\)</span> above. For
+intersected membranes, it is defined as <span class="math notranslate">\(V(-d)\)</span>. There is no shift
+implemented currently, which means that the potential is discontinuous
+at <span class="math notranslate">\(d=d_\mathrm{cut}\)</span>. Therefore energy calculations should
+be used with great caution.</p>
+</div>
+<div class="section" id="hat-interaction">
+<span id="id14"></span><h3>6.1.11. Hat interaction<a class="headerlink" href="#hat-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">HAT</span></code> required.</p>
+</div>
+<p>The interface for the Lennard-Jones interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.HatInteraction" title="espressomd.interactions.HatInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.HatInteraction</span></code></a>. The hat parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">hat</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines a simple force ramp between particles of two types.
+The maximal force acts at zero distance and zero force is applied at
+distances <span class="math notranslate">\(r_c\)</span> and bigger. For distances smaller than <span class="math notranslate">\(r_c\)</span>,
+the force is given by</p>
+<div class="math notranslate">
+\[F(r)=F_{\text{max}} \cdot \left( 1 - \frac{r}{r_c} \right),\]</div>
+<p>for distances exceeding <span class="math notranslate">\(r_c\)</span>, the force is zero.</p>
+<p>The potential energy is given by</p>
+<div class="math notranslate">
+\[V(r)=F_{\text{max}} \cdot (r-r_c) \cdot \left( \frac{r+r_c}{2r_c} - 1 \right),\]</div>
+<p>which is zero for distances bigger than <span class="math notranslate">\(r_c\)</span> and continuous at distance <span class="math notranslate">\(0\)</span>.</p>
+<p>This is the standard conservative DPD potential and can be used in
+combination with <a class="reference internal" href="system_setup.html#dissipative-particle-dynamics-dpd"><span class="std std-ref">Dissipative Particle Dynamics (DPD)</span></a>.</p>
+</div>
+<div class="section" id="hertzian-interaction">
+<h3>6.1.12. Hertzian interaction<a class="headerlink" href="#hertzian-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">HERTZIAN</span></code> required.</p>
+</div>
+<p>The interface for the Hertzian interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.HertzianInteraction" title="espressomd.interactions.HertzianInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.HertzianInteraction</span></code></a>. The Hertzian interaction parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">hertzian</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines an interaction according to the Hertzian potential between
+particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. The Hertzian potential is defined by</p>
+<div class="math notranslate">
+\[\begin{split}V(r)=
+  \begin{cases} \epsilon\left(1-\frac{r}{\sigma}\right)^{5/2} &amp; r &lt; \sigma\\
+    0 &amp; r \ge \sigma.
+  \end{cases}\end{split}\]</div>
+<p>The potential has no singularity and is defined everywhere; the
+potential has a nondifferentiable maximum at <span class="math notranslate">\(r=0\)</span>, where the force
+is undefined.</p>
+</div>
+<div class="section" id="gaussian">
+<span id="id15"></span><h3>6.1.13. Gaussian<a class="headerlink" href="#gaussian" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">GAUSSIAN</span></code> required.</p>
+</div>
+<p>The interface for the Gaussian interaction is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.interactions.GaussianInteraction" title="espressomd.interactions.GaussianInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.GaussianInteraction</span></code></a>. The Gaussian interaction parameters
+can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">gaussian</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines an interaction according to the Gaussian potential between
+particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. The Gaussian potential is defined by</p>
+<div class="math notranslate">
+\[\begin{split}V(r) =
+  \begin{cases} \epsilon\,e^{-\frac{1}{2}\left(\frac{r}{\sigma}\right)^{2}}
+    &amp; r &lt; r_\mathrm{cut}\\
+  0 &amp; r \ge r_\mathrm{cut}
+  \end{cases}\end{split}\]</div>
+<p>The Gaussian potential is smooth except at the cutoff, and has a finite
+overlap energy of <span class="math notranslate">\(\epsilon\)</span>. It can be used to model overlapping
+polymer coils.</p>
+<p>Currently, there is no shift implemented, which means that the potential
+is discontinuous at <span class="math notranslate">\(r=r_\mathrm{cut}\)</span>. Therefore use
+caution when performing energy calculations. However, you can often
+choose the cutoff such that the energy difference at the cutoff is less
+than a desired accuracy, since the potential decays very rapidly.</p>
+</div>
+<div class="section" id="dpd-interaction">
+<span id="id16"></span><h3>6.1.14. DPD interaction<a class="headerlink" href="#dpd-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">DPD</span></code> required.</p>
+</div>
+<p>This is a special interaction that is to be used in conjunction with the
+<cite>Dissipative Particle Dynamics (DPD)</cite> thermostat, for a general description
+of the algorithm see there. The parameters can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">dpd</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This command defines a velocity-dependent interaction
+between particles of the types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. For a description of the input arguments
+see <a class="reference internal" href="espressomd.html#espressomd.interactions.DPDInteraction" title="espressomd.interactions.DPDInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.DPDInteraction</span></code></a>. The interaction
+only has an effect if the DPD thermostat activated, and acts according to the
+temperature of the thermostat.</p>
+<p>The interaction consists of a dissipative force <span class="math notranslate">\(\vec{F}_{ij}^{D}\)</span> and
+a random force <span class="math notranslate">\(\vec{F}_{ij}^R\)</span>, and is decomposed into a component
+parallel and perpendicular to the distance vector of the particle pair <span class="math notranslate">\(\vec{F}_{ij}\)</span>.
+The parameters for the two parts can be chosen independently.
+The force contributions of the parallel part are</p>
+<div class="math notranslate">
+\[\vec{F}_{ij}^{D} = -\zeta w^D (r_{ij}) (\hat{r}_{ij} \cdot \vec{v}_{ij}) \hat{r}_{ij}\]</div>
+<p>for the dissipative force and</p>
+<div class="math notranslate">
+\[\vec{F}_{ij}^R = \sigma w^R (r_{ij}) \Theta_{ij} \hat{r}_{ij}\]</div>
+<p>for the random force. Here <span class="math notranslate">\(w^D\)</span> and <span class="math notranslate">\(w^R\)</span> are weight functions that
+can be specified via the weight_function parameter of the interaction. The dissipative
+and random weight function are related by the dissipation-fluctuation theorem:</p>
+<div class="math notranslate">
+\[(\sigma w^R (r_{ij}))^2=\zeta w^D (r_{ij}) \text{k}_\text{B} T\]</div>
+<p>The possible values for weight_function are 0 and 1, corresponding to the
+order of <span class="math notranslate">\(w^D\)</span>:</p>
+<div class="math notranslate">
+\[\begin{split}w^D (r_{ij}) = ( w^R (r_{ij})) ^2 =
+   \left\{
+\begin{array}{clcr}
+             1                      &amp; , \; \text{weight_function} = 0 \\
+             {( 1 - \frac{r_{ij}}{r_c}} )^2 &amp; , \; \text{weight_function} = 1
+   \end{array}
+   \right.\end{split}\]</div>
+<p>For the perpendicular part, the dissipative force is calculated by</p>
+<div class="math notranslate">
+\[\vec{F}_{ij}^{D} = -\zeta w^D (r_{ij}) (I-\hat{r}_{ij}\otimes\hat{r}_{ij}) \cdot \vec{v}_{ij}\]</div>
+<p>The random force by</p>
+<div class="math notranslate">
+\[\vec{F}_{ij}^R = \sigma w^R (r_{ij}) (I-\hat{r}_{ij}\otimes\hat{r}_{ij}) \cdot \vec{\Theta}_{ij}\]</div>
+<p>The parameters define the strength of the friction and the cutoff in the
+same way as above. Note: This interaction does <em>not</em> conserve angular
+momentum.</p>
+</div>
+<div class="section" id="thole-correction">
+<span id="id17"></span><h3>6.1.15. Thole correction<a class="headerlink" href="#thole-correction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Requires features <code class="docutils literal notranslate"><span class="pre">THOLE</span></code> and <code class="docutils literal notranslate"><span class="pre">ELECTROSTATICS</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">THOLE</span></code> is only implemented for the P3M electrostatics solver.</p>
+</div>
+<p>The Thole correction is closely related to simulations involving
+<a class="reference internal" href="advanced_methods.html#particle-polarizability-with-thermalized-cold-drude-oscillators"><span class="std std-ref">Particle polarizability with thermalized cold Drude oscillators</span></a>.
+In this context, it is used to correct for overestimation of
+induced dipoles at short distances. Ultimately, it alters the short-range
+electrostatics of P3M to result in a damped Coulomb interaction potential
+<span class="math notranslate">\(V(r) = \frac{q_1 q_2}{r} \cdot (1- e^{-s r} (1 + \frac{s r}{2}) )\)</span>.  The
+Thole scaling coefficient <span class="math notranslate">\(s\)</span> is related to the polarizabilities
+<span class="math notranslate">\(\alpha\)</span> and Thole damping parameters <span class="math notranslate">\(a\)</span> of the interacting
+species via <span class="math notranslate">\(s = \frac{ (a_i + a_j) / 2 }{ (\alpha_i \alpha_j)^{1/6} }\)</span>.
+Note that for the Drude oscillators, the Thole correction should be applied
+only for the dipole part <span class="math notranslate">\(\pm q_d\)</span> added by the Drude charge and not on
+the total core charge, which can be different for polarizable ions. Also note
+that the Thole correction acts between all dipoles, intra- and intermolecular.
+Again, the accuracy is related to the P3M accuracy and the split between
+short-range and long-range electrostatics interaction. It is configured by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type_1</span><span class="p">,</span><span class="n">type_2</span><span class="p">]</span><span class="o">.</span><span class="n">thole</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">scaling_coeff</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">q1q2</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>with parameters:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">scaling_coeff</span></code>: The scaling coefficient <span class="math notranslate">\(s\)</span>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">q1q2</span></code>: The charge factor of the involved charges.</li>
+</ul>
+</dd>
+</dl>
+<p>Because the scaling coefficient depends on the <em>mixed</em> polarizabilities and the
+nonbonded interaction is controlled by particle types, each Drude charge with a
+unique polarizability has to have a unique type. Each Drude charge type has
+a Thole correction interaction with all other Drude charges and all Drude
+cores, except the one it’s connected to.  This exception is handled internally
+by disabling Thole interaction between particles connected via Drude bonds.
+Also, each Drude core has a Thole correction interaction with all other Drude
+cores and Drude charges. To assist with the bookkeeping of mixed scaling
+coefficients, the helper method <a class="reference internal" href="espressomd.html#espressomd.drude_helpers.add_drude_particle_to_core" title="espressomd.drude_helpers.add_drude_particle_to_core"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_drude_particle_to_core()</span></code></a> (see
+<a class="reference internal" href="advanced_methods.html#particle-polarizability-with-thermalized-cold-drude-oscillators"><span class="std std-ref">Particle polarizability with thermalized cold Drude oscillators</span></a>)
+collects all core types, Drude types and relevant parameters when a Drude
+particle is created. The user already provided all the information when
+setting up the Drude particles, so the simple call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">add_all_thole</span><span class="p">(</span><span class="o">&lt;</span><span class="n">system</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">verbose</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>given the <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a> object, uses this information to create all
+necessary Thole interactions. The method calculates the mixed scaling
+coefficient <cite>s</cite> and creates the non-bonded Thole interactions between the
+collected types to cover all the Drude-Drude, Drude-core and core-core
+combinations. No further calls of <a class="reference internal" href="espressomd.html#espressomd.drude_helpers.add_drude_particle_to_core" title="espressomd.drude_helpers.add_drude_particle_to_core"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_drude_particle_to_core()</span></code></a> should
+follow. Set <code class="docutils literal notranslate"><span class="pre">verbose</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code> to print out the coefficients, charge factors
+and involved types.</p>
+<p>The samples folder contains the script <code class="file docutils literal notranslate"><span class="pre">drude_bmimpf6.py</span></code> with a fully
+polarizable, coarse grained ionic liquid where this approach is applied.
+To use the script, compile espresso with the following features:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define EXTERNAL_FORCES</span>
+<span class="cp">#define MASS</span>
+<span class="cp">#define LANGEVIN_PER_PARTICLE</span>
+<span class="cp">#define ROTATION</span>
+<span class="cp">#define ROTATIONAL_INERTIA</span>
+<span class="cp">#define ELECTROSTATICS</span>
+<span class="cp">#define VIRTUAL_SITES_RELATIVE</span>
+<span class="cp">#define LENNARD_JONES</span>
+<span class="cp">#define THOLE</span>
+<span class="cp">#define GHOSTS_HAVE_BONDS</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="anisotropic-non-bonded-interactions">
+<span id="id18"></span><h2>6.2. Anisotropic non-bonded interactions<a class="headerlink" href="#anisotropic-non-bonded-interactions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gay-berne-interaction">
+<span id="id19"></span><h3>6.2.1. Gay-Berne interaction<a class="headerlink" href="#gay-berne-interaction" title="Permalink to this headline">¶</a></h3>
+<p>The interface for a Gay-Berne interaction is provided by the <a class="reference internal" href="espressomd.html#espressomd.interactions.GayBerneInteraction" title="espressomd.interactions.GayBerneInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.GayBerneInteraction</span></code></a> class. Interaction parameters can be set via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">]</span><span class="o">.</span><span class="n">gay_berne</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This defines a Gay-Berne potential for prolate and oblate particles
+between particles types <code class="docutils literal notranslate"><span class="pre">type1</span></code> and <code class="docutils literal notranslate"><span class="pre">type2</span></code>. The Gay-Berne potential is an
+anisotropic version of the classic Lennard-Jones potential, with
+orientational dependence of the range <span class="math notranslate">\(\sigma_0\)</span> and the well-depth <span class="math notranslate">\(\epsilon_0\)</span>.</p>
+<p>Assume two particles with orientations given by the unit vectors
+<span class="math notranslate">\(\mathbf{\hat{u}}_i\)</span> and <span class="math notranslate">\(\mathbf{\hat{u}}_j\)</span> and
+intermolecular vector <span class="math notranslate">\(\mathbf{r} = r\mathbf{\hat{r}}\)</span>. If
+<span class="math notranslate">\(r&lt;r_\mathrm{cut}\)</span>, then the interaction between these two
+particles is given by</p>
+<div class="math notranslate">
+\[V(\mathbf{r}_{ij}, \mathbf{\hat{u}}_i, \mathbf{\hat{u}}_j) = 4
+  \epsilon(\mathbf{\hat{r}}_{ij}, \mathbf{\hat{u}}_i,
+  \mathbf{\hat{u}}_j) \left( \tilde{r}_{ij}^{-12}-\tilde{r}_{ij}^{-6}
+  \right),\]</div>
+<p>otherwise <span class="math notranslate">\(V(r)=0\)</span>. The reduced radius is</p>
+<div class="math notranslate">
+\[\tilde{r}=\frac{r - \sigma(\mathbf{\hat{r}},
+    \mathbf{\hat{u}}_i, \mathbf{\hat{u}}_j)+\sigma_0}{\sigma_0},\]</div>
+<p>where</p>
+<div class="math notranslate">
+\[\sigma( \mathbf{\hat{r}}, \mathbf{\hat{u}}_i,
+  \mathbf{\hat{u}}_j) = \sigma_{0} \left\{ 1 - \frac{1}{2} \chi \left[
+      \frac{ \left( \mathbf{\hat{r}} \cdot \mathbf{\hat{u}}_i +
+          \mathbf{\hat{r}} \cdot \mathbf{\hat{u}}_j \right)^{2} }
+      {1 + \chi \mathbf{\hat{u}}_i \cdot \mathbf{\hat{u}}_j } +
+      \frac{ \left( \mathbf{\hat{r}} \cdot \mathbf{\hat{u}}_i -
+          \mathbf{\hat{r}} \cdot \mathbf{\hat{u}}_j \right)^{2} }
+      {1 - \chi \mathbf{\hat{u}}_i \cdot \mathbf{\hat{u}}_j}
+    \right] \right\}^{-\frac{1}{2}}\]</div>
+<p>and</p>
+<div class="math notranslate">
+\[\begin{split}\begin{gathered}
+  \epsilon(\mathbf{\hat{r}}, \mathbf{\hat{u}}_i,
+  \mathbf{\hat{u}}_j) = \\
+  \epsilon_0 \left( 1- \chi^{2}(\mathbf{\hat{u}}_i
+    \cdot \mathbf{\hat{u}}_j)^{2} \right)^{-\frac {\nu}{2}} \left[1-\frac
+    {\chi'}{2} \left( \frac { (\mathbf{\hat{r}} \cdot
+        \mathbf{\hat{u}}_i+ \mathbf{\hat{r}} \cdot
+        \mathbf{\hat{u}}_j)^{2}} {1+\chi' \, \mathbf{\hat{u}}_i \cdot
+        \mathbf{\hat{u}}_j }+ \frac {(\mathbf{\hat{r}} \cdot
+        \mathbf{\hat{u}}_i-\mathbf{\hat{r}} \cdot
+        \mathbf{\hat{u}}_j)^{2}} {1-\chi' \, \mathbf{\hat{u}}_i \cdot
+        \mathbf{\hat{u}}_j } \right) \right]^{\mu}.\end{gathered}\end{split}\]</div>
+<p>The parameters <span class="math notranslate">\(\chi = \left(k_1^{2} - 1\right)/\left(k_1^{2} + 1\right)\)</span>
+and <span class="math notranslate">\(\chi' = \left(k_2^{1/\mu} -  1\right)/\left(k_2^{1/\mu} + 1\right)\)</span>
+are responsible for the degree of anisotropy of the molecular properties. <span class="math notranslate">\(k_1\)</span> is
+the molecular elongation, and <span class="math notranslate">\(k_2\)</span> is the ratio of the potential well depths for the
+side-by-side and end-to-end configurations. The exponents and are adjustable
+parameters of the potential. Several Gay-Berne parametrizations exist, the
+original one being <span class="math notranslate">\(k_1 = 3\)</span>, <span class="math notranslate">\(k_2 = 5\)</span>,
+<span class="math notranslate">\(\mu = 2\)</span> and <span class="math notranslate">\(\nu = 1\)</span>.</p>
+</div>
+<div class="section" id="affinity-interaction">
+<span id="id20"></span><h3>6.2.2. Affinity interaction<a class="headerlink" href="#affinity-interaction" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">Not implemented yet.</p>
+</div>
+<p>inter affinity</p>
+<p>Instead of defining a new interaction, this command acts as a modifier
+for existing interactions, so that the conditions of good/bad solvent
+associated to the two components of a Shan-Chen fluid. The two types
+must match those of the interaction that one wants to modify, and the
+two affinity values and are values between 0 and 1. A value of 1 (of 0)
+indicates that the component acts as a good (bad) solvent. The specific
+functional form depends on the interaction type and is listed in the
+interaction section. So far, only the standard Lennard-Jones interaction
+is modified by the interaction.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">6. Non-bonded interactions</a><ul>
+<li><a class="reference internal" href="#isotropic-non-bonded-interactions">6.1. Isotropic non-bonded interactions</a><ul>
+<li><a class="reference internal" href="#tabulated-interaction">6.1.1. Tabulated interaction</a></li>
+<li><a class="reference internal" href="#lennard-jones-interaction">6.1.2. Lennard-Jones interaction</a></li>
+<li><a class="reference internal" href="#generic-lennard-jones-interaction">6.1.3. Generic Lennard-Jones interaction</a></li>
+<li><a class="reference internal" href="#lennard-jones-cosine-interaction">6.1.4. Lennard-Jones cosine interaction</a></li>
+<li><a class="reference internal" href="#smooth-step-interaction">6.1.5. Smooth step interaction</a></li>
+<li><a class="reference internal" href="#bmhtf-potential">6.1.6. BMHTF potential</a></li>
+<li><a class="reference internal" href="#morse-interaction">6.1.7. Morse interaction</a></li>
+<li><a class="reference internal" href="#buckingham-interaction">6.1.8. Buckingham interaction</a></li>
+<li><a class="reference internal" href="#soft-sphere-interaction">6.1.9. Soft-sphere interaction</a></li>
+<li><a class="reference internal" href="#membrane-collision-interaction">6.1.10. Membrane-collision interaction</a></li>
+<li><a class="reference internal" href="#hat-interaction">6.1.11. Hat interaction</a></li>
+<li><a class="reference internal" href="#hertzian-interaction">6.1.12. Hertzian interaction</a></li>
+<li><a class="reference internal" href="#gaussian">6.1.13. Gaussian</a></li>
+<li><a class="reference internal" href="#dpd-interaction">6.1.14. DPD interaction</a></li>
+<li><a class="reference internal" href="#thole-correction">6.1.15. Thole correction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#anisotropic-non-bonded-interactions">6.2. Anisotropic non-bonded interactions</a><ul>
+<li><a class="reference internal" href="#gay-berne-interaction">6.2.1. Gay-Berne interaction</a></li>
+<li><a class="reference internal" href="#affinity-interaction">6.2.2. Affinity interaction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="inter_bonded.html" title="7. Bonded interactions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="5. Running the simulation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Jan 25, 2019.
+    </div>
+  </body>
+</html>

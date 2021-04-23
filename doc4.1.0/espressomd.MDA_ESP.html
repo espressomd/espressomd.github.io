@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>espressomd.MDA_ESP package &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="espressomd.io package" href="espressomd.io.html" />
+    <link rel="prev" title="espressomd package" href="espressomd.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="espressomd.io.html" title="espressomd.io package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="espressomd.html" title="espressomd package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >espressomd</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="espressomd.html" accesskey="U">espressomd package</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="espressomd-mda-esp-package">
+<h1>espressomd.MDA_ESP package<a class="headerlink" href="#espressomd-mda-esp-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-espressomd.MDA_ESP">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-espressomd.MDA_ESP" title="Permalink to this headline">¶</a></h2>
+<p>This modules allows to expose ESPREsSo’s coordinates and particle attributes
+to MDAnalysis without need to save information to files.</p>
+<p>The main class is <a class="reference internal" href="#espressomd.MDA_ESP.Stream" title="espressomd.MDA_ESP.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>, which is used to initialize the stream of
+data to MDAnalysis’ readers. These are the topology reader <a class="reference internal" href="#espressomd.MDA_ESP.ESPParser" title="espressomd.MDA_ESP.ESPParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">ESPParser</span></code></a>
+and the coordinates reader <a class="reference internal" href="#espressomd.MDA_ESP.ESPReader" title="espressomd.MDA_ESP.ESPReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ESPReader</span></code></a>.</p>
+<p>A minimal working example is the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># imports</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">MDA_ESP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MDAnalysis</span> <span class="k">as</span> <span class="nn">mda</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># system setup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">10.</span><span class="p">,</span><span class="mf">10.</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">2.</span><span class="p">,</span><span class="mf">3.</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># set up the stream</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eos</span> <span class="o">=</span> <span class="n">MDA_ESP</span><span class="o">.</span><span class="n">Stream</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># feed Universe with a topology and with coordinates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">mda</span><span class="o">.</span><span class="n">Universe</span><span class="p">(</span><span class="n">eos</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span><span class="n">eos</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">u</span>
+<span class="go">&lt;Universe with 1 atoms&gt;</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="espressomd.MDA_ESP.ESPParser">
+<em class="property">class </em><code class="sig-prename descclassname">espressomd.MDA_ESP.</code><code class="sig-name descname">ESPParser</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#ESPParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.MDA_ESP.ESPParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.topology.base.TopologyReaderBase</span></code></p>
+<p>An MDAnalysis reader of espresso’s topology</p>
+<dl class="attribute">
+<dt id="espressomd.MDA_ESP.ESPParser.format">
+<code class="sig-name descname">format</code><em class="property"> = 'ESP'</em><a class="headerlink" href="#espressomd.MDA_ESP.ESPParser.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="espressomd.MDA_ESP.ESPParser.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#ESPParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.MDA_ESP.ESPParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access ESPResSo data and return the topology object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>top</strong> – a topology object</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.core.topology.Topology</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="espressomd.MDA_ESP.ESPReader">
+<em class="property">class </em><code class="sig-prename descclassname">espressomd.MDA_ESP.</code><code class="sig-name descname">ESPReader</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#ESPReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.MDA_ESP.ESPReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.coordinates.base.SingleFrameReaderBase</span></code></p>
+<p>An MDAnalysis single frame reader for the stream provided by Stream()</p>
+<dl class="attribute">
+<dt id="espressomd.MDA_ESP.ESPReader.format">
+<code class="sig-name descname">format</code><em class="property"> = 'ESP'</em><a class="headerlink" href="#espressomd.MDA_ESP.ESPReader.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="espressomd.MDA_ESP.ESPReader.units">
+<code class="sig-name descname">units</code><em class="property"> = {'length': 'nm', 'time': None, 'velocity': 'nm/ps'}</em><a class="headerlink" href="#espressomd.MDA_ESP.ESPReader.units" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="espressomd.MDA_ESP.Stream">
+<em class="property">class </em><code class="sig-prename descclassname">espressomd.MDA_ESP.</code><code class="sig-name descname">Stream</code><span class="sig-paren">(</span><em class="sig-param">system</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#Stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.MDA_ESP.Stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Create an object that provides a MDAnalysis topology and a coordinate reader</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eos</span> <span class="o">=</span> <span class="n">MDA_ESP</span><span class="o">.</span><span class="n">Stream</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">mda</span><span class="o">.</span><span class="n">Universe</span><span class="p">(</span><span class="n">eos</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span><span class="n">eos</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-obj docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>)</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="espressomd.MDA_ESP.Stream.trajectory">
+<em class="property">property </em><code class="sig-name descname">trajectory</code><a class="headerlink" href="#espressomd.MDA_ESP.Stream.trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Particles’ coordinates at the current time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>stream</strong> – A stream in the format that can be parsed by <a class="reference internal" href="#espressomd.MDA_ESP.ESPReader" title="espressomd.MDA_ESP.ESPReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ESPReader</span></code></a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.lib.util.NamedStream</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="espressomd.MDA_ESP.Timestep">
+<em class="property">class </em><code class="sig-prename descclassname">espressomd.MDA_ESP.</code><code class="sig-name descname">Timestep</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#Timestep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.MDA_ESP.Timestep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.coordinates.base.Timestep</span></code></p>
+<dl class="method">
+<dt id="espressomd.MDA_ESP.Timestep.dimensions">
+<em class="property">property </em><code class="sig-name descname">dimensions</code><a class="headerlink" href="#espressomd.MDA_ESP.Timestep.dimensions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">espressomd.MDA_ESP package</a><ul>
+<li><a class="reference internal" href="#module-espressomd.MDA_ESP">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="espressomd.io.html" title="espressomd.io package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="espressomd.html" title="espressomd package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >espressomd</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="espressomd.html" >espressomd package</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Oct 01, 2019.
+    </div>
+  </body>
+</html>

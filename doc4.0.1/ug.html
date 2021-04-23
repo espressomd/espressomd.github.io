@@ -1,0 +1,774 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>&lt;no title&gt; &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="1. Introduction" href="introduction.html" />
+    <link rel="prev" title="ESPResSo documentation" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="1. Introduction"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="ESPResSo documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">1. Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#guiding-principles">1.1. Guiding principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#basic-program-structure">1.2. Basic program structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#basic-python-simulation-script">1.3. Basic python simulation script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#tutorials">1.4. Tutorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#sample-scripts">1.5. Sample scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#on-units">1.6. On units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#available-simulation-methods">1.7. Available simulation methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#intended-interface-compatibility-between-espresso-versions">1.8. Intended interface compatibility between ESPResSo versions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">2. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">2.1. Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#installing-requirements-on-ubuntu-16-04-lts">2.1.1. Installing Requirements on Ubuntu 16.04 LTS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#installing-requirements-on-mac-os-x">2.1.2. Installing Requirements on Mac OS X</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#installing-python-dependencies">2.1.3. Installing python dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#quick-installation">2.2. Quick installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#configuring">2.3. Configuring</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#myconfig-hpp-activating-and-deactivating-features">2.3.1. <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>: Activating and deactivating features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#features">2.3.2. Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#features-marked-as-experimental">2.3.3. Features marked as experimental</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#cmake">2.3.4. cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#ccmake">2.3.5. ccmake</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#make-compiling-testing-and-installing">2.4. <code class="docutils literal notranslate"><span class="pre">make</span></code>: Compiling, testing and installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-es">2.5. Running <cite>ESPResSo</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#debugging-es">2.6. Debugging <cite>ESPResSo</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="system_setup.html">3. Setting up the system</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#setting-global-variables-in-python">3.1. Setting global variables in Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#accessing-module-states">3.1.1. Accessing module states</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#cellsystems">3.2. Cellsystems</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#global-properties">3.2.1. Global properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#domain-decomposition">3.2.2. Domain decomposition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#n-squared">3.2.3. N-squared</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#layered-cell-system">3.2.4. Layered cell system</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#thermostats">3.3. Thermostats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#langevin-thermostat">3.3.1. Langevin thermostat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#dissipative-particle-dynamics-dpd">3.3.2. Dissipative Particle Dynamics (DPD)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#isotropic-npt-thermostat">3.3.3. Isotropic NPT thermostat</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#cuda">3.4. CUDA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#gpu-acceleration-with-cuda">3.4.1. GPU Acceleration with CUDA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#list-available-cuda-devices">3.4.2. List available CUDA devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#selection-of-cuda-device">3.4.3. Selection of CUDA device</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">4. Setting up particles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#overview-of-the-relevant-python-classes">4.1. Overview of the relevant Python classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#adding-particles">4.2. Adding particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#accessing-particle-properties">4.3. Accessing particle properties</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#vectorial-properties">4.3.1. Vectorial properties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#interacting-with-groups-of-particles">4.4. Interacting with groups of particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#deleting-particles">4.5. Deleting particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#iterating-over-particles-and-pairs-of-particles">4.6. Iterating over particles and pairs of particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#exclusions">4.7. Exclusions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#create-particular-particle-configurations">4.8. Create particular particle configurations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#setting-up-polymer-chains">4.8.1. Setting up polymer chains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#setting-up-diamond-polymer-networks">4.8.2. Setting up diamond polymer networks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#virtual-sites">4.9. Virtual sites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#rigid-arrangements-of-particles">4.9.1. Rigid arrangements of particles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#inertialess-lattice-boltzmann-tracers">4.9.2. Inertialess lattice Boltzmann tracers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#particle-number-counting-feature">4.10. Particle number counting feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#self-propelled-swimmers">4.11. Self-propelled swimmers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#langevin-swimmers">4.11.1. Langevin swimmers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#lattice-boltzmann-lb-swimmers">4.11.2. Lattice Boltzmann (LB) swimmers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">5. Running the simulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="running.html#integrator">5.1. Integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html#run-steepest-descent-minimization">5.2. Run steepest descent minimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html#multi-timestepping">5.3. Multi-timestepping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html#integrating-rotational-degrees-of-freedom">5.4. Integrating rotational degrees of freedom</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inter_non-bonded.html">6. Non-bonded interactions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inter_non-bonded.html#isotropic-non-bonded-interactions">6.1. Isotropic non-bonded interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#tabulated-interaction">6.1.1. Tabulated interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#lennard-jones-interaction">6.1.2. Lennard-Jones interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#generic-lennard-jones-interaction">6.1.3. Generic Lennard-Jones interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#lennard-jones-cosine-interaction">6.1.4. Lennard-Jones cosine interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#smooth-step-interaction">6.1.5. Smooth step interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#bmhtf-potential">6.1.6. BMHTF potential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#morse-interaction">6.1.7. Morse interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#buckingham-interaction">6.1.8. Buckingham interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#soft-sphere-interaction">6.1.9. Soft-sphere interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#membrane-collision-interaction">6.1.10. Membrane-collision interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#hat-interaction">6.1.11. Hat interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#hertzian-interaction">6.1.12. Hertzian interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#gaussian">6.1.13. Gaussian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#dpd-interaction">6.1.14. DPD interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#thole-correction">6.1.15. Thole correction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_non-bonded.html#anisotropic-non-bonded-interactions">6.2. Anisotropic non-bonded interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#gay-berne-interaction">6.2.1. Gay-Berne interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#affinity-interaction">6.2.2. Affinity interaction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inter_bonded.html">7. Bonded interactions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#distance-dependent-bonds">7.1. Distance-dependent bonds</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#fene-bond">7.1.1. FENE bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#harmonic-bond">7.1.2. Harmonic bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#harmonic-dumbbell-bond">7.1.3. Harmonic Dumbbell Bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#bonded-coulomb">7.1.4. Bonded Coulomb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#subtract-p3m-short-range-bond">7.1.5. Subtract P3M short-range bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#subtracted-lennard-jones-bond">7.1.6. Subtracted Lennard-Jones bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#rigid-bonds">7.1.7. Rigid bonds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#tabulated-bond-interactions">7.1.8. Tabulated bond interactions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#virtual-bonds">7.1.9. Virtual bonds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#object-in-fluid-interactions">7.2. Object-in-fluid interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#oif-local-forces">7.2.1. OIF local forces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#oif-global-forces">7.2.2. OIF global forces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#out-direction">7.2.3. Out direction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#bond-angle-interactions">7.3. Bond-angle interactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#dihedral-interactions">7.4. Dihedral interactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#thermalized-distance-bond">7.5. Thermalized distance bond</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="electrostatics.html">8. Electrostatics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#coulomb-p3m">8.1. Coulomb P3M</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="electrostatics.html#tuning-coulomb-p3m">8.1.1. Tuning Coulomb P3M</a></li>
+<li class="toctree-l3"><a class="reference internal" href="electrostatics.html#coulomb-p3m-on-gpu">8.1.2. Coulomb P3M on GPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#debye-huckel-potential">8.2. Debye-Hückel potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#dielectric-interfaces-with-the-icc-algorithm">8.3. Dielectric interfaces with the ICC<span class="math notranslate">\(\star\)</span> algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#mmm2d">8.4. MMM2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#electrostatic-layer-correction-elc">8.5. Electrostatic Layer Correction (ELC)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#mmm1d">8.6. MMM1D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#scafacos-electrostatics">8.7. Scafacos Electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="magnetostatics.html">9. Magnetostatics / Dipolar interactions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#dipolar-interaction">9.1. Dipolar interaction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="magnetostatics.html#dipolar-p3m">9.1.1. Dipolar P3M</a></li>
+<li class="toctree-l3"><a class="reference internal" href="magnetostatics.html#dipolar-layer-correction-dlc">9.1.2. Dipolar Layer Correction (DLC)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#dipolar-direct-sum">9.2. Dipolar direct sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#barnes-hut-octree-sum-on-gpu">9.3. Barnes-Hut octree sum on gpu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#scafacos-magnetostatics">9.4. Scafacos Magnetostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="system_manipulation.html">10. System manipulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#changing-the-box-volume">10.1. Changing the box volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#stopping-particles">10.2. Stopping particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#fixing-the-center-of-mass">10.3. Fixing the center of mass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#capping-the-force-during-warmup">10.4. Capping the force during warmup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#galilei-transform-and-particle-velocity-manipulation">10.5. Galilei Transform and Particle Velocity Manipulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">11. Single particle forces (constraints)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#shaped-based-constraints">11.1. Shaped-based constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#adding-shape-based-constraints-to-the-system">11.2. Adding shape-based constraints to the system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#deleting-a-constraint">11.2.1. Deleting a constraint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#getting-the-currently-defined-constraints">11.2.2. Getting the currently defined constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#getting-the-force-on-a-constraint">11.2.3. Getting the force on a constraint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#getting-the-minimal-distance-to-a-constraint">11.2.4. Getting the minimal distance to a constraint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#available-shapes">11.2.5. Available Shapes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#available-options">11.2.6. Available options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#creating-a-harmonic-trap">11.3. Creating a harmonic trap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#external-fields">11.4. External Fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#constant-fields">11.4.1. Constant fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#interpolated-force-and-potential-fields">11.4.2. Interpolated Force and Potential fields</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lb.html">12. Lattice Boltzmann</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#setting-up-a-lb-fluid">12.1. Setting up a LB fluid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#checkpointing-lb">12.2. Checkpointing LB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#lb-as-a-thermostat">12.3. LB as a thermostat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#reading-and-setting-properties-of-single-lattice-nodes">12.4. Reading and setting properties of single lattice nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#removing-total-fluid-momentum">12.5. Removing total fluid momentum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#output-for-visualization">12.6. Output for visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#choosing-between-the-gpu-and-cpu-implementations">12.7. Choosing between the GPU and CPU implementations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#electrohydrodynamics">12.8. Electrohydrodynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#using-shapes-as-lattice-boltzmann-boundary">12.9. Using shapes as lattice Boltzmann boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lb.html#minimal-usage-example">12.9.1. Minimal usage example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lb.html#setting-up-boundary-conditions">12.9.2. Setting up boundary conditions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">13. Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#direct-analysis-routines">13.1. Direct analysis routines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#energies">13.1.1. Energies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#momentum-of-the-system">13.1.2. Momentum of the System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#minimal-distances-between-particles">13.1.3. Minimal distances between particles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#particles-in-the-neighborhood">13.1.4. Particles in the neighborhood</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#particle-distribution">13.1.5. Particle distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#cylindrical-average">13.1.6. Cylindrical Average</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#radial-distribution-function">13.1.7. Radial distribution function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#structure-factor">13.1.8. Structure factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#center-of-mass">13.1.9. Center of mass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#moment-of-inertia-matrix">13.1.10. Moment of inertia matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#gyration-tensor">13.1.11. Gyration tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#pressure">13.1.12. Pressure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#stress-tensor">13.1.13. Stress Tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#local-stress-tensor">13.1.14. Local Stress Tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#chains">13.1.15. Chains</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#observables-and-correlators">13.2. Observables and correlators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#creating-an-observable">13.2.1. Creating an observable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#available-observables">13.2.2. Available observables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#correlations">13.2.3. Correlations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#details-of-the-multiple-tau-correlation-algorithm">13.2.4. Details of the multiple tau correlation algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#accumulators">13.3. Accumulators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#mean-variance-calculator">13.3.1. Mean-variance calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#cluster-analysis">13.4. Cluster analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">14. Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#no-generic-checkpointing">14.1. No generic checkpointing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#almost-generic-checkpointing-in-python">14.2. (Almost) generic checkpointing in Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-h5md-files">14.3. Writing H5MD-files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-mpi-io-binary-files">14.4. Writing MPI-IO binary files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-vtf-files">14.5. Writing VTF files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="io.html#writevsf-writing-the-topology">14.5.1. <code class="docutils literal notranslate"><span class="pre">writevsf</span></code>: Writing the topology</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html#writevcf-writing-the-coordinates">14.5.2. <code class="docutils literal notranslate"><span class="pre">writevcf</span></code>: Writing the coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html#espressomd-io-writer-vtf-vtf-pid-map">14.5.3. <code class="docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.vtf_pid_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-various-formats-using-mdanalysis">14.6. Writing various formats using MDAnalysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#parsing-pdb-files">14.7. Parsing PDB Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">15. Online-visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#general-usage">15.1. General usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#common-methods-for-opengl-and-mayavi">15.2. Common methods for OpenGL and Mayavi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#mayavi-visualizer">15.3. Mayavi visualizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#opengl-visualizer">15.4. OpenGL visualizer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#running-the-visualizer">15.4.1. Running the visualizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#screenshots">15.4.2. Screenshots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#colors-and-materials">15.4.3. Colors and Materials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#visualize-vectorial-properties">15.4.4. Visualize vectorial properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#controls">15.4.5. Controls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#dragging-particles">15.4.6. Dragging particles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#visualization-example-scripts">15.5. Visualization example scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_methods.html">16. Advanced Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#creating-bonds-when-particles-collide">16.1. Creating bonds when particles collide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#swimmer-reactions">16.2. Swimmer Reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#lees-edwards-boundary-conditions">16.3. Lees-Edwards boundary conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#immersed-boundary-method-for-soft-elastic-objects">16.4. Immersed Boundary Method for soft elastic objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#object-in-fluid">16.5. Object-in-fluid</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#triangulations-of-elastic-objects">16.5.1. Triangulations of elastic objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#description-of-sample-script">16.5.2. Description of sample script</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#visualization-in-paraview">16.5.3. Visualization in ParaView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#available-object-in-fluid-oif-classes">16.5.4. Available Object-in-fluid (OIF) classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#electrokinetics">16.6. Electrokinetics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#electrokinetic-equations">16.6.1. Electrokinetic Equations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#setup">16.6.2. Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#output">16.6.3. Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#particle-polarizability-with-thermalized-cold-drude-oscillators">16.7. Particle polarizability with thermalized cold Drude oscillators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#canceling-intramolecular-electrostatics">16.7.1. Canceling intramolecular electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#reaction-ensemble">16.8. Reaction Ensemble</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#converting-tabulated-reaction-constants-to-internal-units-in-espresso">16.8.1. Converting tabulated reaction constants to internal units in Espresso</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#wang-landau-reaction-ensemble">16.8.2. Wang-Landau Reaction Ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#constant-ph-simulation-using-the-reaction-ensemble">16.8.3. Constant pH simulation using the Reaction Ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#grand-canonical-ensemble-simulation-using-the-reaction-ensemble">16.8.4. Grand canonical ensemble simulation using the Reaction Ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#widom-insertion-for-homogeneous-systems">16.8.5. Widom Insertion (for homogeneous systems)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="under_the_hood.html">17. Under the hood</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="under_the_hood.html#internal-particle-organization">17.1. Internal particle organization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">18. Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#community-support-and-mailing-lists">18.1. Community support and mailing lists</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#contributing-your-own-code">18.2. Contributing your own code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#building-the-user-s-guide">18.3. Building the User’s guide</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">19. Appendix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="appendix.html#the-mmm-family-of-algorithms">19.1. The MMM family of algorithms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#introduction">19.1.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#mmm2d-theory">19.1.2. MMM2D theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#mmm1d-theory">19.1.3. MMM1D theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#elc-theory">19.1.4. ELC theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#errors">19.1.5. Errors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<p id="bibtex-bibliography-ug-0"><table class="docutils citation" frame="void" id="andersen80a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[And80]</td><td>Andersen. Molecular-Dynamics Simulations At Constant Pressure And/Or Temperature. <em>J. Chem. Phys</em>, 72(4):2384-2393, 1980.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="andersen83a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[And83]</td><td>Hans&nbsp;C. Andersen. Rattle: a “velocity” version of the shake algorithm for molecular dynamics calculations. <em>J. Comp. Phys.</em>, 51:24–34, 1983.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="arnold05a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[AH05]</td><td>A.&nbsp;Arnold and C.&nbsp;Holm. MMM1D: A method for calculating electrostatic interactions in 1D periodic geometries. <em>J. Chem. Phys.</em>, 123(12):144103, 2005.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="arnold02b" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[AH02a]</td><td>Axel Arnold and Christian Holm. A novel method for calculating electrostatic interactions in 2D periodic slab geometries. <em>Chem. Phys. Lett.</em>, 354:324–330, 2002.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="arnold02a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[AH02b]</td><td>Axel Arnold and Christian Holm. MMM2D: a fast and accurate summation methodlimnb for electrostatic interactions in 2d slab geometries. <em>Comput. Phys. Commun.</em>, 148(3):327–348, 2002. <a class="reference external" href="https://arxiv.org/abs/cond-mat/0202265">arXiv:cond-mat/0202265</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="espresso2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[ALK+ed]</td><td>Axel Arnold, Olaf Lenz, Stefan Kesselheim, Rudolf Weeber, Florian Fahrenberger, Dominic Roehm, Peter Kosovan, and Christian Holm. ESPResSo 3.1 – molecular dynamics software for coarse-grained models. In Michael Griebel, Christian Rieger, and Marc&nbsp;Alexander Schweitzer, editors, <em>Proceedings of the Sixth International Workshop on Meshfree Methods for Partial Differential Equations</em>, Lecture Notes in Computational Science and Engineering. Springer, Berlin, Germany, submitted.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="arnold02c" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[AdeJoannisH02]</td><td>Axel Arnold, Jason de Joannis, and Christian Holm. Electrostatics in Periodic Slab Geometries I+II. <em>J. Chem. Phys.</em>, 117:2496–2512, 2002. <a class="reference external" href="https://arxiv.org/abs/cond-mat/0202399 and cond-mat/0202400">arXiv:cond-mat/0202399 and cond-mat/0202400</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="ballenegger09a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[BAC09]</td><td>V.&nbsp;Ballenegger, A.&nbsp;Arnold, and J.&nbsp;J. Cerda. Simulations of non-neutral slab systems with long-range electrostatic interactions in two-dimensional periodic boundary conditions. <em>J. Chem. Phys.</em>, 131(9):094107, 2009. URL: <a class="reference external" href="http://link.aip.org/link/?JCP/131/094107/1">http://link.aip.org/link/?JCP/131/094107/1</a>, <a class="reference external" href="https://doi.org/10.1063/1.3216473">doi:10.1063/1.3216473</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="belardinelli07a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[BP07]</td><td>RE&nbsp;Belardinelli and VD&nbsp;Pereyra. Fast algorithm to calculate density of states. <em>Physical Review E</em>, 75(4):046701, 2007.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="bereau15" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Ber15]</td><td>Tristan Bereau. Multi-timestep integrator for the modified andersen barostat. <em>Physics Procedia</em>, 68:7–15, 2015.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="brodka04a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Bro04]</td><td>A.&nbsp;Brodka. Ewald summation method with electrostatic layer correction for interactions of point dipoles in slab geometry. <em>Chem. Phys. Lett.</em>, 400:62–67, 2004.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="brown1995general" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[BN95]</td><td>David Brown and Sylvie Neyertz. A general pressure tensor calculation for molecular dynamics simulations. <em>Molecular Physics</em>, 84(3):577–595, 1995.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="cerda08a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[CBLCHolm08]</td><td>Juan&nbsp;J. Cerda, V.&nbsp;Ballenegger, O.&nbsp;Lenz, and C.Holm. P3M algorithm for dipolar interactions. <em>J. Chem. Phys.</em>, 129:234104, 2008. <a class="reference external" href="https://arxiv.org/abs/cond-mat/????">arXiv:cond-mat/????</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="cerda08d" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[CerdaBLH08]</td><td>Juan&nbsp;J. Cerdà, V.&nbsp;Ballenegger, O.&nbsp;Lenz, and Ch. Holm. P3M algorithm for dipolar interactions. <em>Journal of Chemical Physics</em>, 129:234104, 2008. <a class="reference external" href="https://doi.org/10.1063/1.3000389">doi:10.1063/1.3000389</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="cimrak2014" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[CGJancigova14]</td><td>I.&nbsp;Cimrák, M.&nbsp;Gusenbauer, and I.&nbsp;Jančigová. An ESPResSo implementation of elastic objects immersed in a fluid. <em>Computer Physics Communications</em>, 185(3):900 – 907, 2014.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="cimrak2012" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[CGS12]</td><td>I.&nbsp;Cimrák, M.&nbsp;Gusenbauer, and T.&nbsp;Schrefl. Modelling and simulation of processes in microfluidic devices for biomedical applications. <em>Computers &amp; Mathematics with Applications</em>, 64(3):278–288, 2012.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="crowl2010" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[CF10]</td><td>Lindsay&nbsp;M Crowl and Aaron&nbsp;L Fogelson. Computational model of whole blood exhibiting lateral platelet motion induced by red blood cells. <em>Int. J. Numer. Meth. Biomed. Engng.</em>, 26(3-4):471–487, 2010.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="degraaf16" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[dGMM+16]</td><td>Joost de&nbsp;Graaf, Henri Menke, Arnold&nbsp;J.T.M. Mathijssen, Marc Fabritius, Christian Holm, and Tyler&nbsp;N. Shendruk. Lattice-boltzmann hydrodynamics of anisotropic active matter. <em>J. Chem. Phys.</em>, 144:134106, 2016. <a class="reference external" href="https://doi.org/10.1063/1.4944962">doi:10.1063/1.4944962</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="deserno00a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Des00]</td><td>M.&nbsp;Deserno. <em>Counterion condensation for rigid linear polyelectrolytes</em>. PhD thesis, Universität Mainz, 2000.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="deserno98" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[DH98a]</td><td>M.&nbsp;Deserno and C.&nbsp;Holm. How to mesh up Ewald sums. i. <em>J. Chem. Phys.</em>, 109:7678, 1998.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="deserno98a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[DH98b]</td><td>M.&nbsp;Deserno and C.&nbsp;Holm. How to mesh up Ewald sums. ii. <em>J. Chem. Phys.</em>, 109:7694, 1998.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="deserno00" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[DHL00]</td><td>M.&nbsp;Deserno, C.&nbsp;Holm, and H.&nbsp;J. Limbach. <em>Molecular Dynamics on Parallel Computers</em>, chapter How to mesh up Ewald sums. World Scientific, Singapore, 2000.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="doi86a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[DE86]</td><td>M&nbsp;Doi and S&nbsp;F Edwards. <em>The theory of polymer dynamics</em>. Oxford Science Publications, 1986.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="dupin07" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[DHCA07]</td><td>M.M. Dupin, I.&nbsp;Halliday, C.M. Care, and L.&nbsp;Alboul. Modeling the flow of dense suspensions of deformable particles in three dimensions. <em>Phys Rev E Stat Nonlin Soft Matter Phys.</em>, 75:066707, 2007.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="duenweg08a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[DunwegL08]</td><td>Burkhard Dünweg and Anthony&nbsp;J.C. Ladd. Lattice Boltzmann Simulations of Soft Matter Systems. In <em>Lattice Boltzmann Simulations of Soft Matter Systems</em>, Advances in Polymer Science, pages 1–78. Springer Berlin Heidelberg, 2008. URL: <a class="reference external" href="http://dx.doi.org/10.1007/12_2008_4">http://dx.doi.org/10.1007/12_2008_4</a>, <a class="reference external" href="https://doi.org/10.1007/12_2008_4">doi:10.1007/12_2008_4</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="essmann1995smooth" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[EPB+95]</td><td>Ulrich Essmann, Lalith Perera, Max&nbsp;L Berkowitz, Tom Darden, Hsing Lee, and Lee&nbsp;G Pedersen. A smooth particle mesh ewald method. <em>The Journal of chemical physics</em>, 103(19):8577–8593, 1995.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="ewald21" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Ewa21]</td><td>P.P. Ewald. Die berechnung optischer und elektrostatischer gitterpotentiale. <em>Ann. Phys.</em>, 64:253–287, 1921.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="frenkel02b" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[FS02]</td><td>Daan Frenkel and Berend Smit. <em>Understanding Molecular Simulation</em>. Academic Press, San Diego, second edition, 2002.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="grest86a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[GK86]</td><td>Gary&nbsp;S. Grest and Kurt Kremer. Molecular dynamics simulation for polymers in the presence of a heat bath. <em>Phys. Rev. A</em>, 33(5):3628–31, 1986.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="turner2008simulation" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[HTBL+08]</td><td>C&nbsp;Heath&nbsp;Turner, John&nbsp;K Brennan, Martin Lisal, William&nbsp;R Smith, J&nbsp;Karl&nbsp;Johnson, and Keith&nbsp;E Gubbins. Simulation of chemical reaction equilibria by the reaction ensemble monte carlo method: a review. <em>Molecular Simulation</em>, 34(2):119–146, 2008.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="hickey10a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[HHHS10]</td><td>Owen&nbsp;A. Hickey, Christian Holm, James&nbsp;L. Harden, and Gary&nbsp;W. Slater. Implicit Method for Simulating Electrohydrodynamics of Polyelectrolytes. <em>Phys. Rev. Lett.</em>, SEP 29 2010. <a class="reference external" href="https://doi.org/{10.1103/PhysRevLett.105.148301}">doi:10.1103/PhysRevLett.105.148301</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="hockney88" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[HE88]</td><td>R.&nbsp;W. Hockney and J.&nbsp;W. Eastwood. <em>Computer Simulation Using Particles</em>. IOP, 1988.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="humphrey96a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[HDS96]</td><td>W.&nbsp;Humphrey, A.&nbsp;Dalke, and K.&nbsp;Schulten. VMD: visual molecular dynamics. <em>J. Mol. Graphics</em>, 14:33–38, 1996.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="kesselheim11a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[KSH11]</td><td>Stefan Kesselheim, Marcello Sega, and Christian Holm. Applying to dna translocation: effect of dielectric boundaries. <em>Computer Physics Communications</em>, 182(1):33 – 35, 2011. &lt;ce:title&gt;Computer Physics Communications Special Edition for Conference on Computational Physics Kaohsiung, Taiwan, Dec 15-19, 2009&lt;/ce:title&gt;. URL: <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S001046551000305X">http://www.sciencedirect.com/science/article/pii/S001046551000305X</a>, <a class="reference external" href="https://doi.org/10.1016/j.cpc.2010.08.014">doi:10.1016/j.cpc.2010.08.014</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="kolafa92" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[KP92]</td><td>Jiri Kolafa and John&nbsp;W. Perram. Cutoff errors in the ewald summation formulae for point charge systems. <em>Molecular Simulation</em>, 9(5):351–368, 1992.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="kruegerthesis" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Kruger11]</td><td>Timm Krüger. <em>Computer simulation study of collective phenomena in dense suspensions of red blood cells under shear</em>. PhD thesis, Universität Bochum, 2011.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="landsgesell16b" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[LHS17a]</td><td>Jonas Landsgesell, Christian Holm, and Jens Smiatek. Simulation of weak polyelectrolytes: a comparison between the constant ph and the reaction ensemble method. <em>The European Physical Journal Special Topics</em>, 2017. <a class="reference external" href="https://doi.org/10.1140/epjst/e2016-60324-3">doi:10.1140/epjst/e2016-60324-3</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="landsgesell16a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[LHS17b]</td><td>Jonas Landsgesell, Christian Holm, and Jens Smiatek. Wang-landau reaction ensemble method: simulation of weak polyelectrolytes and general acid-base reactions. <em>Journal of Chemical Theory and Computation</em>, 13(2):852–862, 2017. <a class="reference external" href="https://doi.org/10.1021/acs.jctc.6b00791">doi:10.1021/acs.jctc.6b00791</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="magatti01a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[MF01]</td><td>D&nbsp;Magatti and F&nbsp;Ferri. Fast multi-tau real-time software correlator for dynamic light scattering. <em>Applied Optics</em>, 40(24):4011–4021, AUG 20 2001. <a class="reference external" href="https://doi.org/{10.1364/AO.40.004011}">doi:10.1364/AO.40.004011</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="mann05d" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Man05]</td><td>Bernward&nbsp;A. Mann. <em>The Swelling Behaviour of Polyelectrolyte Networks</em>. PhD thesis, Johannes Gutenberg-University, Mainz, Germany, December 2005.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="peskin2002" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Pes03]</td><td>Charles&nbsp;S Peskin. The immersed boundary method. <em>Acta Numerica</em>, 11:479–517, 2003.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="polyakov2013" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[PLD+13]</td><td>A.Yu. Polyakov, T.V. Lyutyy, S.&nbsp;Denisov, V.V. Reva, and P.&nbsp;Hänggi. Large-scale ferrofluid simulations on graphics processing units. <em>Computer Physics Communications</em>, 184:1483–1489, 2013.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="ramirez10a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[RSVL10]</td><td>Jorge Ramirez, Sathish&nbsp;K. Sukumaran, Bart Vorselaars, and Alexei&nbsp;E. Likhtman. Efficient on the fly calculation of time correlation functions in computer simulations. <em>J. Chem. Phys.</em>, 133(15):154103, OCT 21 2010. <a class="reference external" href="https://doi.org/{10.1063/1.3491098}">doi:10.1063/1.3491098</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="reed92a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[RR92]</td><td>Christopher&nbsp;E Reed and Wayne&nbsp;F Reed. Monte carlo study of titration of linear polyelectrolytes. <em>J. Chem. Phys.</em>, 96(2):1609–1620, 1992.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="lbgpu" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[RA12]</td><td>D.&nbsp;Roehm and A.&nbsp;Arnold. Lattice boltzmann simulations on GPUs with ESPResSo. <em>Eur. Phys. J. ST</em>, 210:73–88, 2012.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="rubinstein03a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[RC03]</td><td>Michael Rubinstein and Ralph&nbsp;H. Colby. <em>Polymer Physics</em>. Oxford University Press, Oxford, UK, 2003.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="schatzel88a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[SDS88]</td><td>K.&nbsp;Schätzel, M.&nbsp;Drewel, and S&nbsp;Stimac. Photon-correlation measurements at large lag times - improving statistical accuracy. <em>Journal of Modern Optics</em>, 35(4):711–718, APR 1988. <a class="reference external" href="https://doi.org/{10.1080/09500348814550731}">doi:10.1080/09500348814550731</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="smith81a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Smi81]</td><td>E.&nbsp;R. Smith. Electrostatic energy in ionic crystals. <em>Proc. R. Soc. Lond. A</em>, 375:475–505, 1981.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="smith94a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[ST94]</td><td>WR&nbsp;Smith and B&nbsp;Triska. The reaction ensemble method for the computer simulation of chemical and phase equilibria. i. theory and basic examples. <em>The Journal of chemical physics</em>, 100(4):3019–3027, 1994.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="soddeman01a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[SDK01]</td><td>T.&nbsp;Soddemann, B.&nbsp;Dünweg, and K.&nbsp;Kremer. A generic computer model for amphiphilic systems. <em>Eur. Phys. J. E</em>, 6:409, 2001.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="strebel99a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Str99]</td><td>R.&nbsp;Strebel. <em>Pieces of software for the Coulombic $m$ body problem</em>. PhD thesis, ETH Zürich, 1999. URL: <a class="reference external" href="http://e-collection.ethbib.ethz.ch/show?type=diss&amp;nr=13504">http://e-collection.ethbib.ethz.ch/show?type=diss&amp;nr=13504</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="succi01a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Suc01]</td><td>S.&nbsp;Succi. <em>The lattice Boltzmann equation for fluid dynamics and beyond</em>. Oxford University Press, USA, 2001.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="thompson09a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[TPM09]</td><td>A.&nbsp;P. Thompson, S.&nbsp;J. Plimpton, and W.&nbsp;Mattson. General formulation of pressure and stress tensor for arbitrary many-body interaction potentials under periodic boundary conditions. <em>Journal of Chemical Physics</em>, 131:154107, 2009.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="tyagi10a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[TSuzenS+10]</td><td>C.&nbsp;Tyagi, M.&nbsp;Süzen, M.&nbsp;Sega, M.&nbsp;Barbosa, S.&nbsp;Kantorovich, and C.&nbsp;Holm. An iterative, fast, linear-scaling method for computing induced charges on arbitrary dielectric boundaries. <em>J. Chem. Phys.</em>, 132:154112, 2010. <a class="reference external" href="https://doi.org/10.1063/1.3376011">doi:10.1063/1.3376011</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="icmmm2d" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[TAH07]</td><td>S.&nbsp;Tyagi, A.&nbsp;Arnold, and C.&nbsp;Holm. ICMMM2D: an accurate method to include planar dielectric interfaces via image charge summation. <em>J. Chem. Phys.</em>, 127:154723, 2007.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="icelc" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[TAH08]</td><td>Sandeep Tyagi, Axel Arnold, and Christian Holm. Electrostatic layer correction with image charges: a linear scaling method to treat slab 2d + h systems with dielectric interfaces. <em>J. Chem. Phys.</em>, 129(20):204102, 2008.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="wagner02" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[WP02]</td><td>Alexander&nbsp;J. Wagner and Ignacio Pagonabarraga. Lees–edwards boundary conditions for lattice boltzmann. <em>Journal of statistical physics</em>, 107:521–537, 2002. <a class="reference external" href="https://doi.org/10.1023/A:1014595628808">doi:10.1023/A:1014595628808</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="wang01a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[WL01]</td><td>Fugao Wang and David&nbsp;P Landau. Efficient, multiple-range random walk algorithm to calculate the density of states. <em>Physical review letters</em>, 86(10):2050, 2001.</td></tr>
+</tbody>
+</table>
+</p>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="1. Introduction"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="ESPResSo documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Jan 25, 2019.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1848 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>16. Advanced Methods &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="17. Under the hood" href="under_the_hood.html" />
+    <link rel="prev" title="15. Online-visualization" href="visualization.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="under_the_hood.html" title="17. Under the hood"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="visualization.html" title="15. Online-visualization"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="advanced-methods">
+<span id="id1"></span><h1>16. Advanced Methods<a class="headerlink" href="#advanced-methods" title="Permalink to this headline">¶</a></h1>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Write short introduction</p>
+</div>
+<div class="section" id="creating-bonds-when-particles-collide">
+<span id="id3"></span><h2>16.1. Creating bonds when particles collide<a class="headerlink" href="#creating-bonds-when-particles-collide" title="Permalink to this headline">¶</a></h2>
+<p>Please cite <a class="bibtex reference internal" href="zreferences.html#arnold13a" id="id4">[ALK+13]</a> when using dynamic bonding.</p>
+<p>With the help of this feature, bonds between particles can be created
+automatically during the simulation, every time two particles collide.
+This is useful for simulations of chemical reactions and irreversible
+adhesion processes. Both, sliding and non-sliding contacts can be created.</p>
+<p>The collision detection is controlled via the <a class="reference internal" href="espressomd.html#espressomd.system.System.collision_detection" title="espressomd.system.System.collision_detection"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.collision_detection</span></code></a> attribute, which is an instance of the class <a class="reference internal" href="espressomd.html#espressomd.collision_detection.CollisionDetection" title="espressomd.collision_detection.CollisionDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.collision_detection.CollisionDetection</span></code></a>.</p>
+<p>Several modes are available for different types of binding.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bind_centers&quot;</span></code>: adds a pair-bond between two particles at their first collision. By making the bonded interaction <em>stiff</em> enough, the particles can be held together after the collision. Note that the particles can still slide on each others’ surface, as the pair bond is not directional. This mode is set up as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="k">import</span> <span class="n">HarmonicBond</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">bond_centers</span> <span class="o">=</span> <span class="n">HarmonicBond</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">r_0</span><span class="o">=&lt;</span><span class="n">CUTOFF</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bond_centers</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">collision_detection</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;bind_centers&quot;</span><span class="p">,</span> <span class="n">distance</span><span class="o">=&lt;</span><span class="n">CUTOFF</span><span class="o">&gt;</span><span class="p">,</span>
+                                      <span class="n">bond_centers</span><span class="o">=</span><span class="n">bond_centers</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The parameters are as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">distance</span></code> is the distance between two particles at which the binding is triggered. This cutoff distance, <code class="docutils literal notranslate"><span class="pre">&lt;CUTOFF&gt;</span></code> in the example above, is typically chosen slightly larger than the particle diameter. It is also a good choice for the equilibrium length of the bond.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bond_centers</span></code> is the bonded interaction (an instance of <a class="reference internal" href="espressomd.html#espressomd.interactions.HarmonicBond" title="espressomd.interactions.HarmonicBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.HarmonicBond</span></code></a>) to be created between the particles. No guarantees are made regarding which of the two colliding particles gets the bond. Once there is a bond of this type on any of the colliding particles, no further binding occurs for this pair of particles.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bind_at_point_of_collision&quot;</span></code>: this mode prevents sliding of the colliding particles at the contact. This is achieved by
+creating two virtual sites at the point of collision. They are
+rigidly connected to the colliding particles, respectively. A bond is
+then created between the virtual sites, or an angular bond between
+the two colliding particles and the virtual particles. In the latter case,
+the virtual particles are the centers of the angle potentials
+(particle 2 in the description of the angle potential (see <a class="reference internal" href="inter_bonded.html#bond-angle-interactions"><span class="std std-ref">Bond-angle interactions</span></a>).
+Due to the rigid connection between each of the
+particles in the collision and its respective virtual site, a sliding
+at the contact point is no longer possible. See the documentation on
+<a class="reference internal" href="particles.html#rigid-arrangements-of-particles"><span class="std std-ref">Rigid arrangements of particles</span></a> for details. In addition to the bond between the virtual
+sites, the bond between the colliding particles is also created, i.e., the <code class="docutils literal notranslate"><span class="pre">&quot;bind_at_point_of_collision&quot;</span></code> mode implicitly includes the <code class="docutils literal notranslate"><span class="pre">&quot;bind_centers&quot;</span></code> mode. You
+can either use a real bonded interaction to prevent wobbling around
+the point of contact or you can use <a class="reference internal" href="espressomd.html#espressomd.interactions.Virtual" title="espressomd.interactions.Virtual"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.Virtual</span></code></a> which acts as a marker, only.
+The method is setup as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">collision_detection</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;bind_at_point_of_collision&quot;</span><span class="p">,</span>
+    <span class="n">distance</span><span class="o">=&lt;</span><span class="n">CUTOFF</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">bond_centers</span><span class="o">=&lt;</span><span class="n">BOND_CENTERS</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">bond_vs</span><span class="o">=&lt;</span><span class="n">BOND_VS</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">part_type_vs</span><span class="o">=&lt;</span><span class="n">PART_TYPE_VS</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">vs_placement</span><span class="o">=&lt;</span><span class="n">VS_PLACEMENT</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The parameters <code class="docutils literal notranslate"><span class="pre">distance</span></code> and <code class="docutils literal notranslate"><span class="pre">bond_centers</span></code> have the same meaning as in the <code class="docutils literal notranslate"><span class="pre">&quot;bind_centers&quot;</span></code> mode. The remaining parameters are as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bond_vs</span></code> is the bond to be added between the two virtual sites created on collision. This is either a pair-bond with an equilibrium length matching the distance between the virtual sites, or an angle bond fully stretched in its equilibrium configuration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">part_type_vs</span></code> is the particle type assigned to the virtual sites created on collision. In nearly all cases, no non-bonded interactions should be defined for this particle type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vs_placement</span></code> controls, where on the line connecting the centers of the colliding particles, the virtual sites are placed. A value of 0 means that the virtual sites are placed at the same position as the colliding particles on which they are based. A value of 0.5 will result in the virtual sites being placed ad the mid-point between the two colliding particles. A value of 1 will result the virtual site associated to the first colliding particle to be placed at the position of the second colliding particle. In most cases, 0.5, is a good choice. Then, the bond connecting the virtual sites should have an equilibrium length of zero.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;glue_to_surface&quot;</span></code>: This mode is used to irreversibly attach small particles to the surface of a big particle. It is asymmetric in that several small particles can be bound to a big particle but not vice versa. The small particles can change type after collision to make them <em>inert</em>. On collision, a single virtual site is placed and related to the big particle. Then, a bond (<code class="docutils literal notranslate"><span class="pre">bond_centers</span></code>) connects the big and the small particle. A second bond (<code class="docutils literal notranslate"><span class="pre">bond_vs</span></code>) connects the virtual site and the small particle. Further required parameters are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">part_type_to_attach_vs_to</span></code>: Type of the particle to which the virtual site is attached, i.e., the <em>big</em> particle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">part_type_to_be_glued</span></code>: Type of the particle bound to the virtual site (the <em>small</em> particle).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">part_type_after_glueing</span></code>: The type assigned to the particle bound to the virtual site (<em>small</em> particle) after the collision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">part_type_vs</span></code>: Particle type assigned to the virtual site created during the collision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distance_glued_particle_to_vs</span></code>: Distance of the virtual site to the particle being bound to it (<em>small</em> particle).</p></li>
+</ul>
+<p>Note: When the type of a particle is changed on collision, this makes the
+particle inert with regards to further collision. Should a particle  of
+type <code class="docutils literal notranslate"><span class="pre">part_type_to_be_glued</span></code> collide with two particles in a single
+time step, no guarantees are made with regards to which partner is selected.
+In particular, there is no guarantee that the choice is unbiased.</p>
+</li>
+</ul>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bind_three_particles&quot;</span></code> allows for the creation of agglomerates which maintain their shape
+similarly to those create by the mode <code class="docutils literal notranslate"><span class="pre">&quot;bind_at_point_of_collision&quot;</span></code>. The present approach works
+without virtual sites. Instead, for each two-particle collision, the
+surrounding is searched for a third particle. If one is found,
+angular bonds are placed to maintain the local shape.
+If all three particles are within the cutoff distance, an angle bond is added
+on each of the three particles in addition
+to the distance based bonds between the particle centers.
+If two particles are within the cutoff of a central particle (e.g., chain of three particles)
+an angle bond is placed on the central particle.
+The angular bonds being added are determined from the angle between the particles.
+This method does not depend on the particles’ rotational
+degrees of freedom being integrated. Virtual sites are also not
+required.
+The method, along with the corresponding bonds are setup as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n_angle_bonds</span> <span class="o">=</span> <span class="mi">181</span>  <span class="c1"># 0 to 180 degrees in one degree steps</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">bonded_inter</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Angle_Harmonic</span><span class="p">(</span>
+        <span class="n">bend</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">phi0</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">res</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+<span class="c1"># Create the bond passed to bond_centers here and add it to the system</span>
+
+<span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">collision_detection</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;bind_three_particles&quot;</span><span class="p">,</span>
+    <span class="n">bond_centers</span><span class="o">=&lt;</span><span class="n">BOND_CENTERS</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">bond_three_particles</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">three_particle_binding_angle_resolution</span><span class="o">=</span><span class="n">res</span><span class="p">,</span> <span class="n">distance</span><span class="o">=&lt;</span><span class="n">CUTOFF</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Important: The bonds for the angles are mapped via their numerical bond ids. In this example, ids from 0 to 180 are used. All other bonds required for the simulation need to be added to the system after those bonds. In particular, this applies to the bonded interaction passed via <code class="docutils literal notranslate"><span class="pre">bond_centers</span></code></p>
+</li>
+</ul>
+<p>The following limitations currently apply for the collision detection:</p>
+<ul class="simple">
+<li><p>No distinction is currently made between different particle types for the <code class="docutils literal notranslate"><span class="pre">&quot;bind_centers&quot;</span></code> method.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">&quot;bind</span> <span class="pre">at</span> <span class="pre">point</span> <span class="pre">of</span> <span class="pre">collision&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;glue</span> <span class="pre">to</span> <span class="pre">surface&quot;</span></code>  approaches require the feature <code class="docutils literal notranslate"><span class="pre">VIRTUAL_SITES_RELATIVE</span></code> to be activated in <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">&quot;bind</span> <span class="pre">at</span> <span class="pre">point</span> <span class="pre">of</span> <span class="pre">collision&quot;</span></code> approach cannot handle collisions
+between virtual sites</p></li>
+</ul>
+</div>
+<div class="section" id="lees-edwards-boundary-conditions">
+<span id="id5"></span><h2>16.2. Lees-Edwards boundary conditions<a class="headerlink" href="#lees-edwards-boundary-conditions" title="Permalink to this headline">¶</a></h2>
+<p>Lees-Edwards boundary conditions are not available in the current version of ESPResSo.</p>
+</div>
+<div class="section" id="immersed-boundary-method-for-soft-elastic-objects">
+<span id="id6"></span><h2>16.3. Immersed Boundary Method for soft elastic objects<a class="headerlink" href="#immersed-boundary-method-for-soft-elastic-objects" title="Permalink to this headline">¶</a></h2>
+<p>Please contact the Biofluid Simulation and Modeling Group at the
+University of Bayreuth if you plan to use this feature.</p>
+<p>With the Immersed Boundary Method (IBM), soft particles are considered as an infinitely
+thin shell filled with liquid (see e.g. <a class="bibtex reference internal" href="zreferences.html#peskin2002" id="id7">[Pes03]</a><a class="bibtex reference internal" href="zreferences.html#crowl2010" id="id8">[CF10]</a><a class="bibtex reference internal" href="zreferences.html#kruegerthesis" id="id9">[Kruger11]</a>). When the
+shell is deformed by an external flow, it responds with elastic restoring
+forces which are transmitted into the fluid. In the present case, the
+inner and outer liquid are of the same type and are simulated using
+lattice Boltzmann.</p>
+<p>Numerically, the shell is discretized by a set of marker points
+connected by triangles. The marker points are advected with <em>exactly</em>
+the local fluid velocity, i.e., they do not possess a mass nor a
+friction coefficient (this is different from the Object-in-Fluid method
+below). We implement these marker points as virtual tracer
+particles which are not integrated using the usual velocity-Verlet
+scheme, but instead are propagated using a simple Euler algorithm with
+the local fluid velocity.</p>
+<p>The immersed boundary method consists of two components, which can be used independently:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="particles.html#inertialess-lattice-boltzmann-tracers"><span class="std std-ref">Inertialess lattice Boltzmann tracers</span></a> implemented as virtual sites</p></li>
+<li><p>Interactions providing the elastic forces for the particles forming the surface. These are described below.</p></li>
+</ul>
+</div></blockquote>
+<p>To compute the elastic forces, three new bonded interactions are defined: <a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_Triel" title="espressomd.interactions.IBM_Triel"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_Triel</span></code></a>, <a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_Tribend" title="espressomd.interactions.IBM_Tribend"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_Tribend</span></code></a> and <a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_VolCons" title="espressomd.interactions.IBM_VolCons"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_VolCons</span></code></a>.</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_Triel" title="espressomd.interactions.IBM_Triel"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_Triel</span></code></a> is used to compute elastic shear forces. To setup an interaction, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tri1</span> <span class="o">=</span> <span class="n">IBM_Triel</span><span class="p">(</span><span class="n">ind1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind2</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ind3</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">elasticLaw</span><span class="o">=</span><span class="s2">&quot;Skalak&quot;</span><span class="p">,</span> <span class="n">k1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">k2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxDist</span><span class="o">=</span><span class="mf">2.4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">ind1</span></code>, <code class="docutils literal notranslate"><span class="pre">ind2</span></code> and <code class="docutils literal notranslate"><span class="pre">ind3</span></code> represent the indices of the three marker points making up the triangle. The parameter <code class="docutils literal notranslate"><span class="pre">maxDist</span></code>
+specifies the maximum stretch above which the bond is considered broken. The parameter <code class="docutils literal notranslate"><span class="pre">elasticLaw</span></code> can be either <code class="docutils literal notranslate"><span class="pre">&quot;NeoHookean&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;Skalak&quot;</span></code>.
+The parameters <code class="docutils literal notranslate"><span class="pre">k1</span></code> and <code class="docutils literal notranslate"><span class="pre">k2</span></code> are the elastic moduli.</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_Tribend" title="espressomd.interactions.IBM_Tribend"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_Tribend</span></code></a> computes out-of-plane bending forces. To setup an interaction, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tribend</span> <span class="o">=</span> <span class="n">IBM_Tribend</span><span class="p">(</span><span class="n">ind1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind2</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ind3</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ind4</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">refShape</span><span class="o">=</span><span class="s2">&quot;Initial&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">ind1</span></code>, <code class="docutils literal notranslate"><span class="pre">ind2</span></code>, <code class="docutils literal notranslate"><span class="pre">ind3</span></code> and <code class="docutils literal notranslate"><span class="pre">ind4</span></code> are four marker points corresponding to two neighboring triangles. The indices <code class="docutils literal notranslate"><span class="pre">ind1</span></code> and <code class="docutils literal notranslate"><span class="pre">ind3</span></code> contain the shared edge. Note that the marker points within a triangle must be labelled such that the normal vector <span class="math notranslate nohighlight">\(\vec{n} = (\vec{r}_\text{ind2} - \vec{r}_\text{ind1}) \times (\vec{r}_\text{ind3} - \vec{r}_\text{ind1})\)</span> points outward of the elastic object.
+The reference (zero energy) shape can be either <code class="docutils literal notranslate"><span class="pre">&quot;Flat&quot;</span></code> or the initial curvature <code class="docutils literal notranslate"><span class="pre">&quot;Initial&quot;</span></code>.
+The bending modulus is <code class="docutils literal notranslate"><span class="pre">kb</span></code>.</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_VolCons" title="espressomd.interactions.IBM_VolCons"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_VolCons</span></code></a> is a volume-conservation force. Without this correction, the volume of the soft object tends to shrink over time due to numerical inaccuracies. Therefore, this implements an artificial force intended to keep the volume constant. If volume conservation is to be used for a given soft particle, the interaction must be added to every marker point belonging to that object.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">volCons</span> <span class="o">=</span> <span class="n">IBM_VolCons</span><span class="p">(</span><span class="n">softID</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kappaV</span><span class="o">=</span><span class="n">kV</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">softID</span></code> identifies the soft particle and <code class="docutils literal notranslate"><span class="pre">kv</span></code> is a volumetric spring constant.
+Note that the <a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_VolCons" title="espressomd.interactions.IBM_VolCons"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.IBM_VolCons</span></code></a> <code class="docutils literal notranslate"><span class="pre">bond</span></code> does not need a bond partner. It is added to a particle as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">s</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">Volcons</span><span class="p">,))</span>
+</pre></div>
+</div>
+<p>The comma is needed to force Python to create a tuple containing a single item.</p>
+<p>For a more detailed description, see e.g. Guckenberger and Gekle, J. Phys. Cond. Mat. (2017) or contact us.
+This feature probably does not work with advanced LB features such electro kinetics.</p>
+<p>A sample script is provided in the <code class="file docutils literal notranslate"><span class="pre">/samples/immersed_boundary/</span></code> directory of the source distribution.</p>
+</div>
+<div class="section" id="object-in-fluid">
+<span id="id10"></span><h2>16.4. Object-in-fluid<a class="headerlink" href="#object-in-fluid" title="Permalink to this headline">¶</a></h2>
+<p>If you plan to use this feature, please contact the Cell-in-fluid Research Group at the
+University of Zilina: <a class="reference external" href="mailto:ivan&#46;cimrak&#37;&#52;&#48;fri&#46;uniza&#46;sk">ivan<span>&#46;</span>cimrak<span>&#64;</span>fri<span>&#46;</span>uniza<span>&#46;</span>sk</a> or <a class="reference external" href="mailto:iveta&#46;jancigova&#37;&#52;&#48;fri&#46;uniza&#46;sk">iveta<span>&#46;</span>jancigova<span>&#64;</span>fri<span>&#46;</span>uniza<span>&#46;</span>sk</a>.</p>
+<p>When using this module, please cite <a class="bibtex reference internal" href="zreferences.html#cimrak2014" id="id11">[CimrakGJanvcigova14]</a> (BibTeX key Cimrak2014 in doc/sphinx/zrefs.bib) and <a class="bibtex reference internal" href="zreferences.html#cimrak2012" id="id12">[CimrakGS12]</a> (Bibtex key Cimrak2012 in doc/sphinx/zrefs.bib)</p>
+<p>This documentation introduces the features of module Object-in-fluid (OIF).
+Even though ESPResSo was not primarily intended to work with closed
+objects, it is a flexible package and appears very suitable when one
+wants to model closed objects with elastic properties, especially if
+they are immersed in a moving fluid. Here we describe the module
+itself and offer some additional information to get you started with. Additionally, we
+provide a step by step tutorial that will show you how to use this
+module.</p>
+<p>The OIF module was developed for simulations of red blood cells
+flowing through microfluidic devices and therefore the elasticity
+features were designed with this application in mind. However, they
+are completely tunable and can be modified easily to allow the user to
+model any elastic object moving in fluid flow.</p>
+<p><a class="reference internal" href="_images/oif1.png"><img alt="image1" src="_images/oif1.png" style="width: 4.30000cm;" /></a> <a class="reference internal" href="_images/oif2.png"><img alt="image2" src="_images/oif2.png" style="width: 4.20000cm;" /></a> <a class="reference internal" href="_images/oif3.png"><img alt="image3" src="_images/oif3.png" style="width: 4.20000cm;" /></a></p>
+<div class="section" id="triangulations-of-elastic-objects">
+<h3>16.4.1. Triangulations of elastic objects<a class="headerlink" href="#triangulations-of-elastic-objects" title="Permalink to this headline">¶</a></h3>
+<p>To create an elastic object, we need a triangulation of the surface of
+this object. Sample triangulations are provided at
+<a class="reference external" href="https://web.archive.org/web/20180719231829/http://cell-in-fluid.fri.uniza.sk/en/content/oif-espresso">http://cell-in-fluid.fri.uniza.sk/en/content/oif-espresso</a>.
+Users can create their own meshes, for example in gmsh, salome or any other meshing software. The
+required format is as follows:</p>
+<p>The file <code class="file docutils literal notranslate"><span class="pre">some_nodes.dat</span></code> should contain triplets of floats (one
+triplet per line), where each triplet represents the <span class="math notranslate nohighlight">\(x, y\)</span> and
+<span class="math notranslate nohighlight">\(z\)</span> coordinates of one node of the surface triangulation. No
+additional information should be written in this file, so this means
+that the number of lines equals to the number of surface nodes. The
+coordinates of the nodes should be specified in such a way that the
+approximate center of mass of the object corresponds to the origin
+(0,0,0). This is for convenience when placing the objects at desired
+locations later.</p>
+<p>The file <code class="file docutils literal notranslate"><span class="pre">some_triangles.dat</span></code> should also contain triplets of
+numbers, this time integers. These integers refer to the IDs of the nodes in
+the <code class="file docutils literal notranslate"><span class="pre">some_nodes.dat</span></code> file and specify which three nodes form a
+triangle. Please, note that the nodes’ IDs start at 0, i.e.
+the node written in the first line of <code class="file docutils literal notranslate"><span class="pre">some_nodes.dat</span></code> has ID 0, the
+node in the second line, has ID 1, etc.</p>
+</div>
+<div class="section" id="description-of-sample-script">
+<h3>16.4.2. Description of sample script<a class="headerlink" href="#description-of-sample-script" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The following features are required:
+<code class="docutils literal notranslate"><span class="pre">LB</span></code>, <code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES</span></code>,
+<code class="docutils literal notranslate"><span class="pre">EXTERNAL_FORCES</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MASS</span></code>, <code class="docutils literal notranslate"><span class="pre">OIF_LOCAL_FORCES</span></code>,
+<code class="docutils literal notranslate"><span class="pre">OIF_GLOBAL_FORCES</span></code>, <code class="docutils literal notranslate"><span class="pre">SOFT_SPHERE</span></code>, <code class="docutils literal notranslate"><span class="pre">MEMBRANE_COLLISION</span></code></p>
+</div>
+<p>The script described in this section is available in <code class="file docutils literal notranslate"><span class="pre">samples/object-in-fluid/two-cells.py</span></code> and also at
+<a class="reference external" href="https://web.archive.org/web/20180719231829/http://cell-in-fluid.fri.uniza.sk/en/content/oif-espresso">http://cell-in-fluid.fri.uniza.sk/en/content/oif-espresso</a>.</p>
+<p>In the first few lines, the script includes several imports related to
+the red blood cell model, fluid, boundaries and interactions. Then we
+have:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">(</span><span class="mi">22</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.2</span>
+</pre></div>
+</div>
+<p>Here we set up a system and its most important parameters. The <code class="docutils literal notranslate"><span class="pre">skin</span></code>
+depth tunes the system’s performance. The one important thing a user needs to know
+about it is that it has to be strictly less than half the grid size.</p>
+<p><code class="docutils literal notranslate"><span class="pre">box_l</span></code> sets up the dimensions of the 3D simulation box. You might
+wonder what the units are. For now, you can think of them as
+micrometers, we will return to them later.</p>
+<p><code class="docutils literal notranslate"><span class="pre">time_step</span></code> is the time step that will be used in the simulation, for
+the purposes here, in microseconds. It allows separate specification of
+time step for the particles and for the fluid. This is useful when one
+takes into account also thermal fluctuations relevant on molecular
+level, however, for us, both of these time steps will mostly be
+identical.</p>
+<div class="section" id="specification-of-immersed-objects">
+<h4>16.4.2.1. Specification of immersed objects<a class="headerlink" href="#specification-of-immersed-objects" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cell_type</span> <span class="o">=</span> <span class="n">OifCellType</span><span class="p">(</span><span class="n">nodesfile</span><span class="o">=</span><span class="s2">&quot;input/rbc374nodes.dat&quot;</span><span class="p">,</span>
+    <span class="n">trianglesfile</span><span class="o">=</span><span class="s2">&quot;input/rbc374triangles.dat&quot;</span><span class="p">,</span> <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+    <span class="n">ks</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="mf">0.016</span><span class="p">,</span> <span class="n">kal</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">kag</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">kv</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>We do not create elastic objects directly but rather each one has to
+correspond to a template, <code class="docutils literal notranslate"><span class="pre">cell_type</span></code>, that has been created first.
+The advantage of this approach is clear when creating many objects of
+the same type that only differ by e.g. position or rotation, because in
+such case it significantly speeds up the creation of objects that are
+just copies of the same template.</p>
+<p>The three mandatory arguments are <code class="docutils literal notranslate"><span class="pre">nodes-file</span></code> and <code class="docutils literal notranslate"><span class="pre">triangles-file</span></code>
+that specify input data files with desired triangulation and <code class="docutils literal notranslate"><span class="pre">system</span></code>
+that specifies the ESPResSo system. The relaxed mesh triangles should be
+as close to equilateral as possible with average edge length
+approximately equal to the space discretisation step <span class="math notranslate nohighlight">\(\Delta x\)</span>.
+While these lengths vary during the simulation, the connectivity of the
+mesh nodes never changes. Basic meshes can be downloaded from our
+website. This script assumes that the two necessary files are located
+inside an <code class="docutils literal notranslate"><span class="pre">input</span></code> directory that resides in the same folder as the
+simulation script.</p>
+<p>All other arguments are optional. <code class="docutils literal notranslate"><span class="pre">resize</span></code> defines resizing in the
+<span class="math notranslate nohighlight">\(x, y, z\)</span> directions with respect to unit size of the object, so
+in this case, the cell radius will be 2. <code class="docutils literal notranslate"><span class="pre">ks</span></code>, <code class="docutils literal notranslate"><span class="pre">kb</span></code>, <code class="docutils literal notranslate"><span class="pre">kal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">kag</span></code>, <code class="docutils literal notranslate"><span class="pre">kv</span></code> specify the elastic properties: stretching, bending,
+local area conservation, global area conservation and volume
+conservation respectively.</p>
+<p>The backslash allows the long command to continue over
+multiple lines.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span> <span class="o">=</span> <span class="n">OifCell</span><span class="p">(</span><span class="n">cellType</span><span class="o">=</span><span class="n">cell_type</span><span class="p">,</span> <span class="n">partType</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Next, an actual object is created and its initial position is saved to a
+<em>.vtk</em> file (the directory <code class="docutils literal notranslate"><span class="pre">output/sim1</span></code> needs to exist before the
+script is executed). Each object has to have a unique ID, specified using the
+keyword <code class="docutils literal notranslate"><span class="pre">partType</span></code>. The IDs have to start at 0 and increase
+consecutively. The other two mandatory arguments are <code class="docutils literal notranslate"><span class="pre">cellType</span></code> and
+<code class="docutils literal notranslate"><span class="pre">origin</span></code>. <code class="docutils literal notranslate"><span class="pre">cellType</span></code> specifies which previously defined cell type
+will be used for this object. <code class="docutils literal notranslate"><span class="pre">origin</span></code> gives placement of object’s
+center in the simulation box.</p>
+</div>
+<div class="section" id="specification-of-fluid-and-movement">
+<h4>16.4.2.2. Specification of fluid and movement<a class="headerlink" href="#specification-of-fluid-and-movement" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lbf</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lb</span><span class="o">.</span><span class="n">LBFluid</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dens</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">visc</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">fric</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+                            <span class="n">tau</span><span class="o">=</span><span class="n">time_step</span><span class="p">,</span> <span class="n">ext_force_density</span><span class="o">=</span><span class="p">[</span><span class="mf">0.002</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This part of the script specifies the fluid that will get the system
+moving. Here <code class="docutils literal notranslate"><span class="pre">agrid</span></code> <span class="math notranslate nohighlight">\(=\Delta x\)</span> is the spatial discretisation
+step, <code class="docutils literal notranslate"><span class="pre">tau</span></code> is the time step that will be the same as the time step
+for particles, viscosity <code class="docutils literal notranslate"><span class="pre">visc</span></code> and density <code class="docutils literal notranslate"><span class="pre">dens</span></code> of the fluid are
+physical parameters scaled to lattice units. <code class="docutils literal notranslate"><span class="pre">fric</span></code> is a
+(non-physical) friction parameter that enters the fluid-object
+interaction and has to be set carefully. Finally, <code class="docutils literal notranslate"><span class="pre">ext_force_density</span></code> sets the
+force-per-unit-volume vector that drives the fluid. Another option to
+add momentum to fluid is by specifying the velocity on the boundaries.</p>
+<p>Here we achieved the movement of the fluid by applying external force.
+Another alternative is to set up a wall/rhomboid with velocity. This
+does not mean that the physical boundary is moving, but rather that it
+transfers specified momentum onto the fluid.</p>
+</div>
+<div class="section" id="specification-of-boundaries">
+<h4>16.4.2.3. Specification of boundaries<a class="headerlink" href="#specification-of-boundaries" title="Permalink to this headline">¶</a></h4>
+<p>To set up the geometry of the channels, we mostly use rhomboids and
+cylinders, but there are also other boundary types available in <em>ESPResSo</em>.
+Their usage is described elsewhere.</p>
+<p><a class="reference internal" href="_images/oifcylinder.png"><img alt="image4" src="_images/oifcylinder.png" style="width: 2.30000cm;" /></a> <a class="reference internal" href="_images/oifrhomboid.png"><img alt="image5" src="_images/oifrhomboid.png" style="width: 5.20000cm;" /></a> <a class="reference internal" href="_images/oifchannel.png"><img alt="image6" src="_images/oifchannel.png" style="width: 4.00000cm;" /></a></p>
+<p>Each wall and obstacle has to be specified separately as a fluid
+boundary and as a particle constraint. The former enters the simulation
+as a boundary condition for the fluid, the latter serves for
+particle-boundary interactions. Sample cylinder and rhomboid can then be
+defined as follows. First we define the two shapes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">boundary1</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Rhomboid</span><span class="p">(</span><span class="n">corner</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                            <span class="n">a</span><span class="o">=</span><span class="p">[</span><span class="n">boxX</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                            <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">boxY</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                            <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+                            <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">boundary2</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Cylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mf">11.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">],</span>
+                            <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+                            <span class="n">length</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
+                            <span class="n">radius</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+                            <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">direction=1</span></code> determines that the fluid is on the <em>outside</em>. Next
+we create boundaries for the fluid:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">boundary1</span><span class="p">))</span>
+<span class="n">system</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">boundary2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Followed by constraints for cells:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">boundary1</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">boundary2</span><span class="p">,</span> <span class="n">particle_type</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">particle_type=10</span></code> will be important for specifying cell-wall
+interactions later. And finally, we output the boundaries for
+visualisation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">output_vtk_rhomboid</span><span class="p">(</span><span class="n">corner</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                    <span class="n">a</span><span class="o">=</span><span class="p">[</span><span class="n">boxX</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                    <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">boxY</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                    <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+                    <span class="n">out_file</span><span class="o">=</span><span class="s2">&quot;output/sim1/wallBack.vtk&quot;</span><span class="p">)</span>
+<span class="n">output_vtk_cylinder</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mf">11.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">],</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+                    <span class="n">length</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span>
+                    <span class="n">radius</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+                    <span class="n">n</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                    <span class="n">out_file</span><span class="o">=</span><span class="s2">&quot;output/sim1/obstacle.vtk&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the method for cylinder output also has an argument <code class="docutils literal notranslate"><span class="pre">n</span></code>.
+This specifies number of rectangular faces on the side.</p>
+<p>It is a good idea to output and visualize the boundaries and objects
+just prior to running the actual simulation, to make sure that the
+geometry is correct and no objects intersect with any boundaries.</p>
+</div>
+<div class="section" id="specification-of-interactions">
+<h4>16.4.2.4. Specification of interactions<a class="headerlink" href="#specification-of-interactions" title="Permalink to this headline">¶</a></h4>
+<p>Since we have two cells, we can also set up the cell-cell interactions
+so that they <em>know</em> about each other:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">membrane_collision</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+    <span class="n">membrane_a</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">membrane_n</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">membrane_cut</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">membrane_offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These interactions act <em>pointwise</em>, e.g. each particle of type 0 (all
+mesh points of cell0) has a repulsive membrane collision interaction
+with each particle of type 1 (all mesh points of cell1) once the pair
+gets closer than <code class="docutils literal notranslate"><span class="pre">membrane_cut</span></code>.</p>
+<p>Similar interaction is defined with the boundaries:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">soft_sphere</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+    <span class="n">soft_a</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">soft_n</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">soft_cut</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">soft_offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These interactions are also <em>pointwise</em>, e.g. each particle of type 0
+(that means all mesh points of cell) will have a repulsive soft-sphere
+interaction with all boundaries of type 10 (here all boundaries) once it
+gets closer than <code class="docutils literal notranslate"><span class="pre">soft_cut</span></code>. The parameters <code class="docutils literal notranslate"><span class="pre">soft_a</span></code> and <code class="docutils literal notranslate"><span class="pre">soft_n</span></code>
+adjust how strong the interaction is and <code class="docutils literal notranslate"><span class="pre">soft_offset</span></code> is a distance
+offset, which will always be zero for our purposes.</p>
+</div>
+<div class="section" id="system-integration">
+<h4>16.4.2.5. System integration<a class="headerlink" href="#system-integration" title="Permalink to this headline">¶</a></h4>
+<p>And finally, the heart of this script is the integration loop at the
+end:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">101</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+    <span class="n">cell</span><span class="o">.</span><span class="n">output_vtk_pos_folded</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;output/sim1/cell_&quot;</span>
+                               <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.vtk&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;time: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span>
+<span class="nb">print</span> <span class="s2">&quot;Simulation completed.&quot;</span>
+</pre></div>
+</div>
+<p>This simulation runs for 100 cycles. In each cycle, 500 integration
+steps are performed and output is saved into files
+<code class="file docutils literal notranslate"><span class="pre">output/sim1/cell_*.vtk</span></code>. Note that they differ only by the number
+before the <em>.vtk</em> extension (this variable changes due to the <code class="docutils literal notranslate"><span class="pre">for</span></code>
+loop) and this will allow us to animate them in the visualisation
+software. <code class="docutils literal notranslate"><span class="pre">str</span></code> changes the type of <code class="docutils literal notranslate"><span class="pre">i</span></code> from integer to string, so
+that it can be used in the filename. The strings can be joined together
+by the + sign. Also, in each pass of the loop, the simulation time is
+printed in the terminal window and when the integration is complete, we
+should get a message about it.</p>
+<p>To sum up, the proper order of setting up individual simulation
+parts is as follows:</p>
+<ul class="simple">
+<li><p>cell types</p></li>
+<li><p>cells</p></li>
+<li><p>fluid</p></li>
+<li><p>fluid boundaries</p></li>
+<li><p>interactions</p></li>
+</ul>
+<p>If cell types and cells are specified after the fluid, the simulation
+is slower. Also, interactions can only be defined once the objects
+and boundaries both exist. Technically, the fluid boundaries can be
+specified before fluid, but it is really not recommended.</p>
+</div>
+<div class="section" id="running-the-simulation">
+<h4>16.4.2.6. Running the simulation<a class="headerlink" href="#running-the-simulation" title="Permalink to this headline">¶</a></h4>
+<p>The script can be executed
+in terminal using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>../pypresso script.py
+</pre></div>
+</div>
+<p>Here <code class="file docutils literal notranslate"><span class="pre">script.py</span></code> is the name of the script we just went over and
+<code class="file docutils literal notranslate"><span class="pre">../pypresso</span></code> should be replaced with the path to your executable.
+This command assumes that we are currently in the same directory as the
+script. Once the command is executed, messages should appear on the
+terminal about the creation of cell type, cell and the integration
+steps.</p>
+</div>
+<div class="section" id="writing-out-data">
+<h4>16.4.2.7. Writing out data<a class="headerlink" href="#writing-out-data" title="Permalink to this headline">¶</a></h4>
+<p>In the script, we have used the commands such as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span><span class="o">.</span><span class="n">output_vtk_pos_folded</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;output/sim1/cell_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.vtk&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to output the information about cell in every pass of the simulation
+loop. These files can then be used for inspection in ParaView and
+creation of animations. It is also possible to save a .vtk file for the
+fluid. And obviously, one can save various types of other data into text
+or data files for further processing and analysis.</p>
+</div>
+</div>
+<div class="section" id="visualization-in-paraview">
+<h3>16.4.3. Visualization in ParaView<a class="headerlink" href="#visualization-in-paraview" title="Permalink to this headline">¶</a></h3>
+<p>For visualization we suggest the free software ParaView. All .vtk
+files (boundaries, fluid, objects at all time steps) can be loaded at
+the same time. The loading is a two step process, because only after
+pressing the Apply button, are the files actually imported. Using the
+eye icon to the left of file names, one can turn on and off the
+individual objects and/or boundaries.</p>
+<p>Fluid can be visualized using Filters/Alphabetical/Glyph (or other
+options from this menu. Please, refer to the ParaView user’s guide for
+more details).</p>
+<p>Note, that ParaView does not automatically reload the data if they
+have been changed in the input folder, but a useful thing to know is
+that the created filters can be “recycled”. Once you delete the old
+data, load the new data and right-click on the existing filters, you
+can re-attach them to the new data.</p>
+<p>It is a good idea to output and visualize the boundaries and objects
+just prior to running the actual simulation, to make sure that the
+geometry is correct and no objects intersect with any boundaries. This
+would cause “particle out of range” error and crash the simulation.</p>
+<div class="section" id="file-format">
+<h4>16.4.3.1. File format<a class="headerlink" href="#file-format" title="Permalink to this headline">¶</a></h4>
+<p>ParaView (download at <a class="reference external" href="http://www.paraview.org">http://www.paraview.org</a>) accepts .vtk files. For
+our cells we use the following format:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># vtk DataFile Version 3.0
+Data
+ASCII
+DATASET POLYDATA
+POINTS 393 float
+p0x p0y p0z
+p1x p1y p1z
+...
+p391x p391y p391z
+p392x p392y p392z
+TRIANGLE_STRIPS num_triang 4*num_triang
+3 p1 p2 p3
+3 p1 p3 p5
+...
+3 p390 p391 p392
+</pre></div>
+</div>
+<p>where the cell has 393 surface nodes (particles). After initial
+specification, the list of points is present, with x, y, z coordinates for
+each. Then we write the triangulation, since that is how our
+surface is specified. We need to know the number of triangles
+(<code class="docutils literal notranslate"><span class="pre">num_triang</span></code>) and the each line/triangle is specified by 4 numbers
+(so we are telling ParaView to expect 4 *  <code class="docutils literal notranslate"><span class="pre">num_triang</span></code>  numbers in
+the following lines. Each line begins with 3 (which stands for a
+triangle) and three point IDs that tell us which three points (from
+the order above) form this specific triangle.</p>
+</div>
+<div class="section" id="color-coding-of-scalar-data-by-surface-points">
+<h4>16.4.3.2. Color coding of scalar data by surface points<a class="headerlink" href="#color-coding-of-scalar-data-by-surface-points" title="Permalink to this headline">¶</a></h4>
+<p>It is possible to save (and visualize) data corresponding to individual
+surface points. These data can be scalar or vector values associated
+with all surface points. At the end of the .vtk file above, add the
+following lines:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>POINT_DATA 393
+SCALARS sample_scalars float 1
+LOOKUP_TABLE default
+value-at-p0
+value-at-p1
+...
+value-at-p392
+</pre></div>
+</div>
+<p>This says that data for each of 393 points are coming. Next line says
+that the data are scalar in this case, one float for each point. To
+color code the values in the visualization, a default (red-to-blue)
+table will be used. It is also possible to specify your own lookup
+table. As an example, we might want to see a force magnitude in each
+surface node</p>
+<p><a class="reference internal" href="_images/oifstretched-sphere.png"><img alt="image7" src="_images/oifstretched-sphere.png" style="width: 4.00000cm;" /></a></p>
+<blockquote>
+<div><p>Stretched sphere after some relaxation, showing magnitude
+of total stretching force in each node.</p>
+</div></blockquote>
+</div>
+<div class="section" id="color-coding-of-scalar-data-by-triangles">
+<h4>16.4.3.3. Color coding of scalar data by triangles<a class="headerlink" href="#color-coding-of-scalar-data-by-triangles" title="Permalink to this headline">¶</a></h4>
+<p>It is also possible to save (and visualize) data corresponding to
+individual triangles</p>
+<p><a class="reference internal" href="_images/oifcolored-triangles.png"><img alt="image8" src="_images/oifcolored-triangles.png" style="width: 4.00000cm;" /></a></p>
+<blockquote>
+<div><p>Red blood cell showing
+which triangles (local surface areas) are under most strain in shear
+flow.</p>
+</div></blockquote>
+<p>In such case, the keyword <code class="docutils literal notranslate"><span class="pre">POINT_DATA</span></code> is changed to <code class="docutils literal notranslate"><span class="pre">CELL_DATA</span></code> and the number of
+triangles is given instead of number of mesh points.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># vtk DataFile Version 3.0
+Data
+ASCII
+DATASET POLYDATA
+POINTS 4 float
+1 1 1
+3 1 1
+1 3 1
+1 1 3
+TRIANGLE_STRIPS 3 12
+3 0 1 2
+3 0 2 3
+3 0 1 3
+CELL_DATA 3
+SCALARS sample_scalars float 1
+LOOKUP_TABLE default
+0.0
+0.5
+1.0
+</pre></div>
+</div>
+<p>Note - it is also possible to save (and visualize) data corresponding to edges.</p>
+</div>
+<div class="section" id="multiple-scalar-data-in-one-vtk-file">
+<h4>16.4.3.4. Multiple scalar data in one .vtk file<a class="headerlink" href="#multiple-scalar-data-in-one-vtk-file" title="Permalink to this headline">¶</a></h4>
+<p>If one wants to switch between several types of scalar values
+corresponding to mesh nodes, these are specifies consecutively in the
+.vtk file, as follows. Their names (<em>scalars1</em> and <em>scalars2</em> in the
+following example) appear in a drop-down menu in ParaView.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>POINT_DATA 393
+SCALARS scalars1 float 1
+LOOKUP_TABLE default
+value1-at-p0
+value1-at-p1
+...
+value1-at-p392
+SCALARS scalars2 float 1
+LOOKUP_TABLE default
+value2-at-p0
+value2-at-p1
+...
+value2-at-p392
+</pre></div>
+</div>
+</div>
+<div class="section" id="vector-data-for-objects-vtk-file">
+<h4>16.4.3.5. Vector data for objects .vtk file<a class="headerlink" href="#vector-data-for-objects-vtk-file" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line">If we want to observe some vector data (e.g. outward normal,
+fig. [fig:vectordata]) at points of the saved objects, we can use the
+following structure of the .vtk file, where the vector at one point is
+[v1, v2, v3]:</div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>POINT_DATA 393
+VECTORS vector_field float
+v1-at-p0 v2-at-p0 v3-at-p0
+v1-at-p1 v2-at-p1 v3-at-p1
+...
+v1-at-p391 v2-at-p391 v3-at-p392
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/oifvectordata.png"><img alt="image9" src="_images/oifvectordata.png" style="width: 4.00000cm;" /></a></p>
+<blockquote>
+<div><p>Example of vector data stored in points of the object</p>
+</div></blockquote>
+<div class="line-block">
+<div class="line">More info on .vtk files and possible options:</div>
+<div class="line"><a class="reference external" href="http://www.vtk.org/VTK/img/file-formats.pdf">http://www.vtk.org/VTK/img/file-formats.pdf</a></div>
+</div>
+</div>
+<div class="section" id="automatic-loading">
+<h4>16.4.3.6. Automatic loading<a class="headerlink" href="#automatic-loading" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line">Sometimes it is frustrating to reload data in ParaView: manually open
+all the files, click all the properties etc. This however, can be done
+automatically.</div>
+<div class="line">Scenario:</div>
+<div class="line">Load file <em>data.vtk</em> with the fluid velocity field.</div>
+<div class="line">Add filter called <em>slice</em> to visualize the flow field on the
+cross-section.</div>
+<div class="line">To do it automatically, ParaView has a feature for tracking steps. To
+record the steps that create the scenario above, first choose
+Tools/Start Trace. From that moment, all the steps done in ParaView
+will be recorded. Then you Tools/Stop Trace. Afterwards, a window
+appears with a python code with recorded steps. It needs to be saved
+as, e.g. <em>loading-script.py.</em></div>
+<div class="line">Next time you open ParaView with command
+<code class="docutils literal notranslate"><span class="pre">paraview</span> <span class="pre">--script=loading-script.py</span></code> and all the steps for creating
+that scenario will be executed and you end up with the velocity field
+visualized.</div>
+</div>
+</div>
+</div>
+<div class="section" id="available-object-in-fluid-oif-classes">
+<h3>16.4.4. Available Object-in-fluid (OIF) classes<a class="headerlink" href="#available-object-in-fluid-oif-classes" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line">Here we describe the currently available OIF classes and commands.
+Note that there are more still being added. We would be pleased to
+hear from you about any suggestions on further functionality.</div>
+</div>
+<div class="line-block">
+<div class="line">Notation: <code class="docutils literal notranslate"><span class="pre">keywords</span></code>, <em>parameter values</em>, <strong>vectors</strong></div>
+<div class="line">The keywords do not have to be in a specific order.</div>
+</div>
+<div class="section" id="class-oifcelltype">
+<h4>16.4.4.1. class OifCellType<a class="headerlink" href="#class-oifcelltype" title="Permalink to this headline">¶</a></h4>
+<p>For those familiar with earlier version of object-in-fluid framework,
+this class corresponds to the oif_emplate in tcl. It contains a “recipe”
+for creating cells of the same type. These cells can then be placed at
+different locations with different orientation, but their elasticity and
+size is determined by the CellType. There are no actual particles
+created at this stage. Also, while the interactions are defined, no
+bonds are created here.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OifCellType</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+<span class="n">OifCellType</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">output_mesh_triangles</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">nodesfile=</span></code><em>nodes.dat</em> - input file. Each line contains three
+real numbers. These are the <span class="math notranslate nohighlight">\(x, y, z\)</span> coordinates of individual
+surface mesh nodes of the objects centered at [0,0,0] and normalized
+so that the “radius” of the object is 1.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">trianglesfile=</span></code><em>triangles.dat</em> - input file. Each line contains
+three integers. These are the ID numbers of the mesh nodes as they
+appear in <em>nodes.dat</em>. Note that the first node has ID 0.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">system=</span></code><em>system</em> Particles of cells created using this
+template will be added to this system. Note that there can be only one
+system per simulation.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">ks=</span></code><em>value</em> - elastic modulus for stretching forces.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kslin=</span></code> <em>value</em> - elastic modulus for linear stretching forces.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kb=</span></code> <em>value</em> - elastic modulus for bending forces.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kal=</span></code> <em>value</em> - elastic modulus for local area forces.</div>
+</div>
+<div class="line-block">
+<div class="line">The switches <code class="docutils literal notranslate"><span class="pre">ks</span></code>, <code class="docutils literal notranslate"><span class="pre">kb</span></code> and <code class="docutils literal notranslate"><span class="pre">kal</span></code> set elastic parameters for
+local interactions: <code class="docutils literal notranslate"><span class="pre">ks</span></code> for edge stiffness, <code class="docutils literal notranslate"><span class="pre">kb</span></code> for angle
+preservation stiffness and <code class="docutils literal notranslate"><span class="pre">kal</span></code> for triangle area preservation
+stiffness. Currently, the stiffness is implemented to be uniform over
+the whole object, but with some tweaking, it is possible to have
+non-uniform local interactions.</div>
+</div>
+<div class="line-block">
+<div class="line">Note, the difference between stretching (<code class="docutils literal notranslate"><span class="pre">ks</span></code>) and linear stretching
+(<code class="docutils literal notranslate"><span class="pre">kslin</span></code>) - these two options cannot be used simultaneously:</div>
+</div>
+<div class="line-block">
+<div class="line">Linear stretching behaves like linear spring, where the stretching
+force is calculated as <span class="math notranslate nohighlight">\(\mathbf{F}_s=k_s*\Delta L\)</span>, where
+<span class="math notranslate nohighlight">\(\Delta L\)</span> is the prolongation of the given edge. By default,
+the stretching is non-linear (neo-Hookian).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kvisc=</span></code><em>value</em> - elastic modulus for viscosity of the membrane.
+Viscosity slows down the reaction of the membrane.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kag=</span></code><em>value</em> - elastic modulus for global area forces</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">kv=</span></code><em>value</em> - elastic modulus for volume forces</div>
+</div>
+<div class="line-block">
+<div class="line">Note: At least one of the elastic moduli should be set.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">resize=</span></code>(<em>x, y, z</em>) - coefficients, by which the coordinates
+stored in <span class="math notranslate nohighlight">\(nodesfile\)</span> will be stretched in the <span class="math notranslate nohighlight">\(x, y, z\)</span>
+direction. The default value is (1.0, 1.0, 1.0).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">mirror=</span></code>(<em>x, y, z</em>) - whether the respective coordinates should
+be flipped around 0. Arguments <span class="math notranslate nohighlight">\(x, y, z\)</span> must be either 0 or 1.
+The reflection of only one coordinate is allowed so at most one
+argument is set to 1, others are 0. For example <code class="docutils literal notranslate"><span class="pre">mirror=</span></code>(0, 1, 0)
+results in flipping the coordinates (<em>x, y, z</em>) to (<em>x, -y, z</em>). The
+default value is (0, 0, 0).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">normal</span></code> - by default set to <span class="math notranslate nohighlight">\(False\)</span>, however without this
+option enabled, the membrane collision (and thus cell-cell
+interactions) will not work.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">check_orientation</span></code> - by default set to <span class="math notranslate nohighlight">\(True\)</span>. This options
+performs a check, whether the supplied <span class="math notranslate nohighlight">\(trianglesfile\)</span> contains
+triangles with correct orientation. If not, it corrects the
+orientation and created cells with corrected triangles. It is useful
+for new or unknown meshes, but not necessary for meshes that have
+already been tried out. Since it can take a few minutes for larger
+meshes (with thousands of nodes), it can be set to <span class="math notranslate nohighlight">\(False\)</span>. In
+that case, the check is skipped when creating the <code class="docutils literal notranslate"><span class="pre">CellType</span></code> and a
+warning is displayed.</div>
+</div>
+<div class="line-block">
+<div class="line">The order of indices in <em>triangles.dat</em> is important. Normally, each
+triangle ABC should be oriented in such a way, that the normal vector
+computed as vector product ABxAC must point inside the object. For
+example, a sphere (or any other sufficiently convex object) contains
+such triangles that the normals of these triangles point towards the
+center of the sphere (almost).</div>
+</div>
+<div class="line-block">
+<div class="line">The check runs over all triangles, makes sure that they have the
+correct orientation and then calculates the volume of the object. If
+the result is negative, it flips the orientation of all triangles.</div>
+</div>
+<div class="line-block">
+<div class="line">Note, this method tells the user about the correction it makes. If
+there is any, it might be useful to save the corrected triangulation
+for future simulations using the method
+<code class="docutils literal notranslate"><span class="pre">CellType.mesh.OutputMeshTriangles</span></code>(<span class="math notranslate nohighlight">\(filename\)</span>), so that the
+check does not have to be used repeatedly.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">CellType.mesh.output_mesh_triangles</span></code>(<span class="math notranslate nohighlight">\(filename\)</span>) - this is
+useful after checking orientation, if any of the triangles where
+corrected. This method saves the current triangles into a file that
+can be used as input in the next simulations.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">CellType.print_info()</span></code> - prints the information about the template.</div>
+</div>
+</div>
+<div class="section" id="class-oifcell">
+<h4>16.4.4.2. class OifCell<a class="headerlink" href="#class-oifcell" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OifCell</span><span class="o">.</span><span class="n">set_origin</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_origin</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_origin_folded</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_approx_origin</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_approx_origin_folded</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_velocity</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">set_velocity</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">pos_bounds</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">surface</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">volume</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_diameter</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">get_n_nodes</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">set_force</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">kill_motion</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">unkill_motion</span><span class="p">()</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">output_vtk_pos</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">vtk</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">output_vtk_pos_folded</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">vtk</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">append_point_data_to_vtk</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">vtk</span><span class="p">,</span> <span class="n">dataname</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">firstAppend</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">output_raw_data</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rawdata</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">output_mesh_nodes</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">set_mesh_nodes</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">elastic_forces</span><span class="p">(</span><span class="n">elasticforces</span><span class="p">,</span> <span class="n">fmetric</span><span class="p">,</span> <span class="n">vtkfile</span><span class="p">,</span> <span class="n">rawdatafile</span><span class="p">)</span>
+<span class="n">OifCell</span><span class="o">.</span><span class="n">print_info</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">cell_type</span></code> - object will be created using nodes, triangle
+incidences, elasticity parameters and initial stretching saved in this
+cellType.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">part_type</span></code>=<em>type</em> - must start at 0 for the first cell and
+increase consecutively for different cells. Volume calculation of
+individual objects and interactions between objects are set up using
+these types.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">origin</span></code>=(<em>x, y, z</em>) - center of the object will be at this
+point.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">rotate</span></code>=(<em>x, y, z</em>) - angles in radians, by which the object
+will be rotated about the <span class="math notranslate nohighlight">\(x, y, z\)</span> axis. Default value is (0.0,
+0.0, 0.0). Value (<span class="math notranslate nohighlight">\(\pi/2, 0.0, 0.0\)</span>) means that the object will
+be rotated by <span class="math notranslate nohighlight">\(\pi/2\)</span> radians clockwise around the <span class="math notranslate nohighlight">\(x\)</span>
+axis when looking in the positive direction of the axis.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">mass</span></code>=<em>m</em> - mass of one particle. Default value is 1.0.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.set_origin</span></code>(<strong>o</strong>) - moves the object such that the origin
+has coordinates <strong>o</strong>=(<em>x, y, z</em>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_origin()</span></code> - outputs the location of the center of the
+object.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_origin_folded()</span></code> - outputs the location of the center of
+the object. For periodical movements the coordinates are folded
+(always within the computational box).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_approx_origin()</span></code> - outputs the approximate location of
+the center of the object. It is computed as average of 6 mesh points
+that have extremal <span class="math notranslate nohighlight">\(x, y\)</span> and <span class="math notranslate nohighlight">\(z\)</span> coordinates at the time
+of object loading.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_approx_origin_folded()</span></code> - outputs the approximate location
+of the center of the object. It is computed as average of 6 mesh
+points that have extremal <span class="math notranslate nohighlight">\(x, y\)</span> and <span class="math notranslate nohighlight">\(z\)</span> coordinates at
+the time of object loading. For periodical movements the coordinates
+are folded (always within the computational box). TODO: this is not
+implemented yet, but it should be</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_velocity()</span></code> - outputs the average velocity of the
+object. Runs over all mesh points and outputs their average velocity.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.set_velocity</span></code>(<strong>v</strong>) - sets the velocities of all mesh
+points to <strong>v</strong>=(<span class="math notranslate nohighlight">\(v_x\)</span>, <span class="math notranslate nohighlight">\(v_y\)</span>, <span class="math notranslate nohighlight">\(v_z\)</span>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.pos_bounds()</span></code> - computes six extremal coordinates of the
+object. More precisely, runs through the all mesh points and returns
+the minimal and maximal <span class="math notranslate nohighlight">\(x\)</span>-coordinate, <span class="math notranslate nohighlight">\(y\)</span>-coordinate and
+<span class="math notranslate nohighlight">\(z\)</span>-coordinate in the order (<span class="math notranslate nohighlight">\(x_{max}\)</span>, <span class="math notranslate nohighlight">\(x_{min}\)</span>,
+<span class="math notranslate nohighlight">\(y_{max}\)</span>, <span class="math notranslate nohighlight">\(y_{min}\)</span>, <span class="math notranslate nohighlight">\(z_{max}\)</span>, <span class="math notranslate nohighlight">\(z_{min}\)</span>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.surface()</span></code> - outputs the surface of the object.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.volume()</span></code> - outputs the volume of the object.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_diameter()</span></code> - outputs the largest diameter of the
+object.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.get_n_nodes()</span></code> - returns the number of mesh nodes.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.set_force</span></code>(<strong>f</strong>) - sets the external force vector
+<strong>f</strong>=(<span class="math notranslate nohighlight">\(f_x\)</span>, <span class="math notranslate nohighlight">\(f_y\)</span>, <span class="math notranslate nohighlight">\(f_z\)</span>) to all mesh nodes of
+the object. Setting is done using command <code class="docutils literal notranslate"><span class="pre">p.set_force</span></code>(<strong>f</strong>).
+Note, that this command sets the external force in each integration
+step. So if you want to use the external force only in one iteration,
+you need to set zero external force in the following integration step.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.kill_motion()</span></code> - stops all the particles in the object
+(analogue to the command <code class="docutils literal notranslate"><span class="pre">p.kill_motion()</span></code>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.unkill_motion()</span></code> - enables the movement of all the particles
+in the object (analogue to the command <code class="docutils literal notranslate"><span class="pre">p.unkill_motion()</span></code>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.output_vtk_pos</span></code>(<em>filename.vtk</em>) - outputs the mesh of the
+object to the desired <em>filename.vtk</em>. ParaView can directly visualize
+this file.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.output_vtk_pos_folded</span></code>(<em>filename.vtk</em>) - outputs the mesh of
+the object to the desired <em>filename.vtk</em>. ParaView can directly
+visualize this file. For periodical movements the coordinates are
+folded (always within the computational box).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.append_point_data_to_vtk</span></code>(<em>filename.vtk</em>, <em>dataname</em>,
+<strong>data</strong>, <em>firstAppend</em>) - outputs the specified scalar <strong>data</strong> to an
+existing <span class="math notranslate nohighlight">\(filename.vtk\)</span>. This is useful for ParaView
+visualisation of local velocity magnitudes, magnitudes of forces, etc.
+in the meshnodes and can be shown in ParaView by selecting the
+<span class="math notranslate nohighlight">\(dataname\)</span> in the <span class="math notranslate nohighlight">\(Properties\)</span> toolbar. It is possible to
+consecutively write multiple datasets into one <span class="math notranslate nohighlight">\(filename.vtk\)</span>.
+For the first one, the <span class="math notranslate nohighlight">\(firstAppend\)</span> parameter is set to
+<span class="math notranslate nohighlight">\(True\)</span>, for the following datasets, it needs to be set to
+<span class="math notranslate nohighlight">\(False\)</span>. This is to ensure the proper structure of the output
+file.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.output_raw_data</span></code>(<em>filename</em>, <strong>rawdata</strong>) - outputs the
+vector <strong>rawdata</strong> about the object into the <em>filename</em>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.output_mesh_nodes</span></code>(<em>filename</em>) - outputs the positions of
+the mesh nodes to <em>filename</em>. In fact, this command creates a new
+<em>nodes.dat</em> file that can be used by the method
+<code class="docutils literal notranslate"><span class="pre">OifCell.set_mesh_nodes</span></code>(<em>nodes.dat</em>). The center of the object is
+located at point (0.0, 0.0, 0.0). This command is aimed to store the
+deformed shape in order to be loaded later.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.set_mesh_nodes</span></code>(<em>filename</em>) - deforms the object in such a
+way that its origin stays unchanged, however the relative positions of
+the mesh points are taken from file <em>filename</em>. The <em>filename</em> should
+contain the coordinates of the mesh points with the origin location at
+(0.0, 0.0, 0.0). The procedure also checks whether number of lines in
+the <em>filename</em> is the same as the corresponding value from
+<code class="docutils literal notranslate"><span class="pre">OifCell.get_n_nodes()</span></code>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.elastic_forces</span></code>(<strong>elasticforces</strong>, <strong>fmetric</strong>, <em>vtkfile</em>,
+<em>rawdatafile</em>) - this method can be used in two different ways. One is
+to compute the elastic forces locally for each mesh node and the other
+is to compute the f-metric, which is an approximation of elastic
+energy.</div>
+</div>
+<div class="line-block">
+<div class="line">To compute the elastic forces, use the vector
+<span class="math notranslate nohighlight">\(\mathbf{elasticforces}\)</span>. It is a sextuple of zeros and ones,
+e.g. <span class="math notranslate nohighlight">\(\mathbf{elasticforces}=(1,0,0,1,0,0)\)</span>, where the ones
+denote the elastic forces to be computed. The order is (stretching,
+bending, local area, global area, volume, total). The output can be
+saved in two different ways: either by setting
+<span class="math notranslate nohighlight">\(vtkfile = filename.vtk\)</span>, which saves a .vtk file that can be
+visualized using ParaView. If more than one elastic force was
+selected, they can be chosen in the Properties window in ParaView. The
+other type of output is <span class="math notranslate nohighlight">\(rawdatafile=filename.dat\)</span>, which will
+save a datafile with the selected type of elastic force - one force
+per row, where each row corresponds to a single mesh node. Note that
+only one type of elastic force can be written this way at a time.
+Thus, if you need output for several elastic forces, this method
+should be called several times.</div>
+</div>
+<div class="line-block">
+<div class="line">To compute the f-metric, use the vector <span class="math notranslate nohighlight">\(\mathbf{fmetric}\)</span>. It
+is again a sextuple of zeros and ones, e.g.
+<span class="math notranslate nohighlight">\(\mathbf{fmetric}=(1,1,0,0,0,0)\)</span>, where the ones denote the
+elastic forces to be computed. The order is (stretching, bending,
+local area, global area, volume, total). The output is again a vector
+with six elements, each corresponding to the requested fmetric/“naive
+energy” computed as a sum of magnitudes of respective elastic forces
+over all nodes of the object.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">OifCell.print_info()</span></code> - prints the information about the elastic
+object.</div>
+</div>
+</div>
+<div class="section" id="short-utility-procedures">
+<h4>16.4.4.3. Short utility procedures<a class="headerlink" href="#short-utility-procedures" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">get_n_triangle</span></code>(<span class="math notranslate nohighlight">\(\mathbf{a,b,c}\)</span>) - returns the normal <strong>n</strong>
+to the triangle given by points (<strong>a, b, c</strong>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">norm</span></code>(<span class="math notranslate nohighlight">\(\mathbf{v}\)</span>) - returns the norm of the vector <strong>v</strong>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">distance</span></code>(<span class="math notranslate nohighlight">\(\mathbf{a,b}\)</span>) - returns the distance between
+points <strong>a</strong> and <strong>b</strong>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">area_triangle</span></code>(<span class="math notranslate nohighlight">\(\mathbf{a,b,c}\)</span>) - returns the area of the
+given triangle (<strong>a, b, c</strong>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">angle_btw_triangles</span></code>(<span class="math notranslate nohighlight">\(\mathbf{p}_1\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_2\)</span>,
+<span class="math notranslate nohighlight">\(\mathbf{p}_3\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_4\)</span> - returns the angle
+<span class="math notranslate nohighlight">\(\phi\)</span> between two triangles: (<span class="math notranslate nohighlight">\(\mathbf{p}_1\)</span>,
+<span class="math notranslate nohighlight">\(\mathbf{p}_2\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_3\)</span>) and (<span class="math notranslate nohighlight">\(\mathbf{p}_3\)</span>,
+<span class="math notranslate nohighlight">\(\mathbf{p}_2\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_4\)</span>) that have a common edge
+(<span class="math notranslate nohighlight">\(\mathbf{p}_2\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_3\)</span>).</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">discard_epsilon</span></code>(<span class="math notranslate nohighlight">\(x\)</span>) - needed for rotation; discards very
+small numbers <em>x</em>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">oif_neo_hookean_nonlin</span></code>(<span class="math notranslate nohighlight">\(\lambda\)</span>) - nonlinearity for neo-Hookean stretching</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">calc_stretching_force</span></code>(<span class="math notranslate nohighlight">\(k_s,\ \mathbf{p}_A,\ \mathbf{p}_B,\ dist_0,\ dist\)</span>)
+- computes the nonlinear stretching force with given <span class="math notranslate nohighlight">\(k_s\)</span> for
+points <span class="math notranslate nohighlight">\(\mathbf{p}_A\)</span> and <span class="math notranslate nohighlight">\(\mathbf{p}_B\)</span> given by their
+coordinates, whose initial distance was <em>dist0</em> and current distance
+is <em>dist</em>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">calc_linear_stretching_force</span></code>(<span class="math notranslate nohighlight">\(k_s,\ \mathbf{p}_A,\ \mathbf{p}_B,\ dist_0,\ dist\)</span>)
+- computes the linear stretching force with given <span class="math notranslate nohighlight">\(k_s\)</span> for
+points <span class="math notranslate nohighlight">\(\mathbf{p}_A\)</span> and <span class="math notranslate nohighlight">\(\mathbf{p}_B\)</span> given by their
+coordinates, whose initial distance was <em>dist0</em> and current distance
+is <em>dist</em>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">calc_bending_force</span></code>(<span class="math notranslate nohighlight">\(k_b,\ \mathbf{p}_A,\ \mathbf{p}_B,\ \mathbf{p}_C,\ \mathbf{p}_D,\ \phi_0,\ \phi\)</span>)
+- computes the bending force with given <span class="math notranslate nohighlight">\(k_b\)</span> for points
+<span class="math notranslate nohighlight">\(\mathbf{p}_A\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_B\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_C\)</span> and
+<span class="math notranslate nohighlight">\(\mathbf{p}_D\)</span> (<span class="math notranslate nohighlight">\(\triangle_1\)</span>=BAC;
+<span class="math notranslate nohighlight">\(\triangle_2\)</span>=BCD) given by their coordinates; the initial
+angle for these two triangles was <span class="math notranslate nohighlight">\(\phi_0\)</span>, the current angle is
+<span class="math notranslate nohighlight">\(\phi\)</span>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">calc_local_area_force</span></code>(<span class="math notranslate nohighlight">\(k_{al},\ \mathbf{p}_A,\ \mathbf{p}_B,\ \mathbf{p}_C,\ A_0,\ A\)</span>)
+- computes the local area force with given <span class="math notranslate nohighlight">\(k_{al}\)</span> for points
+<span class="math notranslate nohighlight">\(\mathbf{p}_A\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_B\)</span> and <span class="math notranslate nohighlight">\(\mathbf{p}_C\)</span>
+given by their coordinates; the initial area of triangle ABC was
+<span class="math notranslate nohighlight">\(A_0\)</span>, the current area is <span class="math notranslate nohighlight">\(A\)</span>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">calc_global_area_force</span></code>(<span class="math notranslate nohighlight">\(k_{ag},\ \mathbf{p}_A,\ \mathbf{p}_B,\ \mathbf{p}_C,\ A_{g0},\ A_g\)</span>)
+- computes the global area force with given <span class="math notranslate nohighlight">\(k_{ag}\)</span> for points
+<span class="math notranslate nohighlight">\(\mathbf{p}_A\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_B\)</span> and <span class="math notranslate nohighlight">\(\mathbf{p}_C\)</span>
+given by their coordinates; the initial surface area of the object was
+<span class="math notranslate nohighlight">\(A_{g0}\)</span>, the current surface area of the object is <span class="math notranslate nohighlight">\(A_g\)</span>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">calc_volume_force</span></code>(<span class="math notranslate nohighlight">\(k_v,\ \mathbf{p}_A,\ \mathbf{p}_B,\ \mathbf{p}_C,\ V_0\ V\)</span>)
+- computes the volume force with given <span class="math notranslate nohighlight">\(k_v\)</span> for points
+<span class="math notranslate nohighlight">\(\mathbf{p}_A\)</span>, <span class="math notranslate nohighlight">\(\mathbf{p}_B\)</span> and <span class="math notranslate nohighlight">\(\mathbf{p}_C\)</span>
+given by their coordinates; the initial volume of the object was
+<span class="math notranslate nohighlight">\(V_0\)</span>, the current volume of the object is <span class="math notranslate nohighlight">\(V\)</span>.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">output_vtk_rhomboid</span></code>(<span class="math notranslate nohighlight">\(\mathbf{corner}, \mathbf{a}, \mathbf{b}, \mathbf{c}, outFile.vtk\)</span>)
+- outputs rhomboid boundary for later visualisation in ParaView.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">output_vtk_cylinder</span></code>(<span class="math notranslate nohighlight">\(\mathbf{center}, \mathbf{normal}, L, r, n, outFile.vtk\)</span>)
+- outputs cylinder boundary for later visualisation in ParaView.</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">output_vtk_lines</span></code>(<span class="math notranslate nohighlight">\(lines, outFile.vtk\)</span>) - outputs a set of
+line segments for later visualisation in ParaView.</div>
+</div>
+</div>
+<div class="section" id="description-of-helper-classes">
+<h4>16.4.4.4. Description of helper classes<a class="headerlink" href="#description-of-helper-classes" title="Permalink to this headline">¶</a></h4>
+<p>Awareness of these classes is not necessary for a user of OIF module,
+but is essential for developers who wish to modify it because it shows
+how the object data are stored.</p>
+<p>classes FixedPoint and PartPoint</p>
+<p>Class PartPoint represents a particle. These particles are then used as
+building blocks for edges, angles, triangles and ultimately the whole
+object mesh. Since we use a two-step process to create the objects, it
+is necessary to distinguish between a FixedPoint and PartPoint.
+FixedPoint is a point used by template and does not correspond to
+particle. The FixedPoints of one OifCellType form a mesh that is
+centered around origin. Only after it is stretched and shifted to the
+object origin are the PartPoints of the given object created.</p>
+<p>classes Edge, Angle, Triangle, ThreeNeighbors</p>
+<p>These classes represent the building blocks of a mesh. They are used to
+compute the elastic interactions: Edge is for stretching, Angle for
+bending, Triangle for local and global area and volume and ThreeNeigbors
+for calculation of outward normal vector needed for cell-cell
+interaction.</p>
+<p>class Mesh</p>
+<p>This class holds all the information about the geometry of the object,
+including nodes, edges, angles, triangles and neighboring points. The
+mesh of OifCellType is copied every time a new object (i.e. OifCell) of
+this type is created. This saves computational time, since the data for
+elastic interactions of the given object do not need to be recalculated
+every time.</p>
+</div>
+</div>
+</div>
+<div class="section" id="electrokinetics">
+<span id="id14"></span><h2>16.5. Electrokinetics<a class="headerlink" href="#electrokinetics" title="Permalink to this headline">¶</a></h2>
+<p>The electrokinetics setup in <em>ESPResSo</em> allows for the description of
+electro-hydrodynamic systems on the level of ion density distributions
+coupled to a Lattice Boltzmann (LB) fluid. The ion density distributions
+may also interact with explicit charged particles, which are
+interpolated on the LB grid. In the following paragraph we briefly
+explain the electrokinetic model implemented in <em>ESPResSo</em>, before we come to the
+description of the interface.</p>
+<div class="section" id="electrokinetic-equations">
+<span id="id15"></span><h3>16.5.1. Electrokinetic Equations<a class="headerlink" href="#electrokinetic-equations" title="Permalink to this headline">¶</a></h3>
+<p>In the electrokinetics code we solve the following system of coupled
+continuity, diffusion-advection, Poisson, and Navier-Stokes equations:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\label{eq:ek-model-continuity} \frac{\partial n_k}{\partial t} &amp; = &amp; -\, \nabla \cdot \vec{j}_k \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+\label{eq:ek-model-fluxes} \vec{j}_{k} &amp; = &amp; -D_k \nabla n_k - \nu_k \, q_k n_k\, \nabla \Phi + n_k \vec{v}_{\mathrm{fl}} \vphantom{\left(\frac{\partial}{\partial}\right)} + \sqrt{n_k}\vec{\mathcal{W}}_k; \\
+\label{eq:ek-model-poisson} \Delta \Phi &amp; = &amp; -4 \pi \, {l_\mathrm{B}}\, {k_\mathrm{B}T}\sum_k q_k n_k \vphantom{\left(\frac{\partial}{\partial}\right)}; \\
+\nonumber \left(\frac{\partial \vec{v}_{\mathrm{fl}}}{\partial t} + \vec{v}_{\mathrm{fl}} \cdot \vec{\nabla} \vec{v}_{\mathrm{fl}} \right) \rho_\mathrm{fl} &amp; = &amp; -{k_\mathrm{B}T}\, \nabla \rho_\mathrm{fl} - q_k n_k \nabla \Phi \\
+\label{eq:ek-model-velocity} &amp; &amp; +\, \eta \vec{\Delta} \vec{v}_{\mathrm{fl}} + (\eta / 3 + \eta_{\text{b}}) \nabla (\nabla \cdot \vec{v}_{\mathrm{fl}}) \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+\label{eq:ek-model-continuity-fl} \frac{\partial \rho_\mathrm{fl}}{\partial t} &amp; = &amp; -\,\nabla\cdot\left( \rho_\mathrm{fl} \vec{v}_{\mathrm{fl}} \right) \vphantom{\left(\frac{\partial}{\partial}\right)} , \end{aligned}\end{split}\]</div>
+<p>which define relations between the following observables</p>
+<dl class="simple">
+<dt><span class="math notranslate nohighlight">\(n_k\)</span></dt><dd><p>the number density of the particles of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{j}_k\)</span></dt><dd><p>the number density flux of the particles of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\Phi\)</span></dt><dd><p>the electrostatic potential,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\rho_{\mathrm{fl}}\)</span></dt><dd><p>the mass density of the fluid,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{v}_{\mathrm{fl}}\)</span></dt><dd><p>the advective velocity of the fluid,</p>
+</dd>
+</dl>
+<p>and input parameters</p>
+<dl>
+<dt><span class="math notranslate nohighlight">\(D_k\)</span></dt><dd><p>the diffusion constant of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\nu_k\)</span></dt><dd><p>the mobility of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{\mathcal{W}}_k\)</span></dt><dd><p>the white-noise term for the fluctuations of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(q_k\)</span></dt><dd><p>the charge of a single particle of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\({l_\mathrm{B}}\)</span></dt><dd><p>the Bjerrum length,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\({k_\mathrm{B}T}\)</span></dt><dd><div class="line-block">
+<div class="line">the thermal energy given by the product of Boltzmann’s constant
+<span class="math notranslate nohighlight">\(k_\text{B}\)</span></div>
+<div class="line">and the temperature <span class="math notranslate nohighlight">\(T\)</span>,</div>
+</div>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\eta\)</span></dt><dd><p>the dynamic viscosity of the fluid,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\eta_{\text{b}}\)</span></dt><dd><p>the bulk viscosity of the fluid.</p>
+</dd>
+</dl>
+<p>The temperature <span class="math notranslate nohighlight">\(T\)</span>, and diffusion constants <span class="math notranslate nohighlight">\(D_k\)</span> and
+mobilities <span class="math notranslate nohighlight">\(\nu_k\)</span> of individual species are linked through the
+Einstein-Smoluchowski relation <span class="math notranslate nohighlight">\(D_k /
+\nu_k = {k_\mathrm{B}T}\)</span>. This system of equations
+combining diffusion-advection, electrostatics, and hydrodynamics is
+conventionally referred to as the <em>Electrokinetic Equations</em>.</p>
+<p>The electrokinetic equations have the following properties:</p>
+<ul>
+<li><p>On the coarse time and length scale of the model, the dynamics of the
+particle species can be described in terms of smooth density
+distributions and potentials as opposed to the microscale where
+highly localized densities cause singularities in the potential.</p>
+<p>In most situations, this restricts the application of the model to
+species of monovalent ions, since ions of higher valency typically
+show strong condensation and correlation effects – the localization
+of individual ions in local potential minima and the subsequent
+correlated motion with the charges causing this minima.</p>
+</li>
+<li><p>Only the entropy of an ideal gas and electrostatic interactions are
+accounted for. In particular, there is no excluded volume.</p>
+<p>This restricts the application of the model to monovalent ions and
+moderate charge densities. At higher valencies or densities,
+overcharging and layering effects can occur, which lead to
+non-monotonic charge densities and potentials, that can not be
+covered by a mean-field model such as Poisson–Boltzmann or this one.</p>
+<p>Even in salt free systems containing only counter ions, the
+counter-ion densities close to highly charged objects can be
+overestimated when neglecting excluded volume effects. Decades of the
+application of Poisson–Boltzmann theory to systems of electrolytic
+solutions, however, show that those conditions are fulfilled for
+monovalent salt ions (such as sodium chloride or potassium chloride)
+at experimentally realizable concentrations.</p>
+</li>
+<li><p>Electrodynamic and magnetic effects play no role. Electrolytic
+solutions fulfill those conditions as long as they don’t contain
+magnetic particles.</p></li>
+<li><p>The diffusion coefficient is a scalar, which means there can not be
+any cross-diffusion. Additionally, the diffusive behavior has been
+deduced using a formalism relying on the notion of a local
+equilibrium. The resulting diffusion equation, however, is known to
+be valid also far from equilibrium.</p></li>
+<li><p>The temperature is constant throughout the system.</p></li>
+<li><p>The density fluxes instantaneously relax to their local equilibrium
+values. Obviously one can not extract information about processes on
+length and time scales not covered by the model, such as dielectric
+spectra at frequencies, high enough that they correspond to times
+faster than the diffusive time scales of the charged species.</p></li>
+</ul>
+</div>
+<div class="section" id="setup">
+<span id="id16"></span><h3>16.5.2. Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="initialization">
+<span id="id17"></span><h4>16.5.2.1. Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">ek</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Electrokinetics</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">lb_density</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">viscosity</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">friction</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">prefactor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">stencil</span><span class="o">=</span><span class="s1">&#39;linkcentered&#39;</span><span class="p">,</span> <span class="n">advection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fluid_coupling</span><span class="o">=</span><span class="s1">&#39;friction&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Features <code class="docutils literal notranslate"><span class="pre">ELECTROKINETICS</span></code> and <code class="docutils literal notranslate"><span class="pre">CUDA</span></code> required</p>
+</div>
+<p>The above is a minimal example how to initialize the LB fluid, and
+it is very similar to the lattice Boltzmann command in set-up. We
+therefore refer the reader to Chapter <a class="reference internal" href="lb.html#lattice-boltzmann"><span class="std std-ref">Lattice Boltzmann</span></a> for details on the
+implementation of LB in <em>ESPResSo</em> and describe only the major differences here.</p>
+<p>The first major difference with the LB implementation is that the
+electrokinetics set-up is a Graphics Processing Unit (GPU) only
+implementation. There is no Central Processing Unit (CPU) version, and
+at this time there are no plans to make a CPU version available in the
+future. To use the electrokinetics features it is therefore imperative
+that your computer contains a CUDA capable GPU which is sufficiently
+modern.</p>
+<p>To set up a proper LB fluid using this command one has to specify at
+least the following options: <code class="docutils literal notranslate"><span class="pre">agrid</span></code>, <code class="docutils literal notranslate"><span class="pre">lb_density</span></code>, <code class="docutils literal notranslate"><span class="pre">viscosity</span></code>, <code class="docutils literal notranslate"><span class="pre">friction</span></code>, <code class="docutils literal notranslate"><span class="pre">T</span></code>, and <code class="docutils literal notranslate"><span class="pre">prefactor</span></code>. The other options can be
+used to modify the behavior of the LB fluid. Note that the command does
+not allow the user to set the time step parameter as is the case for the
+lattice Boltzmann command, this parameter is instead taken directly from the value set for
+<a class="reference internal" href="espressomd.html#espressomd.system.System.time_step" title="espressomd.system.System.time_step"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.time_step</span></code></a>. The LB <em>mass density</em> is set independently from the
+electrokinetic <em>number densities</em>, since the LB fluid serves only as a
+medium through which hydrodynamic interactions are propagated, as will
+be explained further in the next paragraph. If no <code class="docutils literal notranslate"><span class="pre">lb_density</span></code> is specified, then our
+algorithm assumes <code class="docutils literal notranslate"><span class="pre">lb_density=</span> <span class="pre">1.0</span></code>. The two ‘new’ parameters are the temperature <code class="docutils literal notranslate"><span class="pre">T</span></code> at
+which the diffusive species are simulated and the <code class="docutils literal notranslate"><span class="pre">prefactor</span></code>
+associated with the electrostatic properties of the medium. See the
+above description of the electrokinetic equations for an explanation of
+the introduction of a temperature, which does not come in directly via a
+thermostat that produces thermal fluctuations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">advection</span></code> can be set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code>. It controls whether there should be an
+advective contribution to the diffusive species’ fluxes. Default is
+<code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fluid_coupling</span></code> can be set to <code class="docutils literal notranslate"><span class="pre">&quot;friction&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;estatics&quot;</span></code>. This option determines the force
+term acting on the fluid. The former specifies the force term to be the
+sum of the species fluxes divided by their respective mobilities while
+the latter simply uses the electrostatic force density acting on all
+species. Note that this switching is only possible for the linkcentered
+stencil. For all other stencils, this choice is hardcoded. The default
+is <code class="docutils literal notranslate"><span class="pre">&quot;friction&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">es_coupling</span></code> enables the action of the electrostatic potential due to the
+electrokinetics species and charged boundaries on the MD particles. The
+forces on the particles are calculated by interpolation from the
+electric field which is in turn calculated from the potential via finite
+differences. This only includes interactions between the species and
+boundaries and MD particles, not between MD particles and MD particles.
+To get complete electrostatic interactions a particles Coulomb method
+like Ewald or P3M has to be activated too.</p>
+<p>The fluctuation of the EK species can be turned on by the flag <code class="docutils literal notranslate"><span class="pre">fluctuations</span></code>.
+This adds a white-noise term to the fluxes. The amplitude of this noise term
+can be controlled by <code class="docutils literal notranslate"><span class="pre">fluctuation_amplitude</span></code>. To circumvent that these fluctuations
+lead to negative densities, they are modified by a smoothed Heaviside function,
+which decreases the magnitude of the fluctuation for densities close to 0.
+By default the fluctuations are turned off.</p>
+</div>
+<div class="section" id="diffusive-species">
+<span id="id18"></span><h4>16.5.2.2. Diffusive Species<a class="headerlink" href="#diffusive-species" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">species</span> <span class="o">=</span> <span class="n">electrokinetics</span><span class="o">.</span><span class="n">Species</span><span class="p">(</span><span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">valency</span><span class="o">=</span><span class="n">valency</span><span class="p">,</span>
+    <span class="n">ext_force_density</span><span class="o">=</span><span class="n">ext_force</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Species" title="espressomd.electrokinetics.Species"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrokinetics.Species</span></code></a> is used to initialize a diffusive species. Here the
+options specify: the number density <code class="docutils literal notranslate"><span class="pre">density</span></code>, the diffusion coefficient <code class="docutils literal notranslate"><span class="pre">D</span></code>, the
+valency of the particles of that species <code class="docutils literal notranslate"><span class="pre">valency</span></code>, and an optional external
+(electric) force which is applied to the diffusive species. As mentioned
+before, the LB density is completely decoupled from the electrokinetic
+densities. This has the advantage that greater freedom can be achieved
+in matching the internal parameters to an experimental system. Moreover,
+it is possible to choose parameters for which the LB is more stable. The species can be added to a LB fluid:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="o">.</span><span class="n">add_species</span><span class="p">(</span><span class="n">species</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One can also add the species during the initialization step of the
+<a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Electrokinetics" title="espressomd.electrokinetics.Electrokinetics"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrokinetics.Electrokinetics</span></code></a> by defining the list variable <code class="docutils literal notranslate"><span class="pre">species</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Electrokinetics</span><span class="p">(</span><span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="n">species</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The variables <code class="docutils literal notranslate"><span class="pre">density</span></code>, <code class="docutils literal notranslate"><span class="pre">D</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">valency</span></code> must be set to properly initialize the diffusive species; the
+<code class="docutils literal notranslate"><span class="pre">ext_force_density</span></code> is optional.</p>
+</div>
+<div class="section" id="boundaries">
+<span id="id19"></span><h4>16.5.2.3. Boundaries<a class="headerlink" href="#boundaries" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek_boundary</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKBoundary</span><span class="p">(</span><span class="n">charge_density</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">my_shape</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek_boundary</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Feature <code class="docutils literal notranslate"><span class="pre">EK_BOUNDARIES</span></code> required</p>
+</div>
+<p>The EKBoundary command allows one to set up (internal or external) boundaries for
+the electrokinetics algorithm in much the same way as the command is
+used for the LB fluid. The major difference with the LB command is given
+by the option <code class="docutils literal notranslate"><span class="pre">charge_density</span></code>, with which a boundary can be endowed with a volume
+charge density. To create a surface charge density, a combination of two
+oppositely charged boundaries, one inside the other, can be used.
+However, care should be taken to maintain the surface charge density when the value of <code class="docutils literal notranslate"><span class="pre">agrid</span></code>
+is changed. Examples for possible shapes are wall, sphere, ellipsoid, cylinder,
+rhomboid and hollowcone. We refer to the documentation of the
+<a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a> module for more possible shapes and information on
+the options associated to these shapes. In order to properly set up the
+boundaries, the <code class="docutils literal notranslate"><span class="pre">charge_density</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code>
+must be specified.</p>
+</div>
+<div class="section" id="checkpointing">
+<span id="id20"></span><h4>16.5.2.4. Checkpointing<a class="headerlink" href="#checkpointing" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Checkpointing in the EK works quite similar to checkpointing in the LB, because the density is not saved within the <a class="reference internal" href="espressomd.html#module-espressomd.checkpointing" title="espressomd.checkpointing"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.checkpointing</span></code></a> object. However one should keep in mind, that the EK not only saves the density of the species but also saves the population of the LB fluid in a separate file. To load a checkpoint the <a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Electrokinetics" title="espressomd.electrokinetics.Electrokinetics"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrokinetics.Electrokinetics</span></code></a> should have the same name as in the script it was saved, but to use the species one need to extract them from the <a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Electrokinetics" title="espressomd.electrokinetics.Electrokinetics"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrokinetics.Electrokinetics</span></code></a> via <code class="docutils literal notranslate"><span class="pre">species</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">checkpoint</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">cpt_path</span><span class="p">)</span>
+<span class="n">species</span> <span class="o">=</span> <span class="n">ek</span><span class="o">.</span><span class="n">get_params</span><span class="p">()[</span><span class="s1">&#39;species&#39;</span><span class="p">]</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="output">
+<span id="id21"></span><h3>16.5.3. Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="fields">
+<span id="id22"></span><h4>16.5.3.1. Fields<a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="o">.</span><span class="n">print_vtk_boundary</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">print_vtk_density</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">print_vtk_velocity</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">print_vtk_potential</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A property of the fluid field can be exported into a
+file in one go. Currently supported
+are: density, velocity, potential and boundary, which give the LB fluid density, the LB fluid velocity,
+the electrostatic potential, and the location and type of the
+boundaries, respectively. The boundaries can only be printed when the
+<code class="docutils literal notranslate"><span class="pre">EK_BOUNDARIES</span></code> is compiled in. The output is a vtk-file, which is readable by
+visualization software such as ParaView <a class="footnote-reference brackets" href="#id26" id="id23">5</a> and Mayavi2 <a class="footnote-reference brackets" href="#id27" id="id24">6</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">species</span><span class="o">.</span><span class="n">print_vtk_flux</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">species</span><span class="o">.</span><span class="n">print_vtk_density</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These commands are similar to the above. They enable the
+export of diffusive species properties, namely: <code class="docutils literal notranslate"><span class="pre">density</span></code> and <code class="docutils literal notranslate"><span class="pre">flux</span></code>, which specify the
+number density and flux of species <code class="docutils literal notranslate"><span class="pre">species</span></code>, respectively.</p>
+</div>
+<div class="section" id="local-quantities">
+<span id="id25"></span><h4>16.5.3.2. Local Quantities<a class="headerlink" href="#local-quantities" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">velocity</span>
+<span class="n">ek</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">potential</span>
+<span class="n">ek</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pressure</span>
+</pre></div>
+</div>
+<p>A single node can be addressed using three integer values
+which run from 0 to <code class="docutils literal notranslate"><span class="pre">dim_x/agrid</span></code>, <code class="docutils literal notranslate"><span class="pre">dim_y/agrid</span></code>, and <code class="docutils literal notranslate"><span class="pre">dim_z/agrid</span></code>, respectively. The
+velocity, electrostatic potential and the pressure of a LB fluid node can be obtained this way.</p>
+<p>The local <code class="docutils literal notranslate"><span class="pre">density</span></code> and <code class="docutils literal notranslate"><span class="pre">flux</span></code> of a species can be obtained in the same fashion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">density</span>
+<span class="n">species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span>
+</pre></div>
+</div>
+<dl class="footnote brackets">
+<dt class="label" id="id26"><span class="brackets"><a class="fn-backref" href="#id23">5</a></span></dt>
+<dd><p><a class="reference external" href="https://www.paraview.org/">https://www.paraview.org/</a></p>
+</dd>
+<dt class="label" id="id27"><span class="brackets"><a class="fn-backref" href="#id24">6</a></span></dt>
+<dd><p><a class="reference external" href="http://code.enthought.com/projects/mayavi/">http://code.enthought.com/projects/mayavi/</a></p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="particle-polarizability-with-thermalized-cold-drude-oscillators">
+<span id="id28"></span><h2>16.6. Particle polarizability with thermalized cold Drude oscillators<a class="headerlink" href="#particle-polarizability-with-thermalized-cold-drude-oscillators" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires features <code class="docutils literal notranslate"><span class="pre">THOLE</span></code>, <code class="docutils literal notranslate"><span class="pre">P3M</span></code>, <code class="docutils literal notranslate"><span class="pre">LANGEVIN_PER_PARTICLE</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Drude is only available for the P3M electrostatics solver and the Langevin thermostat.</p>
+</div>
+<p><strong>Thermalized cold Drude oscillators</strong> can be used to simulate
+polarizable particles.  The basic idea is to add a ‘charge-on-a-spring’ (Drude
+charge) to a particle (Drude core) that mimics an electron cloud which can be
+elongated to create a dynamically inducible dipole. The energetic minimum of
+the Drude charge can be obtained self-consistently, which requires several
+iterations of the system’s electrostatics and is usually considered
+computational expensive. However, with thermalized cold Drude oscillators, the
+distance between Drude charge and core is coupled to a thermostat so that it
+fluctuates around the SCF solution. This thermostat is kept at a low
+temperature compared to the global temperature to minimize the heat flow into
+the system. A second thermostat is applied on the centre of mass of the Drude
+charge + core system to maintain the global temperature. The downside of this
+approach is that usually a smaller time step has to be used to resolve the high
+frequency oscillations of the spring to get a stable system.</p>
+<p>In <em>ESPResSo</em>, the basic ingredients to simulate such a system are split into three bonds:</p>
+<ol class="arabic simple">
+<li><p>A <a class="reference internal" href="inter_bonded.html#harmonic-bond"><span class="std std-ref">Harmonic bond</span></a> to account for the spring.</p></li>
+<li><p>A <a class="reference internal" href="inter_bonded.html#thermalized-distance-bond"><span class="std std-ref">Thermalized distance bond</span></a> with a cold thermostat on the Drude-Core distance.</p></li>
+<li><p>A <a class="reference internal" href="inter_bonded.html#subtract-p3m-short-range-bond"><span class="std std-ref">Subtract P3M short-range bond</span></a> to cancel the electrostatic interaction between Drude and core particles.</p></li>
+</ol>
+<p>The system-wide thermostat has to be applied to the centre of mass and not to
+the core particle directly. Therefore, the particles have to be excluded from
+global thermostatting.  With <code class="docutils literal notranslate"><span class="pre">LANGEVIN_PER_PARTICLE</span></code> enabled, we set the
+temperature and friction coefficient of the Drude complex to zero, which allows
+to still use a global Langevin thermostat for non-polarizable particles.</p>
+<p>As the Drude charge should not alter the <em>charge</em> or <em>mass</em> of the Drude
+complex, both properties have to be subtracted from the core when adding the
+Drude particle. In the following convention, we assume that the Drude charge is
+<strong>always negative</strong>. It is calculated via the spring constant <span class="math notranslate nohighlight">\(k\)</span> and
+polarizability <span class="math notranslate nohighlight">\(\alpha\)</span> (in units of inverse volume) with <span class="math notranslate nohighlight">\(q_d =
+-\sqrt{k \cdot \alpha}\)</span>.</p>
+<p>The following helper method takes into account all the preceding considerations
+and can be used to conveniently add a Drude particle to a given core particle.
+As it also adds the first two bonds between Drude and core, these bonds have to
+be created beforehand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">drude_functions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="n">add_drude_particle_to_core</span><span class="p">(</span><span class="o">&lt;</span><span class="n">system</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">harmonic_bond</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">thermalized_bond</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">core</span> <span class="n">particle</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">id</span> <span class="n">drude</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">type</span> <span class="n">drude</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">alpha</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mass</span> <span class="n">drude</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">coulomb_prefactor</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">thole</span> <span class="n">damping</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">verbose</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>The arguments of the helper function are:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;system&gt;</span></code>: The <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;harmonic_bond&gt;</span></code>: The harmonic bond of the charge-on-a-spring. This is
+added between core and newly generated Drude particle</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;thermalized_bond&gt;</span></code>: The thermalized distance bond for the cold and hot
+thermostats.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;core</span> <span class="pre">particle&gt;</span></code>: The core particle on which the Drude particle is added.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;id</span> <span class="pre">drude&gt;</span></code>: The user-defined id of the Drude particle that is created.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;type</span> <span class="pre">drude&gt;</span></code>: The user-defined type of the Drude particle.
+Each Drude particle of each complex should have an
+individual type (e.g. in an ionic system with Anions (type 0) and Cations
+(type 1), two new, individual Drude types have to be assigned).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;alpha&gt;</span></code>: The polarizability volume.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;coulomb_prefactor&gt;</span></code>: The Coulomb prefactor of the system. Used to
+calculate the Drude charge from the polarizability and the spring constant
+of the Drude bond.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;thole</span> <span class="pre">damping&gt;</span></code>: (optional) An individual Thole damping parameter for the
+core-Drude pair. Only relevant if Thole damping is used (defaults to 2.6).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;verbose&gt;</span></code>: (bool, optional) Prints out information about the added Drude
+particles (default: False)</p></li>
+</ul>
+</dd>
+</dl>
+<p>What is still missing is the short-range exclusion bond between all Drude-core pairs.
+One bond type of this kind is needed per Drude type. The above helper function also
+tracks particle types, ids and charges of Drude and core particles, so a simple call of
+another helper function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">drude_helpers</span><span class="o">.</span><span class="n">setup_and_add_drude_exclusion_bonds</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will use this data to create a <a class="reference internal" href="inter_bonded.html#subtract-p3m-short-range-bond"><span class="std std-ref">Subtract P3M short-range bond</span></a> per Drude type
+and set it up it between all Drude and core particles collected in calls of <a class="reference internal" href="espressomd.html#espressomd.drude_helpers.add_drude_particle_to_core" title="espressomd.drude_helpers.add_drude_particle_to_core"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_drude_particle_to_core()</span></code></a>.</p>
+<div class="section" id="canceling-intramolecular-electrostatics">
+<span id="id29"></span><h3>16.6.1. Canceling intramolecular electrostatics<a class="headerlink" href="#canceling-intramolecular-electrostatics" title="Permalink to this headline">¶</a></h3>
+<p>Note that for polarizable <strong>molecules</strong> (i.e. connected particles, coarse grained
+models etc.) with partial charges on the molecule sites, the Drude charges will
+have electrostatic interaction with other cores of the molecule. Often, this
+is unwanted, as it might be already part of the force-field (via. partial
+charges or parametrization of the covalent bonds). Without any further
+measures, the elongation of the Drude particles will be greatly affected be the
+close-by partial charges of the molecule. To prevent this, one has to cancel
+the interaction of the Drude charge with the partial charges of the cores
+within the molecule. This can be done with special bonds that subtracts the P3M
+short-range interaction of the charge portion <span class="math notranslate nohighlight">\(q_d q_{partial}\)</span>. This ensures
+that only the <em>dipolar interaction</em> inside the molecule remains. It should be
+considered that the error of this approximation increases with the share of the
+long-range part of the electrostatic interaction. Two helper methods assist
+with setting up this exclusion. If used, they have to be called
+after all Drude particles are added to the system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setup_intramol_exclusion_bonds</span><span class="p">(</span><span class="o">&lt;</span><span class="n">system</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">molecule</span> <span class="n">drude</span> <span class="n">types</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">molecule</span> <span class="n">core</span> <span class="n">types</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">molecule</span> <span class="n">core</span> <span class="n">partial</span> <span class="n">charges</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">verbose</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This function creates the requires number of bonds which are later added to the
+particles. It has to be called only once. In a molecule with <span class="math notranslate nohighlight">\(N\)</span> polarizable
+sites, <span class="math notranslate nohighlight">\(N \cdot (N-1)\)</span> bond types are needed to cover all the combinations.
+Parameters are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;system&gt;</span></code>: The <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;molecule</span> <span class="pre">drude</span> <span class="pre">types&gt;</span></code>: List of the Drude types within the molecule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;molecule</span> <span class="pre">core</span> <span class="pre">types&gt;</span></code>: List of the core types within the molecule that have partial charges.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;molecule</span> <span class="pre">core</span> <span class="pre">partial</span> <span class="pre">charges&gt;</span></code>: List of the partial charges on the cores.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;verbose&gt;</span></code>: (bool, optional) Prints out information about the created bonds (default: False)</p></li>
+</ul>
+</div></blockquote>
+<p>After setting up the bonds, one has to add them to each molecule with the
+following method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">add_intramol_exclusion_bonds</span><span class="p">(</span><span class="o">&lt;</span><span class="n">system</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">drude</span> <span class="n">ids</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">core</span> <span class="n">ids</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">verbose</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This method has to be called for all molecules and needs the following parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;system&gt;</span></code>: The <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;drude</span> <span class="pre">ids&gt;</span></code>: The ids of the Drude particles within one molecule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;core</span> <span class="pre">ids&gt;</span></code>: The ids of the core particles within one molecule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;verbose&gt;</span></code>: (bool, optional) Prints out information about the added bonds (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
+</ul>
+</div></blockquote>
+<p>Internally, this is done with the bond described in  <a class="reference internal" href="inter_bonded.html#subtract-p3m-short-range-bond"><span class="std std-ref">Subtract P3M short-range bond</span></a>, that
+simply adds the p3m shortrange pair-force of scale <span class="math notranslate nohighlight">\(- q_d q_{partial}\)</span> the to
+bonded particles.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Often used in conjunction with Drude oscillators is the <a class="reference internal" href="inter_non-bonded.html#thole-correction"><span class="std std-ref">Thole correction</span></a>
+to damp dipole-dipole interactions on short distances. It is available in <em>ESPResSo</em>
+as a non-bonded interaction.</p>
+</div>
+</div>
+</div>
+<div class="section" id="reaction-ensemble">
+<span id="id30"></span><h2>16.7. Reaction Ensemble<a class="headerlink" href="#reaction-ensemble" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The whole Reaction Ensemble module uses Monte Carlo moves which require potential energies. Therefore the Reaction Ensemble requires support for energy calculations for all interactions which are used in the simulation.</p>
+</div>
+<p>For a description of the available methods see <a class="reference internal" href="espressomd.html#module-espressomd.reaction_ensemble" title="espressomd.reaction_ensemble"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.reaction_ensemble</span></code></a>.
+An Example script can be found here:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/espressomd/espresso/blob/python/samples/reaction_ensemble.py">Reaction ensemble/ constant pH ensemble</a></p></li>
+</ul>
+<p>The reaction ensemble <a class="bibtex reference internal" href="zreferences.html#smith94a" id="id31">[ST94]</a><a class="bibtex reference internal" href="zreferences.html#turner2008simulation" id="id32">[HTBL+08]</a> allows to simulate
+chemical reactions which can be represented by the general equation:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{\nu_1 S_1 +\ \dots\  \nu_l S_l\ \rightleftharpoons\ \nu_m S_m +\ \dots\ \nu_z S_z }
+    \label{general-eq}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\nu_i\)</span> is the stoichiometric coefficient of species
+<span class="math notranslate nohighlight">\(S_i\)</span>. By convention, stoichiometric coefficients of the
+species on the left-hand side of the reaction (<em>reactants</em>) attain
+negative values, and those on the right-hand side (<em>products</em>) attain
+positive values, so that the reaction can be equivalently written as</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{\sum_i \nu_i S_i = 0} \,.
+    \label{general-eq-sum}\]</div>
+<p>The equilibrium constant of the reaction is then given as</p>
+<div class="math notranslate nohighlight">
+\[K = \exp(-\Delta_{\mathrm{r}}G^{\ominus} / k_B T)
+    \quad\text{with}\quad
+    \Delta_{\mathrm{r}}G^{\ominus} = \sum_i \nu_i \mu_i^{\ominus}\,.
+    \label{Keq}\]</div>
+<p>Here <span class="math notranslate nohighlight">\(k_B\)</span> is the Boltzmann constant, <span class="math notranslate nohighlight">\(T\)</span> is temperature,
+<span class="math notranslate nohighlight">\(\Delta_{\mathrm{r}}G^{\ominus}\)</span> standard Gibbs free energy change
+of the reaction, and <span class="math notranslate nohighlight">\(\mu_i^{\ominus}\)</span> the standard chemical
+potential (per particle) of species <span class="math notranslate nohighlight">\(i\)</span>. Note that thermodynamic equilibrium is
+independent of the direction in which we write the reaction. If it is
+written with left and right-hand side swapped,
+both <span class="math notranslate nohighlight">\(\Delta_{\mathrm{r}}G^{\ominus}\)</span> and the stoichiometric
+coefficients attain opposite signs, and the equilibrium constant attains the inverse value.
+Further, note that the equilibrium constant <span class="math notranslate nohighlight">\(K\)</span> is the
+dimensionless <em>thermodynamic, concentration-based</em> equilibrium constant,
+defined as</p>
+<div class="math notranslate nohighlight">
+\[K(c^{\ominus}) = (c^{\ominus})^{-\bar\nu} \prod_i (c_i)^{\nu_i}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\bar\nu=\sum_i \nu_i\)</span>, and <span class="math notranslate nohighlight">\(c^{\ominus}\)</span> is the reference concentration,
+at which the standard chemical potential <span class="math notranslate nohighlight">\(\Delta_{\mathrm{r}}G^{\ominus}\)</span> was determined.
+In practice, this constant is often used with the dimension of <span class="math notranslate nohighlight">\((c^{\ominus})^{\bar\nu}\)</span></p>
+<div class="math notranslate nohighlight">
+\[K_c(c^{\ominus}) = K(c^{\ominus})\times (c^{\ominus})^{\bar\nu}\]</div>
+<p>A simulation in
+the reaction ensemble consists of two types of moves: the <em>reaction move</em>
+and the <em>configuration move</em>. The configuration move changes the configuration
+of the system. It is not performed by the Reaction Ensemble module, and can be
+performed by a suitable molecular dynamics or a Monte Carlo scheme. The
+<code class="docutils literal notranslate"><span class="pre">reactant_ensemble</span></code> command takes care only of the reaction moves.
+In the <em>forward</em> reaction, the appropriate number of reactants (given by
+<span class="math notranslate nohighlight">\(\nu_i\)</span>) is removed from the system, and the concomitant number of
+products is inserted into the system. In the <em>backward</em> reaction,
+reactants and products exchange their roles. The acceptance probability
+<span class="math notranslate nohighlight">\(P^{\xi}\)</span> for move from state <span class="math notranslate nohighlight">\(o\)</span> to <span class="math notranslate nohighlight">\(n\)</span> reaction
+ensemble is given by the criterion <a class="bibtex reference internal" href="zreferences.html#smith94a" id="id33">[ST94]</a></p>
+<div class="math notranslate nohighlight">
+\[P^{\xi} = \text{min}\biggl(1,V^{\bar\nu\xi}\Gamma^{\xi}e^{-\beta\Delta E}\prod_{i=1}\frac{N_i^0!}{(N_i^0+\nu_{i}\xi)!}
+    \label{eq:Pacc}
+    \biggr),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta E=E_\mathrm{new}-E_\mathrm{old}\)</span> is the change in potential energy,
+<span class="math notranslate nohighlight">\(V\)</span> is the simulation box volume,
+and <span class="math notranslate nohighlight">\(\beta=1/k_\mathrm{B}T\)</span>.
+The extent of reaction, <span class="math notranslate nohighlight">\(\xi=1\)</span> for the forward, and
+<span class="math notranslate nohighlight">\(\xi=-1\)</span> for the backward direction.
+The parameter <span class="math notranslate nohighlight">\(\Gamma\)</span> proportional to the reaction constant. It is defined as</p>
+<div class="math notranslate nohighlight">
+\[\Gamma = \prod_i \Bigl(\frac{\left&lt;N_i\right&gt;}{V} \Bigr)^{\bar\nu} = V^{-\bar\nu} \prod_i \left&lt;N_i\right&gt;^{\nu_i} = K_c(c^{\ominus}=1/\sigma^3)\]</div>
+<p>where <span class="math notranslate nohighlight">\(\left&lt;N_i\right&gt;/V\)</span> is the average number density of particles of type <span class="math notranslate nohighlight">\(i\)</span>.
+Note that the dimension of <span class="math notranslate nohighlight">\(\Gamma\)</span> is <span class="math notranslate nohighlight">\(V^{\bar\nu}\)</span>, therefore its
+units must be consistent with the units in which Espresso measures the box volume,
+i.e. <span class="math notranslate nohighlight">\(\sigma^3\)</span>.</p>
+<p>It is often convenient, and in some cases even necessary, that some particles
+representing reactants are not removed from or placed at randomly in the system
+but their identity is changed to that of the products, or vice versa in the
+backward direction.  A typical example is the ionization reaction of weak
+polyelectrolytes, where the ionizable groups on the polymer have to remain on
+the polymer chain after the reaction.  The replacement rule is that the identity of a given reactant type is
+changed to the corresponding product type as long as the corresponding
+coefficients allow for it.  Corresponding means having the same position (index) in
+the python lists of reactants and products which are used to set up the
+reaction.</p>
+<div class="section" id="converting-tabulated-reaction-constants-to-internal-units-in-espresso">
+<span id="id34"></span><h3>16.7.1. Converting tabulated reaction constants to internal units in Espresso<a class="headerlink" href="#converting-tabulated-reaction-constants-to-internal-units-in-espresso" title="Permalink to this headline">¶</a></h3>
+<p>The implementation in Espresso requires that the dimension of <span class="math notranslate nohighlight">\(\Gamma\)</span>
+is consistent with the internal unit of volume, <span class="math notranslate nohighlight">\(\sigma^3\)</span>.
+The tabulated values of equilibrium constants for reactions in solution, <span class="math notranslate nohighlight">\(K_c\)</span>, typically use
+<span class="math notranslate nohighlight">\(c^{\ominus} = 1\,\mathrm{moldm^{-3}}\)</span> as the reference concentration,
+and have the dimension of <span class="math notranslate nohighlight">\((c^{\ominus})^{\bar\nu}\)</span>.  To be used with Espresso, the
+value of <span class="math notranslate nohighlight">\(K_c\)</span> has to be converted as</p>
+<div class="math notranslate nohighlight">
+\[\Gamma = K_c(c^{\ominus} = 1/\sigma^3) = K_c(c^{\ominus} = 1\,\mathrm{moldm^{-3}})
+\Bigl( N_{\mathrm{A}}\bigl(\frac{\sigma}{\mathrm{dm}}\bigr)^3\Bigr)^{\bar\nu}\]</div>
+<p>where <span class="math notranslate nohighlight">\(N_{\mathrm{A}}\)</span> is the Avogadro number.  For gas-phase reactions,
+the pressure-based reaction constant, <span class="math notranslate nohighlight">\(K_p\)</span> is often used, which can
+be converted to <span class="math notranslate nohighlight">\(K_c\)</span> as</p>
+<div class="math notranslate nohighlight">
+\[K_p(p^{\ominus}=1\,\mathrm{atm}) = K_c(c^{\ominus} = 1\,\mathrm{moldm^{-3}}) \biggl(\frac{c^{\ominus}RT}{p^{\ominus}}\biggr)^{\bar\nu},\]</div>
+<p>where <span class="math notranslate nohighlight">\(p^{\ominus}=1\,\mathrm{atm}\)</span> is the standard pressure.</p>
+</div>
+<div class="section" id="wang-landau-reaction-ensemble">
+<span id="id35"></span><h3>16.7.2. Wang-Landau Reaction Ensemble<a class="headerlink" href="#wang-landau-reaction-ensemble" title="Permalink to this headline">¶</a></h3>
+<p>An Example script can be found here:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/espressomd/espresso/blob/python/samples/wang_landau_reaction_ensemble.py">Wang Landau reaction ensemble</a></p></li>
+</ul>
+<p>Combination of the Reaction Ensemble with the Wang-Landau algorithm
+<a class="bibtex reference internal" href="zreferences.html#wang01a" id="id37">[WL01]</a>
+allows for enhanced sampling of the reacting system, and
+and for the determination of the density of states with respect
+to the reaction coordinate or with respect to some other collective
+variable <a class="bibtex reference internal" href="zreferences.html#landsgesell17a" id="id38">[LHS17b]</a>. Here the 1/t Wang-Landau
+algorithm <a class="bibtex reference internal" href="zreferences.html#belardinelli07a" id="id39">[BP07]</a> is implemented since it
+does not suffer from systematic errors. Additionally to the above
+commands for the reaction ensemble use the following commands for the
+Wang-Landau reaction ensemble. For a description of the available methods see <a class="reference internal" href="espressomd.html#module-espressomd.reaction_ensemble" title="espressomd.reaction_ensemble"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.reaction_ensemble</span></code></a>:</p>
+</div>
+<div class="section" id="constant-ph-simulation-using-the-reaction-ensemble">
+<span id="id40"></span><h3>16.7.3. Constant pH simulation using the Reaction Ensemble<a class="headerlink" href="#constant-ph-simulation-using-the-reaction-ensemble" title="Permalink to this headline">¶</a></h3>
+<p>An Example script can be found here:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/espressomd/espresso/blob/python/samples/reaction_ensemble.py">Reaction ensemble/ constant pH ensemble</a></p></li>
+</ul>
+<p>In the constant pH method due to Reed and Reed
+<a class="bibtex reference internal" href="zreferences.html#reed92a" id="id42">[RR92]</a> it is possible to set the chemical potential
+of <span class="math notranslate nohighlight">\(H^{+}\)</span> ions, assuming that the simulated system is coupled to an
+infinite reservoir. This value is the used to simulate dissociation
+equilibrium of acids and bases. Under certain conditions, the constant
+pH method can yield equivalent results as the reaction ensemble <a class="bibtex reference internal" href="zreferences.html#landsgesell17b" id="id43">[LHS17a]</a>. However, it
+treats the chemical potential of <span class="math notranslate nohighlight">\(H^{+}\)</span> ions and their actual
+number in the simulation box as independent variables, which can lead to
+serious artifacts.
+The constant pH method can be used within the reaction ensemble module by
+initializing the reactions with the standard commands of the reaction ensemble.</p>
+<p>The dissociation constant, which is the input of the constant pH method, is the equilibrium
+constant <span class="math notranslate nohighlight">\(K_c\)</span> for the following reaction:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{HA \rightleftharpoons\ H^+ + A^- } \,,\]</div>
+<p>For an example of how to setup
+a Constant pH simulation, see the file in the testsuite directory.
+For a description of the available methods see <a class="reference internal" href="espressomd.html#module-espressomd.reaction_ensemble" title="espressomd.reaction_ensemble"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.reaction_ensemble</span></code></a>.</p>
+</div>
+<div class="section" id="grand-canonical-ensemble-simulation-using-the-reaction-ensemble">
+<span id="id44"></span><h3>16.7.4. Grand canonical ensemble simulation using the Reaction Ensemble<a class="headerlink" href="#grand-canonical-ensemble-simulation-using-the-reaction-ensemble" title="Permalink to this headline">¶</a></h3>
+<p>As a special case, all stoichiometric coefficients on one side of the chemical
+reaction can be set to zero.  Such reaction creates particles <em>ex nihilo</em>, and
+is equivalent to exchange with a reservoir. Then the simulation in the reaction ensemble becomes equivalent with the
+grandcanonical simulation. Formally, this can be expressed by the reaction</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{\emptyset \rightleftharpoons\ \nu_A A  }  \,,\]</div>
+<p>where, if <span class="math notranslate nohighlight">\(\nu_A=1\)</span>, the reaction constant <span class="math notranslate nohighlight">\(\Gamma\)</span> defines the chemical potential of species A.
+However, if <span class="math notranslate nohighlight">\(\nu_A\neq 1\)</span>, the statistics of the reaction ensemble becomes
+equivalent to the grandcanonical only in the limit of large average number of species A in the box.
+If the reaction contains more than one product, then the reaction constant
+<span class="math notranslate nohighlight">\(\Gamma\)</span> defines only the sum of their chemical potentials but not the
+chemical potential of each product alone.</p>
+<p>Since the Reaction Ensemble acceptance transition probability can be
+derived from the grand canonical acceptance transition probability we
+can use the reaction ensemble to implement grand canonical simulation
+moves. This is done via adding reactions that only have reactants (for the
+deletion of particles) or only have products (for the creation of
+particles). There exists a one to one mapping of the expressions in the
+grand canonical transition probabilities and the expressions in the
+reaction ensemble transition probabilities.</p>
+</div>
+<div class="section" id="widom-insertion-for-homogeneous-systems">
+<h3>16.7.5. Widom Insertion (for homogeneous systems)<a class="headerlink" href="#widom-insertion-for-homogeneous-systems" title="Permalink to this headline">¶</a></h3>
+<p>An example script can be found here:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/espressomd/espresso/blob/python/samples/widom_insertion.py">Widom Insertion</a></p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">16. Advanced Methods</a><ul>
+<li><a class="reference internal" href="#creating-bonds-when-particles-collide">16.1. Creating bonds when particles collide</a></li>
+<li><a class="reference internal" href="#lees-edwards-boundary-conditions">16.2. Lees-Edwards boundary conditions</a></li>
+<li><a class="reference internal" href="#immersed-boundary-method-for-soft-elastic-objects">16.3. Immersed Boundary Method for soft elastic objects</a></li>
+<li><a class="reference internal" href="#object-in-fluid">16.4. Object-in-fluid</a><ul>
+<li><a class="reference internal" href="#triangulations-of-elastic-objects">16.4.1. Triangulations of elastic objects</a></li>
+<li><a class="reference internal" href="#description-of-sample-script">16.4.2. Description of sample script</a></li>
+<li><a class="reference internal" href="#visualization-in-paraview">16.4.3. Visualization in ParaView</a></li>
+<li><a class="reference internal" href="#available-object-in-fluid-oif-classes">16.4.4. Available Object-in-fluid (OIF) classes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#electrokinetics">16.5. Electrokinetics</a><ul>
+<li><a class="reference internal" href="#electrokinetic-equations">16.5.1. Electrokinetic Equations</a></li>
+<li><a class="reference internal" href="#setup">16.5.2. Setup</a></li>
+<li><a class="reference internal" href="#output">16.5.3. Output</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#particle-polarizability-with-thermalized-cold-drude-oscillators">16.6. Particle polarizability with thermalized cold Drude oscillators</a><ul>
+<li><a class="reference internal" href="#canceling-intramolecular-electrostatics">16.6.1. Canceling intramolecular electrostatics</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reaction-ensemble">16.7. Reaction Ensemble</a><ul>
+<li><a class="reference internal" href="#converting-tabulated-reaction-constants-to-internal-units-in-espresso">16.7.1. Converting tabulated reaction constants to internal units in Espresso</a></li>
+<li><a class="reference internal" href="#wang-landau-reaction-ensemble">16.7.2. Wang-Landau Reaction Ensemble</a></li>
+<li><a class="reference internal" href="#constant-ph-simulation-using-the-reaction-ensemble">16.7.3. Constant pH simulation using the Reaction Ensemble</a></li>
+<li><a class="reference internal" href="#grand-canonical-ensemble-simulation-using-the-reaction-ensemble">16.7.4. Grand canonical ensemble simulation using the Reaction Ensemble</a></li>
+<li><a class="reference internal" href="#widom-insertion-for-homogeneous-systems">16.7.5. Widom Insertion (for homogeneous systems)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="under_the_hood.html" title="17. Under the hood"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="visualization.html" title="15. Online-visualization"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Oct 01, 2019.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>espressomd.io package &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="espressomd.io.writer package" href="espressomd.io.writer.html" />
+    <link rel="prev" title="espressomd.MDA_ESP package" href="espressomd.MDA_ESP.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="espressomd.io.writer.html" title="espressomd.io.writer package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="espressomd.MDA_ESP.html" title="espressomd.MDA_ESP package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >espressomd</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="espressomd.html" accesskey="U">espressomd package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">espressomd.io package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="espressomd-io-package">
+<h1>espressomd.io package<a class="headerlink" href="#espressomd-io-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="espressomd.io.writer.html">espressomd.io.writer package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.io.writer.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.io.writer.html#module-espressomd.io.writer.h5md">espressomd.io.writer.h5md module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.io.writer.html#module-espressomd.io.writer.vtf">espressomd.io.writer.vtf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.io.writer.html#module-espressomd.io.writer">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-espressomd.io.mpiio">
+<span id="espressomd-io-mpiio-module"></span><h2>espressomd.io.mpiio module<a class="headerlink" href="#module-espressomd.io.mpiio" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="espressomd.io.mpiio.Mpiio">
+<em class="property">class </em><code class="sig-prename descclassname">espressomd.io.mpiio.</code><code class="sig-name descname">Mpiio</code><a class="reference internal" href="_modules/espressomd/io/mpiio.html#Mpiio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.io.mpiio.Mpiio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>MPI-IO object.</p>
+<p>Used to output particle data using MPI-IO to binary files.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See the <a class="reference internal" href="#espressomd.io.mpiio.Mpiio.write" title="espressomd.io.mpiio.Mpiio.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code></a> and <a class="reference internal" href="#espressomd.io.mpiio.Mpiio.read" title="espressomd.io.mpiio.Mpiio.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code></a> methods for documentation.</p>
+</div>
+<dl class="py method">
+<dt id="espressomd.io.mpiio.Mpiio.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">types</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bonds</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/io/mpiio.html#Mpiio.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.io.mpiio.Mpiio.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPI-IO read.</p>
+<p>This function reads data dumped by :meth`write`. See the :meth`write`
+documentation for details.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The files must be read on the same number of processes that wrote
+the data. The data must be read on a machine with the same
+architecture (otherwise, this might silently fail).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="espressomd.io.mpiio.Mpiio.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prefix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">types</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bonds</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/io/mpiio.html#Mpiio.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#espressomd.io.mpiio.Mpiio.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPI-IO write.</p>
+<p>Outputs binary data using MPI-IO to several files starting with prefix.
+Suffixes are:</p>
+<ul class="simple">
+<li><p>head: Information about fields that are dumped,</p></li>
+<li><p>pref: Information about processes: 1 int per process,</p></li>
+<li><p>id: Particle ids: 1 int per particle,</p></li>
+<li><p>pos: Position information (if dumped): 3 doubles per particle,</p></li>
+<li><p>vel: Velocity information (if dumped): 3 doubles per particle,</p></li>
+<li><p>typ: Type information (if dumped): 1 int per particle,</p></li>
+<li><p>bond: Bond information (if dumped): variable amount of data,</p></li>
+<li><p>boff: Bond offset information (if bonds are dumped): 1 int per particle.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not read the files on a machine with a different architecture!</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Common prefix for the filenames.</p></li>
+<li><p><strong>positions</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Indicates if positions should be dumped.</p></li>
+<li><p><strong>velocities</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Indicates if velocities should be dumped.</p></li>
+<li><p><strong>types</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Indicates if types should be dumped.</p></li>
+<li><p><strong>bonds</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Indicates if bonds should be dumped.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If no prefix was given or none of the output fields are chosen.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-espressomd.io">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-espressomd.io" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">espressomd.io package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-espressomd.io.mpiio">espressomd.io.mpiio module</a></li>
+<li><a class="reference internal" href="#module-espressomd.io">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="espressomd.io.writer.html" title="espressomd.io.writer package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="espressomd.MDA_ESP.html" title="espressomd.MDA_ESP package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >espressomd</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="espressomd.html" >espressomd package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">espressomd.io package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2020, The ESPResSo project.
+      Last updated on Jul 08, 2020.
+    </div>
+  </body>
+</html>

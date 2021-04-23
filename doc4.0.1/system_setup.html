@@ -1,0 +1,542 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>3. Setting up the system &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="4. Setting up particles" href="particles.html" />
+    <link rel="prev" title="2. Installation" href="installation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="particles.html" title="4. Setting up particles"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="2. Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-the-system">
+<span id="id1"></span><h1>3. Setting up the system<a class="headerlink" href="#setting-up-the-system" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setting-global-variables-in-python">
+<span id="id2"></span><h2>3.1. Setting global variables in Python<a class="headerlink" href="#setting-global-variables-in-python" title="Permalink to this headline">¶</a></h2>
+<p>The global variables in Python are controlled via the
+<a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a> class.
+Global system variables can be read and set in Python simply by accessing the
+attribute of the corresponding Python object. Those variables that are already
+available in the Python interface are listed in the following. Note that for the
+vectorial properties <code class="docutils literal notranslate"><span class="pre">box_l</span></code> and <code class="docutils literal notranslate"><span class="pre">periodicity</span></code>, component-wise manipulation
+like <code class="docutils literal notranslate"><span class="pre">system.box_l[0]</span> <span class="pre">=</span> <span class="pre">1</span></code> or in-place operators like <code class="docutils literal notranslate"><span class="pre">+=</span></code> or <code class="docutils literal notranslate"><span class="pre">*=</span></code> are not
+allowed and result in an error. This behavior is inherited, so the same applies
+to <code class="docutils literal notranslate"><span class="pre">a</span></code> after <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">system.box_l</span></code>. If you want to use a vectorial property
+for further calculations, you should explicitly make a copy e.g. via
+<code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">numpy.copy(system.box_l)</span></code>.</p>
+<ul>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.box_l" title="espressomd.system.System.box_l"><code class="xref py py-attr docutils literal notranslate"><span class="pre">box_l</span></code></a></p>
+<blockquote>
+<div><p>(float[3]) Simulation box lengths of the cuboid box used by <cite>ESPResSo</cite>.
+Note that if you change the box length during the simulation, the folded
+particle coordinates will remain the same, i.e., the particle stay in
+the same image box, but at the same relative position in their image
+box. If you want to scale the positions, use the command
+<a class="reference internal" href="espressomd.html#espressomd.system.System.change_volume_and_rescale_particles" title="espressomd.system.System.change_volume_and_rescale_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">change_volume_and_rescale_particles()</span></code></a>.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.periodicity" title="espressomd.system.System.periodicity"><code class="xref py py-attr docutils literal notranslate"><span class="pre">periodicity</span></code></a></p>
+<blockquote>
+<div><p>(int[3]) Specifies periodicity for the three directions. If the feature
+<code class="docutils literal notranslate"><span class="pre">PARTIAL_PERIODIC</span></code> is set, <cite>ESPResSo</cite> can be instructed to treat some
+dimensions as non-periodic. Per default espresso assumes periodicity in
+all directions which equals setting this variable to [1,1,1]. A
+dimension is specified as non-periodic via setting the periodicity
+variable for this dimension to 0. E.g. Periodicity only in z-direction
+is obtained by [0,0,1]. Caveat: Be aware of the fact that making a
+dimension non-periodic does not hinder particles from leaving the box in
+this direction. In this case for keeping particles in the simulation box
+a constraint has to be set.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.time_step" title="espressomd.system.System.time_step"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_step</span></code></a></p>
+<blockquote>
+<div><p>(float) Time step for MD integration.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.time" title="espressomd.system.System.time"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time</span></code></a></p>
+<blockquote>
+<div><p>(float) The simulation time.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.min_global_cut" title="espressomd.system.System.min_global_cut"><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_global_cut</span></code></a></p>
+<blockquote>
+<div><p>(float) Minimal total cutoff for real space. Effectively, this plus the
+<a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.skin" title="espressomd.cellsystem.CellSystem.skin"><code class="xref py py-attr docutils literal notranslate"><span class="pre">skin</span></code></a> is the minimally possible cell size. Espresso typically determines
+this value automatically, but some algorithms, virtual sites, require
+you to specify it manually.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.max_cut_bonded" title="espressomd.system.System.max_cut_bonded"><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_cut_bonded</span></code></a></p>
+<blockquote>
+<div><p><em>read-only</em> Maximal cutoff of bonded real space interactions.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><a class="reference internal" href="espressomd.html#espressomd.system.System.max_cut_nonbonded" title="espressomd.system.System.max_cut_nonbonded"><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_cut_nonbonded</span></code></a></p>
+<blockquote>
+<div><p><em>read-only</em> Maximal cutoff of bonded real space interactions.</p>
+</div></blockquote>
+</li>
+</ul>
+<div class="section" id="accessing-module-states">
+<span id="id3"></span><h3>3.1.1. Accessing module states<a class="headerlink" href="#accessing-module-states" title="Permalink to this headline">¶</a></h3>
+<p>Some variables like or are no longer directly available as attributes.
+In these cases they can be easily derived from the corresponding Python
+objects like</p>
+<p><code class="docutils literal notranslate"><span class="pre">n_part</span> <span class="pre">=</span> <span class="pre">len(espressomd.System().part[:].pos)</span></code></p>
+<p>or by calling the corresponding <code class="docutils literal notranslate"><span class="pre">get_state()</span></code> methods like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">temperature</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">get_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;kT&#39;</span><span class="p">]</span>
+
+<span class="n">gamma</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">get_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span>
+
+<span class="n">gamma_rot</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">get_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;gamma_rotation&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cellsystems">
+<span id="id4"></span><h2>3.2. Cellsystems<a class="headerlink" href="#cellsystems" title="Permalink to this headline">¶</a></h2>
+<p>This section deals with the flexible particle data organization of <cite>ESPResSo</cite>. Due
+to different needs of different algorithms, <cite>ESPResSo</cite> is able to change the
+organization of the particles in the computer memory, according to the
+needs of the used algorithms. For details on the internal organization,
+refer to section <a class="reference internal" href="under_the_hood.html#internal-particle-organization"><span class="std std-ref">Internal particle organization</span></a>.</p>
+<div class="section" id="global-properties">
+<span id="id5"></span><h3>3.2.1. Global properties<a class="headerlink" href="#global-properties" title="Permalink to this headline">¶</a></h3>
+<p>The properties of the cell system can be accessed by
+<a class="reference internal" href="espressomd.html#espressomd.system.System.cell_system" title="espressomd.system.System.cell_system"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System.cell_system</span></code></a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.max_num_cells" title="espressomd.cellsystem.CellSystem.max_num_cells"><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_num_cells</span></code></a></li>
+</ul>
+<p>(int) Maximal number of cells for the link cell algorithm. Reasonable
+values are between 125 and 1000, or for some problems <span class="math notranslate">\(n_part / nnodes\)</span>.</p>
+<ul class="simple">
+<li><a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.min_num_cells" title="espressomd.cellsystem.CellSystem.min_num_cells"><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_num_cells</span></code></a></li>
+</ul>
+<p>(int) Minimal number of cells for the link cell algorithm. Reasonable
+values range in <span class="math notranslate">\(10^{-6} N^2\)</span> to <span class="math notranslate">\(10^{-7} N^2\)</span>. In general
+just make sure that the Verlet lists are not incredibly large. By default the
+minimum is 0, but for the automatic P3M tuning it may be wise to set larger
+values for high particle numbers.</p>
+<ul class="simple">
+<li><a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.node_grid" title="espressomd.cellsystem.CellSystem.node_grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">node_grid</span></code></a></li>
+</ul>
+<p>(int[3]) 3D node grid for real space domain decomposition (optional, if
+unset an optimal set is chosen automatically).</p>
+<ul class="simple">
+<li><a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.skin" title="espressomd.cellsystem.CellSystem.skin"><code class="xref py py-attr docutils literal notranslate"><span class="pre">skin</span></code></a></li>
+</ul>
+<p>(float) Skin for the Verlet list. This value has to be set, otherwise the simulation will not start.</p>
+</div></blockquote>
+<p>Details about the cell system can be obtained by <a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.get_state" title="espressomd.cellsystem.CellSystem.get_state"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.System().cell_system.get_state()</span></code></a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">cell_grid</span></code>       Dimension of the inner cell grid.</li>
+<li><code class="docutils literal notranslate"><span class="pre">cell_size</span></code>       Box-length of a cell.</li>
+<li><code class="docutils literal notranslate"><span class="pre">local_box_l</span></code>     Local simulation box length of the nodes.</li>
+<li><code class="docutils literal notranslate"><span class="pre">max_cut</span></code>         Maximal cutoff of real space interactions.</li>
+<li><code class="docutils literal notranslate"><span class="pre">n_layers</span></code>        Number of layers in cell structure LAYERED</li>
+<li><code class="docutils literal notranslate"><span class="pre">n_nodes</span></code>         Number of nodes.</li>
+<li><code class="docutils literal notranslate"><span class="pre">type</span></code>            The current type of the cell system.</li>
+<li><code class="docutils literal notranslate"><span class="pre">verlet_reuse</span></code>    Average number of integration steps the Verlet list is re-used.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="domain-decomposition">
+<span id="id6"></span><h3>3.2.2. Domain decomposition<a class="headerlink" href="#domain-decomposition" title="Permalink to this headline">¶</a></h3>
+<p>Invoking <a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.set_domain_decomposition" title="espressomd.cellsystem.CellSystem.set_domain_decomposition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">set_domain_decomposition</span></code></a>
+selects the domain decomposition cell scheme, using Verlet lists
+for the calculation of the interactions. If you specify <code class="docutils literal notranslate"><span class="pre">use_verlet_lists=False</span></code>, only the
+domain decomposition is used, but not the Verlet lists.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">set_domain_decomposition</span><span class="p">(</span><span class="n">use_verlet_lists</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The domain decomposition cellsystem is the default system and suits most
+applications with short ranged interactions. The particles are divided
+up spatially into small compartments, the cells, such that the cell size
+is larger than the maximal interaction range. In this case interactions
+only occur between particles in adjacent cells. Since the interaction
+range should be much smaller than the total system size, leaving out all
+interactions between non-adjacent cells can mean a tremendous speed-up.
+Moreover, since for constant interaction range, the number of particles
+in a cell depends only on the density. The number of interactions is
+therefore of the order N instead of order <span class="math notranslate">\(N^2\)</span> if one has to
+calculate all pair interactions.</p>
+</div>
+<div class="section" id="n-squared">
+<span id="id7"></span><h3>3.2.3. N-squared<a class="headerlink" href="#n-squared" title="Permalink to this headline">¶</a></h3>
+<p>Invoking <a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.set_n_square" title="espressomd.cellsystem.CellSystem.set_n_square"><code class="xref py py-attr docutils literal notranslate"><span class="pre">set_n_square</span></code></a>
+selects the very primitive nsquared cellsystem, which calculates
+the interactions for all particle pairs. Therefore it loops over all
+particles, giving an unfavorable computation time scaling of
+<span class="math notranslate">\(N^2\)</span>. However, algorithms like MMM1D or the plain Coulomb
+interaction in the cell model require the calculation of all pair
+interactions.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">set_n_square</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In a multiple processor environment, the nsquared cellsystem uses a
+simple particle balancing scheme to have a nearly equal number of
+particles per CPU, <span class="math notranslate">\(n\)</span> nodes have <span class="math notranslate">\(m\)</span> particles, and
+<span class="math notranslate">\(p-n\)</span> nodes have <span class="math notranslate">\(m+1\)</span> particles, such that
+<span class="math notranslate">\(n*m+(p-n)*(m+1)=N\)</span>, the total number of particles. Therefore the
+computational load should be balanced fairly equal among the nodes, with
+one exception: This code always uses one CPU for the interaction between
+two different nodes. For an odd number of nodes, this is fine, because
+the total number of interactions to calculate is a multiple of the
+number of nodes, but for an even number of nodes, for each of the
+<span class="math notranslate">\(p-1\)</span> communication rounds, one processor is idle.</p>
+<p>E.g. for 2 processors, there are 3 interactions: 0-0, 1-1, 0-1.
+Naturally, 0-0 and 1-1 are treated by processor 0 and 1, respectively.
+But the 0-1 interaction is treated by node 1 alone, so the workload for
+this node is twice as high. For 3 processors, the interactions are 0-0,
+1-1, 2-2, 0-1, 1-2, 0-2. Of these interactions, node 0 treats 0-0 and
+0-2, node 1 treats 1-1 and 0-1, and node 2 treats 2-2 and 1-2.</p>
+<p>Therefore it is highly recommended that you use nsquared only with an
+odd number of nodes, if with multiple processors at all.</p>
+</div>
+<div class="section" id="layered-cell-system">
+<span id="id8"></span><h3>3.2.4. Layered cell system<a class="headerlink" href="#layered-cell-system" title="Permalink to this headline">¶</a></h3>
+<p>Invoking <a class="reference internal" href="espressomd.html#espressomd.cellsystem.CellSystem.set_layered" title="espressomd.cellsystem.CellSystem.set_layered"><code class="xref py py-attr docutils literal notranslate"><span class="pre">set_layered</span></code></a>
+selects the layered cell system, which is specifically designed for
+the needs of the MMM2D algorithm. Basically it consists of a nsquared
+algorithm in x and y, but a domain decomposition along z, i.e. the
+system is cut into equally sized layers along the z axis. The current
+implementation allows for the CPUs to align only along the z axis,
+therefore the processor grid has to have the form 1x1xN. However, each
+processor may be responsible for several layers, which is determined by
+<code class="docutils literal notranslate"><span class="pre">n_layers</span></code>, i.e. the system is split into N* layers along the z axis. Since in x
+and y direction there are no processor boundaries, the implementation is
+basically just a stripped down version of the domain decomposition
+cellsystem.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">set_layered</span><span class="p">(</span><span class="n">n_layers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="thermostats">
+<span id="id9"></span><h2>3.3. Thermostats<a class="headerlink" href="#thermostats" title="Permalink to this headline">¶</a></h2>
+<p>The thermostat can be controlled by the class <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat" title="espressomd.thermostat.Thermostat"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.thermostat.Thermostat</span></code></a></p>
+<p>The different available thermostats will be described in the following
+subsections. Note that for a simulation of the NPT ensemble, you need to
+use a standard thermostat for the particle velocities (Langevin or DPD),
+and a thermostat for the box geometry (the isotropic NPT thermostat).</p>
+<p>You may combine different thermostats at your own risk by turning them
+on one by one. Note that there is only one temperature for all
+thermostats, although for some thermostats like the Langevin thermostat,
+particles can be assigned individual temperatures.</p>
+<p>Since <cite>ESPResSo</cite> does not enforce a particular unit system, it cannot know about
+the current value of the Boltzmann constant. Therefore, when specifying
+the temperature of a thermostat, you actually do not define the
+temperature, but the value of the thermal energy <span class="math notranslate">\(k_B T\)</span> in the
+current unit system (see the discussion on units, Section&nbsp;<a class="reference internal" href="introduction.html#on-units"><span class="std std-ref">On units</span></a>).</p>
+<p>Note that there are three different types of noise which can be used in
+<cite>ESPResSo</cite>. The one used typically in simulations is flat noise with the correct
+variance and it is the default used in <cite>ESPResSo</cite>, though it can be explicitly
+specified using the feature <code class="docutils literal notranslate"><span class="pre">FLATNOISE</span></code>. You can also employ Gaussian noise which
+is, in some sense, more realistic. Notably Gaussian noise (activated
+using the feature <code class="docutils literal notranslate"><span class="pre">GAUSSRANDOM</span></code>) does a superior job of reproducing higher order
+moments of the Maxwell–Boltzmann distribution. For typical generic
+coarse-grained polymers using FENE bonds the Gaussian noise tends to
+break the FENE bonds. We thus offer a third type of noise, activate
+using the feature <code class="docutils literal notranslate"><span class="pre">GAUSSRANDOMCUT</span></code>, which produces Gaussian random numbers but takes
+anything which is two standard deviations (<span class="math notranslate">\(2\sigma\)</span>) below or
+above zero and set it to <span class="math notranslate">\(-2\sigma\)</span> or <span class="math notranslate">\(2\sigma\)</span>
+respectively. In all three cases the distribution is made such that the
+second moment of the distribution is the same and thus results in the
+same temperature.</p>
+<div class="section" id="langevin-thermostat">
+<span id="id10"></span><h3>3.3.1. Langevin thermostat<a class="headerlink" href="#langevin-thermostat" title="Permalink to this headline">¶</a></h3>
+<p>In order to activate the Langevin thermostat the member function
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_langevin" title="espressomd.thermostat.Thermostat.set_langevin"><code class="xref py py-attr docutils literal notranslate"><span class="pre">set_langevin</span></code></a> of the thermostat
+class <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat" title="espressomd.thermostat.Thermostat"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.thermostat.Thermostat</span></code></a> has to be invoked.
+Best explained in an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">therm</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">Thermostat</span><span class="p">()</span>
+
+<span class="n">therm</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As explained before the temperature is set as thermal energy <span class="math notranslate">\(k_\mathrm{B} T\)</span>.
+The Langevin thermostat consists of a friction and noise term coupled
+via the fluctuation-dissipation theorem. The friction term is a function
+of the particle velocities. By specifying the diffusion coefficient for
+the particle becomes</p>
+<div class="math notranslate">
+\[D = \frac{\text{temperature}}{\text{gamma}}.\]</div>
+<p>The relaxation time is given by <span class="math notranslate">\(\text{gamma}/\text{MASS}\)</span>, with
+<code class="docutils literal notranslate"><span class="pre">MASS</span></code> the particle’s mass.  For a more detailed explanation, refer to
+<a class="reference internal" href="ug.html#grest86a" id="id11">[GK86]</a>.  An anisotropic diffusion coefficient tensor is available to
+simulate anisotropic colloids (rods, etc.) properly. It can be enabled by the
+feature <code class="docutils literal notranslate"><span class="pre">PARTICLE_ANISOTROPY</span></code>.</p>
+<p>If the feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> is compiled in, the rotational degrees of freedom are
+also coupled to the thermostat. If only the first two arguments are
+specified then the diffusion coefficient for the rotation is set to the
+same value as that for the translation.</p>
+<p>A separate rotational diffusion coefficient can be set by inputting
+<code class="docutils literal notranslate"><span class="pre">gamma_rotate</span></code>.  This also allows one to properly match the translational and
+rotational diffusion coefficients of a sphere. Feature <code class="docutils literal notranslate"><span class="pre">ROTATIONAL_INERTIA</span></code>
+enables an anisotropic rotational diffusion coefficient tensor through
+corresponding friction coefficients.</p>
+<p>Finally, the two options allow one to switch the translational and rotational
+thermalization on or off separately, maintaining the frictional behavior. This
+can be useful, for instance, in high Péclet number active matter systems, where
+one only wants to thermalize the rotational degrees of freedom and
+translational motion is effected by the self-propulsion.</p>
+<p>Using the Langevin thermostat, it is possible to set a temperature and a
+friction coefficient for every particle individually via the feature
+<code class="docutils literal notranslate"><span class="pre">LANGEVIN_PER_PARTICLE</span></code>.  Consult the reference of the <code class="docutils literal notranslate"><span class="pre">part</span></code> command
+(chapter <a class="reference internal" href="particles.html#setting-up-particles"><span class="std std-ref">Setting up particles</span></a>) for information on how to achieve this.</p>
+</div>
+<div class="section" id="dissipative-particle-dynamics-dpd">
+<span id="id12"></span><h3>3.3.2. Dissipative Particle Dynamics (DPD)<a class="headerlink" href="#dissipative-particle-dynamics-dpd" title="Permalink to this headline">¶</a></h3>
+<p>To realize a complete DPD fluid model, three parts are needed:
+The DPD thermostat, which controls the temperate, a dissipative
+interaction between the particles that make up the fluid,
+see <a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a>, and a repulsive conservative force.</p>
+<p>The DPD thermostat can be invoked by the function:
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_dpd" title="espressomd.thermostat.Thermostat.set_dpd"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.thermostat.Thermostat.set_dpd</span></code></a>
+which takes <span class="math notranslate">\(k_\mathrm{B} T\)</span> as the only argument.</p>
+<p>The friction coefficients and cutoff are controlled via the
+<a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a> on a per type-pair basis. For details see
+there.</p>
+<p>As a conservative force any interaction potential can be used,
+see <a class="reference internal" href="inter_non-bonded.html#isotropic-non-bonded-interactions"><span class="std std-ref">Isotropic non-bonded interactions</span></a>. A common choice is
+a force ramp which is implemented as <a class="reference internal" href="inter_non-bonded.html#hat-interaction"><span class="std std-ref">Hat interaction</span></a>.</p>
+<p>A complete example of setting up a DPD fluid and running it
+to sample the equation of state can be found in samples/dpd.py.</p>
+<p>DPD adds a velocity dependent dissipative force and a random force
+to the conservative pair forces.</p>
+<p>The friction (dissipative) and noise (random) term are coupled via the
+fluctuation- dissipation theorem. The friction term is a function of the
+relative velocity of particle pairs. The DPD thermostat is better for
+dynamics than the Langevin thermostat, since it mimics hydrodynamics in
+the system.</p>
+<p>When using a Lennard-Jones interaction, <span class="math notranslate">\({r_\mathrm{cut}} =
+2^{\frac{1}{6}} \sigma\)</span> is a good value to choose, so that the
+thermostat acts on the relative velocities between nearest neighbor
+particles. Larger cutoffs including next nearest neighbors or even more
+are unphysical.</p>
+<p>Boundary conditions for DPD can be introduced by adding the boundary
+as a particle constraint, and setting a velocity and a type on it, see
+<a class="reference internal" href="espressomd.html#espressomd.constraints.Constraint" title="espressomd.constraints.Constraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.Constraint</span></code></a>. Then a
+<a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a> with the type can be defined, which acts as a
+boundary condition.</p>
+</div>
+<div class="section" id="isotropic-npt-thermostat">
+<span id="id13"></span><h3>3.3.3. Isotropic NPT thermostat<a class="headerlink" href="#isotropic-npt-thermostat" title="Permalink to this headline">¶</a></h3>
+<p>This feature allows to simulate an (on average) homogeneous and isotropic system in the NPT ensemble.
+In order to use this feature, <code class="docutils literal notranslate"><span class="pre">NPT</span></code> has to be defined in the <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>.
+Activate the NPT thermostat with the command <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_npt" title="espressomd.thermostat.Thermostat.set_npt"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_npt()</span></code></a>
+and set the following parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">kT</span></code>:     (float) Thermal energy of the heat bath</li>
+<li><code class="docutils literal notranslate"><span class="pre">gamma0</span></code>: (float) Friction coefficient of the bath</li>
+<li><code class="docutils literal notranslate"><span class="pre">gammav</span></code>: (float) Artificial friction coefficient for the volume fluctuations.</li>
+</ul>
+</div></blockquote>
+<p>Also, setup the integrator for the NPT ensemble with <code class="xref py py-func docutils literal notranslate"><span class="pre">set_isotropic_npt()</span></code>
+and the parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">ext_pressure</span></code>:  (float) The external pressure as float variable.</li>
+<li><code class="docutils literal notranslate"><span class="pre">piston</span></code>:        (float) The mass of the applied piston as float variable.</li>
+</ul>
+</div></blockquote>
+<p>This thermostat is based on the Anderson thermostat (see
+<a class="reference internal" href="ug.html#andersen80a" id="id14">[And80]</a><a class="reference internal" href="ug.html#mann05d" id="id15">[Man05]</a>) and will thermalize the box
+geometry. It will only do isotropic changes of the box.
+See this code snippet for the two commands:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_npt</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gammav</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_isotropic_npt</span><span class="p">(</span><span class="n">ext_pressure</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">piston</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Be aware that this feature is neither properly examined for all systems
+nor is it maintained regularly. If you use it and notice strange
+behavior, please contribute to solving the problem.</p>
+</div>
+</div>
+<div class="section" id="cuda">
+<span id="id16"></span><h2>3.4. CUDA<a class="headerlink" href="#cuda" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle" title="espressomd.cuda_init.CudaInitHandle"><code class="xref py py-attr docutils literal notranslate"><span class="pre">CudaInitHandle()</span></code></a> command can be used to choose the GPU for all subsequent
+GPU-computations. Note that due to driver limitations, the GPU cannot be
+changed anymore after the first GPU-using command has been issued, for
+example <code class="docutils literal notranslate"><span class="pre">lbfluid</span></code>. If you do not choose the GPU manually before that,
+CUDA internally chooses one, which is normally the most powerful GPU
+available, but load-independent.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">dev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">device</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">dev</span>
+</pre></div>
+</div>
+<p>The first invocation in the sample above returns the id of the set graphics card, the second one sets the
+device id.</p>
+<div class="section" id="gpu-acceleration-with-cuda">
+<span id="id17"></span><h3>3.4.1. GPU Acceleration with CUDA<a class="headerlink" href="#gpu-acceleration-with-cuda" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">CUDA</span></code> required</p>
+</div>
+<p><cite>ESPResSo</cite> is capable of GPU acceleration to speed up simulations.
+Not every simulation method is parallelizable or profits from
+GPU acceleration. Refer to <a class="reference internal" href="introduction.html#available-simulation-methods"><span class="std std-ref">Available simulation methods</span></a>
+to check whether your desired method can be used on the GPU.
+In order to use GPU acceleration you need a NVIDIA GPU
+and it needs to have at least compute capability 2.0.</p>
+<p>For more information please check <a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle" title="espressomd.cuda_init.CudaInitHandle"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.cuda_init.CudaInitHandle</span></code></a>.</p>
+</div>
+<div class="section" id="list-available-cuda-devices">
+<span id="id18"></span><h3>3.4.2. List available CUDA devices<a class="headerlink" href="#list-available-cuda-devices" title="Permalink to this headline">¶</a></h3>
+<p>If you want to list available CUDA devices
+you should access <a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle.device_list" title="espressomd.cuda_init.CudaInitHandle.device_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.cuda_init.CudaInitHandle.device_list</span></code></a>, e.g.,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">device_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This attribute is read only and will return a dictionary containing
+the device id as key and the device name as its’ value.</p>
+</div>
+<div class="section" id="selection-of-cuda-device">
+<span id="id19"></span><h3>3.4.3. Selection of CUDA device<a class="headerlink" href="#selection-of-cuda-device" title="Permalink to this headline">¶</a></h3>
+<p>When you start <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> your first GPU should
+be selected.
+If you wanted to use the second GPU, this can be done
+by setting <a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle.device" title="espressomd.cuda_init.CudaInitHandle.device"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.cuda_init.CudaInitHandle.device</span></code></a> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>Setting a device id outside the valid range or a device
+which does not meet the minimum requirements will raise
+an exception.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3. Setting up the system</a><ul>
+<li><a class="reference internal" href="#setting-global-variables-in-python">3.1. Setting global variables in Python</a><ul>
+<li><a class="reference internal" href="#accessing-module-states">3.1.1. Accessing module states</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cellsystems">3.2. Cellsystems</a><ul>
+<li><a class="reference internal" href="#global-properties">3.2.1. Global properties</a></li>
+<li><a class="reference internal" href="#domain-decomposition">3.2.2. Domain decomposition</a></li>
+<li><a class="reference internal" href="#n-squared">3.2.3. N-squared</a></li>
+<li><a class="reference internal" href="#layered-cell-system">3.2.4. Layered cell system</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thermostats">3.3. Thermostats</a><ul>
+<li><a class="reference internal" href="#langevin-thermostat">3.3.1. Langevin thermostat</a></li>
+<li><a class="reference internal" href="#dissipative-particle-dynamics-dpd">3.3.2. Dissipative Particle Dynamics (DPD)</a></li>
+<li><a class="reference internal" href="#isotropic-npt-thermostat">3.3.3. Isotropic NPT thermostat</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cuda">3.4. CUDA</a><ul>
+<li><a class="reference internal" href="#gpu-acceleration-with-cuda">3.4.1. GPU Acceleration with CUDA</a></li>
+<li><a class="reference internal" href="#list-available-cuda-devices">3.4.2. List available CUDA devices</a></li>
+<li><a class="reference internal" href="#selection-of-cuda-device">3.4.3. Selection of CUDA device</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="particles.html" title="4. Setting up particles"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="2. Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Jan 25, 2019.
+    </div>
+  </body>
+</html>

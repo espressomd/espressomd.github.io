@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>espressomd.drude_helpers &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../espressomd.html" accesskey="U">espressomd</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.drude_helpers</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2019 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">espressomd.interactions</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">has_features</span>
+
+<span class="c1"># Dict with Drude type infos</span>
+<span class="n">drude_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c1"># Lists with unique Drude and core types</span>
+<span class="n">core_type_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">drude_type_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c1"># Get core id from Drude id</span>
+<span class="n">core_id_from_drude_id</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c1"># Drude IDs</span>
+<span class="n">drude_id_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<div class="viewcode-block" id="add_drude_particle_to_core"><a class="viewcode-back" href="../../espressomd.html#espressomd.drude_helpers.add_drude_particle_to_core">[docs]</a><span class="k">def</span> <span class="nf">add_drude_particle_to_core</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">harmonic_bond</span><span class="p">,</span> <span class="n">thermalized_bond</span><span class="p">,</span>
+                               <span class="n">p_core</span><span class="p">,</span> <span class="n">id_drude</span><span class="p">,</span> <span class="n">type_drude</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span>
+                               <span class="n">mass_drude</span><span class="p">,</span> <span class="n">coulomb_prefactor</span><span class="p">,</span>
+                               <span class="n">thole_damping</span><span class="o">=</span><span class="mf">2.6</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds a Drude particle with specified id, type, and mass to the system.</span>
+<span class="sd">    Checks if different Drude particles have different types.</span>
+<span class="sd">    Collects types/charges/polarizations/Thole factors for intramol. core-Drude short-range exclusion and Thole interaction.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : Instance of :attr:`espressomd.system.System`</span>
+<span class="sd">    harmonic_bond: This method adds this harmonic bond to between Drude particle and core</span>
+<span class="sd">    thermalized_bond: This method adds this thermalized_bond to between Drude particle and core</span>
+<span class="sd">    p_core: The existing core particle</span>
+<span class="sd">    id_drude: :obj:`int`</span>
+<span class="sd">              This method creates the Drude particle and assigns this id.</span>
+<span class="sd">    type_drude: :obj:`int`</span>
+<span class="sd">                The type of the newly created Drude particle</span>
+<span class="sd">    alpha : :obj:`float`</span>
+<span class="sd">            The polarizability in units of inverse volume. Related to the charge of the Drude particle.</span>
+<span class="sd">    mass_drude : :obj:`float`</span>
+<span class="sd">                 The mass of the newly created Drude particle</span>
+<span class="sd">    coulomb_prefactor : :obj:`float`</span>
+<span class="sd">                        Required to calculate the charge of the Drude particle.</span>
+<span class="sd">    thole_damping : :obj:`float`</span>
+<span class="sd">                    Thole damping factor of the Drude pair. Comes to effect if add_all_thole() method is used.</span>
+<span class="sd">    verbose : :obj:`bool`</span>
+<span class="sd">             Turns on verbosity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">harmonic_bond</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;k&quot;</span><span class="p">]</span>
+    <span class="n">q_drude</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">/</span> <span class="n">coulomb_prefactor</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;PARTICLE_ANISOTROPY&quot;</span><span class="p">):</span>
+        <span class="n">gamma_off</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gamma_off</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">id_drude</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">p_core</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">type_drude</span><span class="p">,</span>
+                    <span class="n">q</span><span class="o">=</span><span class="n">q_drude</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="n">mass_drude</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">gamma_off</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Adding to core&quot;</span><span class="p">,</span> <span class="n">p_core</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">&quot;drude id&quot;</span><span class="p">,</span> <span class="n">id_drude</span><span class="p">,</span> <span class="s2">&quot;  pol&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span>
+            <span class="s2">&quot;  core charge&quot;</span><span class="p">,</span> <span class="n">p_core</span><span class="o">.</span><span class="n">q</span><span class="p">,</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">p_core</span><span class="o">.</span><span class="n">q</span> <span class="o">-</span> <span class="n">q_drude</span><span class="p">,</span> <span class="s2">&quot;   drude charge&quot;</span><span class="p">,</span> <span class="n">q_drude</span><span class="p">)</span>
+
+    <span class="n">p_core</span><span class="o">.</span><span class="n">q</span> <span class="o">-=</span> <span class="n">q_drude</span>
+    <span class="n">p_core</span><span class="o">.</span><span class="n">mass</span> <span class="o">-=</span> <span class="n">mass_drude</span>
+    <span class="n">p_core</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">harmonic_bond</span><span class="p">,</span> <span class="n">id_drude</span><span class="p">))</span>
+    <span class="n">p_core</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">thermalized_bond</span><span class="p">,</span> <span class="n">id_drude</span><span class="p">))</span>
+
+    <span class="n">p_core</span><span class="o">.</span><span class="n">temp</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">p_core</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma_off</span>
+
+    <span class="k">if</span> <span class="n">type_drude</span> <span class="ow">in</span> <span class="n">drude_dict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">q_drude</span> <span class="ow">and</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;thole_damping&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">thole_damping</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s2">&quot;Drude particles with different drude charges have to have different types for THOLE&quot;</span><span class="p">)</span>
+
+    <span class="n">core_id_from_drude_id</span><span class="p">[</span><span class="n">id_drude</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_core</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="c1"># Add new Thole nonbonded interaction for D-D, D-C, C-C for all existing</span>
+    <span class="c1"># Drude types if this type is seen for the first time</span>
+    <span class="k">if</span> <span class="n">type_drude</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">drude_dict</span><span class="p">:</span>
+
+        <span class="c1"># Bookkeeping of q, alphas and damping parameter</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">q_drude</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;qc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_core</span><span class="o">.</span><span class="n">q</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;thole_damping&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">thole_damping</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">type_drude</span><span class="p">][</span><span class="s2">&quot;core_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_core</span><span class="o">.</span><span class="n">type</span>
+        <span class="c1"># Save same information to get access to the parameters via core types</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">q_drude</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">][</span><span class="s2">&quot;qc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_core</span><span class="o">.</span><span class="n">q</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">][</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">][</span><span class="s2">&quot;thole_damping&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">thole_damping</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">][</span><span class="s2">&quot;drude_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_drude</span>
+
+    <span class="c1"># Collect unique Drude types</span>
+    <span class="k">if</span> <span class="n">type_drude</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">drude_type_list</span><span class="p">:</span>
+        <span class="n">drude_type_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">type_drude</span><span class="p">)</span>
+
+    <span class="c1"># Collect unique core types</span>
+    <span class="k">if</span> <span class="n">p_core</span><span class="o">.</span><span class="n">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">core_type_list</span><span class="p">:</span>
+        <span class="n">core_type_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_core</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+
+    <span class="c1"># Collect unique Drude ids</span>
+    <span class="k">if</span> <span class="n">id_drude</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">drude_id_list</span><span class="p">:</span>
+        <span class="n">drude_id_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">id_drude</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_thole_pair_damping"><a class="viewcode-back" href="../../espressomd.html#espressomd.drude_helpers.add_thole_pair_damping">[docs]</a><span class="k">def</span> <span class="nf">add_thole_pair_damping</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates mixed Thole factors depending on Thole damping and polarization.</span>
+<span class="sd">    Adds non-bonded Thole interactions to the system.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : Instance of :attr:`espressomd.system.System`</span>
+<span class="sd">    t1 : :obj:`int`</span>
+<span class="sd">        Type 1</span>
+<span class="sd">    t2 : :obj:`int`</span>
+<span class="sd">        Type 2</span>
+<span class="sd">    verbose : :obj:`bool`</span>
+<span class="sd">             Turns on verbosity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">qq</span> <span class="o">=</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">t1</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">t2</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">drude_dict</span><span class="p">[</span><span class="n">t1</span><span class="p">][</span><span class="s2">&quot;thole_damping&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">t2</span><span class="p">][</span><span class="s2">&quot;thole_damping&quot;</span><span class="p">]</span>
+               <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">drude_dict</span><span class="p">[</span><span class="n">t1</span><span class="p">][</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">t2</span><span class="p">][</span><span class="s2">&quot;alpha&quot;</span><span class="p">])</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">6.0</span><span class="p">)</span>
+
+    <span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">]</span><span class="o">.</span><span class="n">thole</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">scaling_coeff</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">q1q2</span><span class="o">=</span><span class="n">qq</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Added THOLE non-bonded interaction for types&quot;</span><span class="p">,</span>
+              <span class="n">t1</span><span class="p">,</span> <span class="s2">&quot;&lt;-&gt;&quot;</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="s2">&quot;q1q2&quot;</span><span class="p">,</span> <span class="n">qq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_all_thole"><a class="viewcode-back" href="../../espressomd.html#espressomd.drude_helpers.add_all_thole">[docs]</a><span class="k">def</span> <span class="nf">add_all_thole</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calls add_thole_pair_damping() for all necessary combinations to create the interactions.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : Instance of :attr:`espressomd.system.System`</span>
+<span class="sd">    verbose : :obj:`bool`</span>
+<span class="sd">             Turns on verbosity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Drude &lt;-&gt; Drude</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">drude_type_list</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">drude_type_list</span><span class="p">)):</span>
+            <span class="n">add_thole_pair_damping</span><span class="p">(</span>
+                <span class="n">system</span><span class="p">,</span> <span class="n">drude_type_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">drude_type_list</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="c1"># core &lt;-&gt; core</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">core_type_list</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">core_type_list</span><span class="p">)):</span>
+            <span class="n">add_thole_pair_damping</span><span class="p">(</span>
+                <span class="n">system</span><span class="p">,</span> <span class="n">core_type_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">core_type_list</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="c1"># Drude &lt;-&gt; core</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">drude_type_list</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">core_type_list</span><span class="p">:</span>
+            <span class="n">add_thole_pair_damping</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="setup_and_add_drude_exclusion_bonds"><a class="viewcode-back" href="../../espressomd.html#espressomd.drude_helpers.setup_and_add_drude_exclusion_bonds">[docs]</a><span class="k">def</span> <span class="nf">setup_and_add_drude_exclusion_bonds</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates electrostatic short-range exclusion bonds for global exclusion</span>
+<span class="sd">    between Drude particles and core charges and adds the bonds to the cores.</span>
+<span class="sd">    Has to be called once after all Drude particles have been created.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : Instance of :attr:`espressomd.system.System`</span>
+<span class="sd">    verbose: :obj:`bool`</span>
+<span class="sd">             Turns on verbosity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># All Drude types need...</span>
+    <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">drude_type_list</span><span class="p">:</span>
+
+        <span class="c1">#...exclusions with core</span>
+        <span class="n">qd</span> <span class="o">=</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span>  <span class="c1"># Drude charge</span>
+        <span class="n">qc</span> <span class="o">=</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;qc&quot;</span><span class="p">]</span>  <span class="c1"># Core charge</span>
+        <span class="n">subtr_sr_bond</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">interactions</span><span class="o">.</span><span class="n">BondedCoulombSRBond</span><span class="p">(</span>
+            <span class="n">q1q2</span><span class="o">=-</span><span class="n">qd</span> <span class="o">*</span> <span class="n">qc</span><span class="p">)</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtr_sr_bond</span><span class="p">)</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;subtr_sr_bonds_drude-core&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subtr_sr_bond</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Added drude-core SR exclusion bond &quot;</span><span class="p">,</span>
+                  <span class="n">subtr_sr_bond</span><span class="p">,</span> <span class="s2">&quot;for drude&quot;</span><span class="p">,</span> <span class="n">qd</span><span class="p">,</span> <span class="s2">&quot;&lt;-&gt; core&quot;</span><span class="p">,</span> <span class="n">qc</span><span class="p">,</span> <span class="s2">&quot;to system&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">drude_id</span> <span class="ow">in</span> <span class="n">drude_id_list</span><span class="p">:</span>
+        <span class="n">core_id</span> <span class="o">=</span> <span class="n">core_id_from_drude_id</span><span class="p">[</span><span class="n">drude_id</span><span class="p">]</span>
+        <span class="n">pd</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">drude_id</span><span class="p">]</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">core_id</span><span class="p">]</span>
+        <span class="n">bond</span> <span class="o">=</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">type</span><span class="p">][</span><span class="s2">&quot;subtr_sr_bonds_drude-core&quot;</span><span class="p">]</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">bond</span><span class="p">,</span> <span class="n">drude_id</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Added drude-core SR bond&quot;</span><span class="p">,</span> <span class="n">bond</span><span class="p">,</span>
+                  <span class="s2">&quot;between ids&quot;</span><span class="p">,</span> <span class="n">drude_id</span><span class="p">,</span> <span class="s2">&quot;and&quot;</span><span class="p">,</span> <span class="n">core_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="setup_intramol_exclusion_bonds"><a class="viewcode-back" href="../../espressomd.html#espressomd.drude_helpers.setup_intramol_exclusion_bonds">[docs]</a><span class="k">def</span> <span class="nf">setup_intramol_exclusion_bonds</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">mol_drude_types</span><span class="p">,</span> <span class="n">mol_core_types</span><span class="p">,</span>
+                                   <span class="n">mol_core_partial_charges</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates electrostatic short-range exclusion bonds for intramolecular exclusion</span>
+<span class="sd">    between Drude particles and partial charges of the cores. Has to be called once</span>
+<span class="sd">    after all Drude particles have been created.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : Instance of :attr:`espressomd.system.System`</span>
+<span class="sd">    mol_drude_types : List of types of Drude particles within the molecule</span>
+<span class="sd">    mol_core_types : List of types of core particles within the molecule</span>
+<span class="sd">    mol_core_partial_charges : List of partial charges of core particles within the molecule</span>
+<span class="sd">    verbose : :obj:`bool`</span>
+<span class="sd">             Turns on verbosity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># All Drude types need...</span>
+    <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">mol_drude_types</span><span class="p">:</span>
+        <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;subtr_sr_bonds_intramol&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1">#... sr exclusion bond with other partial core charges...</span>
+        <span class="k">for</span> <span class="n">tc</span><span class="p">,</span> <span class="n">qp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mol_core_types</span><span class="p">,</span> <span class="n">mol_core_partial_charges</span><span class="p">):</span>
+            <span class="c1">#...excluding the Drude core partner</span>
+            <span class="k">if</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;core_type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">tc</span><span class="p">:</span>
+                <span class="n">qd</span> <span class="o">=</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;q&quot;</span><span class="p">]</span>  <span class="c1"># Drude charge</span>
+                <span class="n">subtr_sr_bond</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">interactions</span><span class="o">.</span><span class="n">BondedCoulombSRBond</span><span class="p">(</span>
+                    <span class="n">q1q2</span><span class="o">=-</span><span class="n">qd</span> <span class="o">*</span> <span class="n">qp</span><span class="p">)</span>
+                <span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtr_sr_bond</span><span class="p">)</span>
+                <span class="n">drude_dict</span><span class="p">[</span><span class="n">td</span><span class="p">][</span><span class="s2">&quot;subtr_sr_bonds_intramol&quot;</span><span class="p">][</span>
+                    <span class="n">tc</span><span class="p">]</span> <span class="o">=</span> <span class="n">subtr_sr_bond</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Added intramolecular exclusion&quot;</span><span class="p">,</span> <span class="n">subtr_sr_bond</span><span class="p">,</span>
+                          <span class="s2">&quot;for drude&quot;</span><span class="p">,</span> <span class="n">qd</span><span class="p">,</span> <span class="s2">&quot;&lt;-&gt; core&quot;</span><span class="p">,</span> <span class="n">qp</span><span class="p">,</span> <span class="s2">&quot;to system&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_intramol_exclusion_bonds"><a class="viewcode-back" href="../../espressomd.html#espressomd.drude_helpers.add_intramol_exclusion_bonds">[docs]</a><span class="k">def</span> <span class="nf">add_intramol_exclusion_bonds</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">drude_ids</span><span class="p">,</span> <span class="n">core_ids</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies electrostatic short-range exclusion bonds for the given ids.</span>
+<span class="sd">    Has to be applied for all molecules.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : Instance of :attr:`espressomd.system.System`</span>
+<span class="sd">    drude_ids : IDs of Drude particles within a molecule.</span>
+<span class="sd">    core_ids : IDs of core particles within a molecule.</span>
+<span class="sd">    verbose : :obj:`bool`</span>
+<span class="sd">             Turns on verbosity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">drude_id</span> <span class="ow">in</span> <span class="n">drude_ids</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">core_id</span> <span class="ow">in</span> <span class="n">core_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">core_id_from_drude_id</span><span class="p">[</span><span class="n">drude_id</span><span class="p">]</span> <span class="o">!=</span> <span class="n">core_id</span><span class="p">:</span>
+                <span class="n">pd</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">drude_id</span><span class="p">]</span>
+                <span class="n">pc</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">core_id</span><span class="p">]</span>
+                <span class="n">bond</span> <span class="o">=</span> <span class="n">drude_dict</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">type</span><span class="p">][</span>
+                    <span class="s2">&quot;subtr_sr_bonds_intramol&quot;</span><span class="p">][</span><span class="n">pc</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">bond</span><span class="p">,</span> <span class="n">core_id</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Added subtr_sr bond&quot;</span><span class="p">,</span> <span class="n">bond</span><span class="p">,</span>
+                          <span class="s2">&quot;between ids&quot;</span><span class="p">,</span> <span class="n">drude_id</span><span class="p">,</span> <span class="s2">&quot;and&quot;</span><span class="p">,</span> <span class="n">core_id</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../espressomd.html" >espressomd</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Nov 13, 2019.
+    </div>
+  </body>
+</html>

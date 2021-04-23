@@ -1,0 +1,30 @@
+espressomd.io.writer package
+============================
+
+Submodules
+----------
+
+espressomd.io.writer.h5md module
+--------------------------------
+
+.. automodule:: espressomd.io.writer.h5md
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+espressomd.io.writer.vtf module
+-------------------------------
+
+.. automodule:: espressomd.io.writer.vtf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: espressomd.io.writer
+    :members:
+    :undoc-members:
+    :show-inheritance:

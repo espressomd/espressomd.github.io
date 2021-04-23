@@ -1,0 +1,446 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>&lt;no title&gt; &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="1. Introduction" href="introduction.html" />
+    <link rel="prev" title="ESPResSo documentation" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="1. Introduction"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="ESPResSo documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">1. Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#guiding-principles">1.1. Guiding principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#basic-program-structure">1.2. Basic program structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#basic-python-simulation-script">1.3. Basic python simulation script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#tutorials">1.4. Tutorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#sample-scripts">1.5. Sample scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#on-units">1.6. On units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#available-simulation-methods">1.7. Available simulation methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#intended-interface-compatibility-between-espresso-versions">1.8. Intended interface compatibility between ESPResSo versions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">2. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">2.1. Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#installing-requirements-on-ubuntu-linux">2.1.1. Installing requirements on Ubuntu Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#installing-requirements-on-other-linux-distributions">2.1.2. Installing requirements on other Linux distributions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#installing-requirements-on-mac-os-x">2.1.3. Installing requirements on Mac OS X</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#quick-installation">2.2. Quick installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#configuring">2.3. Configuring</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#myconfig-hpp-activating-and-deactivating-features">2.3.1. <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>: Activating and deactivating features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#features">2.4. Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#general-features">2.4.1. General features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#fluid-dynamics-and-fluid-structure-interaction">2.4.2. Fluid dynamics and fluid structure interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#interaction-features">2.4.3. Interaction features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#debug-messages">2.4.4. Debug messages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#features-marked-as-experimental">2.4.5. Features marked as experimental</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#cmake">2.4.6. cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#ccmake">2.4.7. ccmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#options-and-variables">2.4.8. Options and Variables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#make-compiling-testing-and-installing">2.5. <code class="docutils literal notranslate"><span class="pre">make</span></code>: Compiling, testing and installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#running-es">2.6. Running <em>ESPResSo</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#debugging-es">2.7. Debugging <em>ESPResSo</em></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="system_setup.html">3. Setting up the system</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#setting-global-variables-in-python">3.1. Setting global variables in Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#accessing-module-states">3.1.1. Accessing module states</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#cellsystems">3.2. Cellsystems</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#global-properties">3.2.1. Global properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#domain-decomposition">3.2.2. Domain decomposition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#n-squared">3.2.3. N-squared</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#layered-cell-system">3.2.4. Layered cell system</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#thermostats">3.3. Thermostats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#langevin-thermostat">3.3.1. Langevin thermostat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#lattice-boltzmann-thermostat">3.3.2. Lattice-Boltzmann thermostat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#dissipative-particle-dynamics-dpd">3.3.3. Dissipative Particle Dynamics (DPD)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#isotropic-npt-thermostat">3.3.4. Isotropic NPT thermostat</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="system_setup.html#cuda">3.4. CUDA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#gpu-acceleration-with-cuda">3.4.1. GPU Acceleration with CUDA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#list-available-cuda-devices">3.4.2. List available CUDA devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="system_setup.html#selection-of-cuda-device">3.4.3. Selection of CUDA device</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">4. Setting up particles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#overview-of-the-relevant-python-classes">4.1. Overview of the relevant Python classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#adding-particles">4.2. Adding particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#accessing-particle-properties">4.3. Accessing particle properties</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#vectorial-properties">4.3.1. Vectorial properties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#interacting-with-groups-of-particles">4.4. Interacting with groups of particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#deleting-particles">4.5. Deleting particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#iterating-over-particles-and-pairs-of-particles">4.6. Iterating over particles and pairs of particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#exclusions">4.7. Exclusions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#create-particular-particle-configurations">4.8. Create particular particle configurations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#setting-up-polymer-chains">4.8.1. Setting up polymer chains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#setting-up-diamond-polymer-networks">4.8.2. Setting up diamond polymer networks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#virtual-sites">4.9. Virtual sites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#rigid-arrangements-of-particles">4.9.1. Rigid arrangements of particles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#inertialess-lattice-boltzmann-tracers">4.9.2. Inertialess lattice-Boltzmann tracers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#particle-number-counting-feature">4.10. Particle number counting feature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#self-propelled-swimmers">4.11. Self-propelled swimmers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#langevin-swimmers">4.11.1. Langevin swimmers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="particles.html#lattice-boltzmann-lb-swimmers">4.11.2. Lattice-Boltzmann (LB) swimmers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">5. Running the simulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="running.html#velocity-verlet-algorithm">5.1. Velocity Verlet algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html#isotropic-npt-integrator">5.2. Isotropic NPT integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html#rotational-degrees-of-freedom-and-particle-anisotropy">5.3. Rotational degrees of freedom and particle anisotropy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running.html#steepest-descent">5.4. Steepest descent</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inter_non-bonded.html">6. Non-bonded interactions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inter_non-bonded.html#isotropic-non-bonded-interactions">6.1. Isotropic non-bonded interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#tabulated-interaction">6.1.1. Tabulated interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#lennard-jones-interaction">6.1.2. Lennard-Jones interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#generic-lennard-jones-interaction">6.1.3. Generic Lennard-Jones interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#weeks-chandler-andersen-interaction">6.1.4. Weeks-Chandler-Andersen interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#lennard-jones-cosine-interaction">6.1.5. Lennard-Jones cosine interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#smooth-step-interaction">6.1.6. Smooth step interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#bmhtf-potential">6.1.7. BMHTF potential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#morse-interaction">6.1.8. Morse interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#buckingham-interaction">6.1.9. Buckingham interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#soft-sphere-interaction">6.1.10. Soft-sphere interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#membrane-collision-interaction">6.1.11. Membrane-collision interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#hat-interaction">6.1.12. Hat interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#hertzian-interaction">6.1.13. Hertzian interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#gaussian">6.1.14. Gaussian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#dpd-interaction">6.1.15. DPD interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#thole-correction">6.1.16. Thole correction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_non-bonded.html#anisotropic-non-bonded-interactions">6.2. Anisotropic non-bonded interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_non-bonded.html#gay-berne-interaction">6.2.1. Gay-Berne interaction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inter_bonded.html">7. Bonded interactions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#distance-dependent-bonds">7.1. Distance-dependent bonds</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#fene-bond">7.1.1. FENE bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#harmonic-bond">7.1.2. Harmonic bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#harmonic-dumbbell-bond">7.1.3. Harmonic Dumbbell Bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#quartic-bond">7.1.4. Quartic bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#bonded-coulomb">7.1.5. Bonded Coulomb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#subtract-p3m-short-range-bond">7.1.6. Subtract P3M short-range bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#subtracted-lennard-jones-bond">7.1.7. Subtracted Lennard-Jones bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#rigid-bonds">7.1.8. Rigid bonds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#thermalized-distance-bond">7.1.9. Thermalized distance bond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#tabulated-distance">7.1.10. Tabulated distance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#virtual-bonds">7.1.11. Virtual bonds</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#bond-angle-interactions">7.2. Bond-angle interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#harmonic-angle-potential">7.2.1. Harmonic angle potential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#cosine-angle-potential">7.2.2. Cosine angle potential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#harmonic-cosine-potential">7.2.3. Harmonic cosine potential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#tabulated-angle-potential">7.2.4. Tabulated angle potential</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#dihedral-interactions">7.3. Dihedral interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#dihedral-potential-with-phase-shift">7.3.1. Dihedral potential with phase shift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#tabulated-dihedral-potential">7.3.2. Tabulated dihedral potential</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inter_bonded.html#object-in-fluid-interactions">7.4. Object-in-fluid interactions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#oif-local-forces">7.4.1. OIF local forces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#oif-global-forces">7.4.2. OIF global forces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inter_bonded.html#out-direction">7.4.3. Out direction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="electrostatics.html">8. Electrostatics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#coulomb-p3m">8.1. Coulomb P3M</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="electrostatics.html#tuning-coulomb-p3m">8.1.1. Tuning Coulomb P3M</a></li>
+<li class="toctree-l3"><a class="reference internal" href="electrostatics.html#coulomb-p3m-on-gpu">8.1.2. Coulomb P3M on GPU</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#debye-huckel-potential">8.2. Debye-Hückel potential</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#dielectric-interfaces-with-the-icc-star-algorithm">8.3. Dielectric interfaces with the ICC<span class="math notranslate nohighlight">\(\star\)</span> algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#mmm2d">8.4. MMM2D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#electrostatic-layer-correction-elc">8.5. Electrostatic Layer Correction (ELC)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#mmm1d">8.6. MMM1D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="electrostatics.html#scafacos-electrostatics">8.7. ScaFaCoS Electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="magnetostatics.html">9. Magnetostatics / Dipolar interactions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#dipolar-interaction">9.1. Dipolar interaction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="magnetostatics.html#dipolar-p3m">9.1.1. Dipolar P3M</a></li>
+<li class="toctree-l3"><a class="reference internal" href="magnetostatics.html#dipolar-layer-correction-dlc">9.1.2. Dipolar Layer Correction (DLC)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#dipolar-direct-sum">9.2. Dipolar direct sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#barnes-hut-octree-sum-on-gpu">9.3. Barnes-Hut octree sum on gpu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="magnetostatics.html#scafacos-magnetostatics">9.4. ScaFaCoS Magnetostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="system_manipulation.html">10. System manipulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#changing-the-box-volume">10.1. Changing the box volume</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#stopping-particles">10.2. Stopping particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#fixing-the-center-of-mass">10.3. Fixing the center of mass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#capping-the-force-during-warmup">10.4. Capping the force during warmup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="system_manipulation.html#galilei-transform-and-particle-velocity-manipulation">10.5. Galilei Transform and Particle Velocity Manipulation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="constraints.html">11. Single particle forces (constraints)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#shaped-based-constraints">11.1. Shaped-based constraints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#adding-shape-based-constraints-to-the-system">11.2. Adding shape-based constraints to the system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#deleting-a-constraint">11.2.1. Deleting a constraint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#getting-the-currently-defined-constraints">11.2.2. Getting the currently defined constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#getting-the-force-on-a-constraint">11.2.3. Getting the force on a constraint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#getting-the-minimal-distance-to-a-constraint">11.2.4. Getting the minimal distance to a constraint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#available-shapes">11.2.5. Available Shapes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#available-options">11.2.6. Available options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="constraints.html#external-fields">11.3. External Fields</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#constant-fields">11.3.1. Constant fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="constraints.html#interpolated-force-and-potential-fields">11.3.2. Interpolated Force and Potential fields</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lb.html">12. Lattice-Boltzmann</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#setting-up-a-lb-fluid">12.1. Setting up a LB fluid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#checkpointing-lb">12.2. Checkpointing LB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#interpolating-velocities">12.3. Interpolating velocities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#coupling-lb-to-a-md-simulation">12.4. Coupling LB to a MD simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#reading-and-setting-properties-of-single-lattice-nodes">12.5. Reading and setting properties of single lattice nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#removing-total-fluid-momentum">12.6. Removing total fluid momentum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#output-for-visualization">12.7. Output for visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#choosing-between-the-gpu-and-cpu-implementations">12.8. Choosing between the GPU and CPU implementations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#electrohydrodynamics">12.9. Electrohydrodynamics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lb.html#using-shapes-as-lattice-boltzmann-boundary">12.10. Using shapes as lattice-Boltzmann boundary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lb.html#minimal-usage-example">12.10.1. Minimal usage example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lb.html#setting-up-boundary-conditions">12.10.2. Setting up boundary conditions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">13. Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#direct-analysis-routines">13.1. Direct analysis routines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#energies">13.1.1. Energies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#momentum-of-the-system">13.1.2. Momentum of the System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#minimal-distances-between-particles">13.1.3. Minimal distances between particles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#particles-in-the-neighborhood">13.1.4. Particles in the neighborhood</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#particle-distribution">13.1.5. Particle distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#cylindrical-average">13.1.6. Cylindrical Average</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#radial-distribution-function">13.1.7. Radial distribution function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#structure-factor">13.1.8. Structure factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#center-of-mass">13.1.9. Center of mass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#moment-of-inertia-matrix">13.1.10. Moment of inertia matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#gyration-tensor">13.1.11. Gyration tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#pressure">13.1.12. Pressure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#stress-tensor">13.1.13. Stress Tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#chains">13.1.14. Chains</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#observables-and-correlators">13.2. Observables and correlators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#creating-an-observable">13.2.1. Creating an observable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#available-observables">13.2.2. Available observables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#correlations">13.2.3. Correlations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#details-of-the-multiple-tau-correlation-algorithm">13.2.4. Details of the multiple tau correlation algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#accumulators">13.3. Accumulators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis.html#mean-variance-calculator">13.3.1. Mean-variance calculator</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis.html#cluster-analysis">13.4. Cluster analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">14. Input and Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#checkpointing-and-restoring-a-simulation">14.1. Checkpointing and restoring a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-h5md-files">14.2. Writing H5MD-files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-mpi-io-binary-files">14.3. Writing MPI-IO binary files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-vtf-files">14.4. Writing VTF files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="io.html#writevsf-writing-the-topology">14.4.1. <code class="docutils literal notranslate"><span class="pre">writevsf</span></code>: Writing the topology</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html#writevcf-writing-the-coordinates">14.4.2. <code class="docutils literal notranslate"><span class="pre">writevcf</span></code>: Writing the coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html#espressomd-io-writer-vtf-vtf-pid-map">14.4.3. <code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.vtf_pid_map()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#writing-various-formats-using-mdanalysis">14.5. Writing various formats using MDAnalysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#reading-various-formats-using-mdanalysis">14.6. Reading various formats using MDAnalysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#parsing-pdb-files">14.7. Parsing PDB Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">15. Online-visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#general-usage">15.1. General usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#common-methods-for-opengl-and-mayavi">15.2. Common methods for OpenGL and Mayavi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#mayavi-visualizer">15.3. Mayavi visualizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#opengl-visualizer">15.4. OpenGL visualizer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#running-the-visualizer">15.4.1. Running the visualizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#screenshots">15.4.2. Screenshots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#colors-and-materials">15.4.3. Colors and Materials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#visualize-vectorial-properties">15.4.4. Visualize vectorial properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#controls">15.4.5. Controls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="visualization.html#dragging-particles">15.4.6. Dragging particles</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html#visualization-example-scripts">15.5. Visualization example scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_methods.html">16. Advanced Methods</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#creating-bonds-when-particles-collide">16.1. Creating bonds when particles collide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#lees-edwards-boundary-conditions">16.2. Lees-Edwards boundary conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#immersed-boundary-method-for-soft-elastic-objects">16.3. Immersed Boundary Method for soft elastic objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#object-in-fluid">16.4. Object-in-fluid</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#triangulations-of-elastic-objects">16.4.1. Triangulations of elastic objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#description-of-sample-script">16.4.2. Description of sample script</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#visualization-in-paraview">16.4.3. Visualization in ParaView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#available-object-in-fluid-oif-classes">16.4.4. Available Object-in-fluid (OIF) classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#electrokinetics">16.5. Electrokinetics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#electrokinetic-equations">16.5.1. Electrokinetic Equations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#setup">16.5.2. Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#output">16.5.3. Output</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#particle-polarizability-with-thermalized-cold-drude-oscillators">16.6. Particle polarizability with thermalized cold Drude oscillators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#canceling-intramolecular-electrostatics">16.6.1. Canceling intramolecular electrostatics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_methods.html#monte-carlo-methods">16.7. Monte Carlo Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#reaction-ensemble">16.7.1. Reaction Ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#wang-landau-reaction-ensemble">16.7.2. Wang-Landau Reaction Ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#grand-canonical-ensemble-simulation">16.7.3. Grand canonical ensemble simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#constant-ph-simulation">16.7.4. Constant pH simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced_methods.html#widom-insertion-for-homogeneous-systems">16.7.5. Widom Insertion (for homogeneous systems)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="under_the_hood.html">17. Under the hood</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="under_the_hood.html#internal-particle-organization">17.1. Internal particle organization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">18. Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#community-support">18.1. Community support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#contributing-your-own-code">18.2. Contributing your own code</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#required-development-tools">18.2.1. Required Development Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#building-the-user-s-guide">18.3. Building the User’s guide</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">19. Appendix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="appendix.html#the-mmm-family-of-algorithms">19.1. The MMM family of algorithms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#introduction">19.1.1. Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#mmm2d-theory">19.1.2. MMM2D theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#mmm1d-theory">19.1.3. MMM1D theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#elc-theory">19.1.4. ELC theory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix.html#errors">19.1.5. Errors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">20. Bibliography</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="1. Introduction"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="ESPResSo documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Dec 13, 2019.
+    </div>
+  </body>
+</html>

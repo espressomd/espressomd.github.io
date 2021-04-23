@@ -1,0 +1,457 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>12. Lattice Boltzmann &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="13. Analysis" href="analysis.html" />
+    <link rel="prev" title="11. Single particle forces (constraints)" href="constraints.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="analysis.html" title="13. Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="constraints.html" title="11. Single particle forces (constraints)"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lattice-boltzmann">
+<span id="id1"></span><h1>12. Lattice Boltzmann<a class="headerlink" href="#lattice-boltzmann" title="Permalink to this headline">¶</a></h1>
+<p>For an implicit treatment of a solvent, <cite>ESPResSo</cite> allows to couple the molecular
+dynamics simulation to a lattice Boltzmann fluid. The Lattice Boltzmann Method (LBM) is a fast, lattice-based method that, in its
+“pure” form, allows to calculate fluid flow in different boundary
+conditions of arbitrarily complex geometries. Coupled to molecular
+dynamics, it allows for the computationally efficient inclusion of
+hydrodynamic interactions into the simulation. The focus of the <cite>ESPResSo</cite> implementation
+of the LBM is, of course, the coupling to MD and therefore available
+geometries and boundary conditions are somewhat limited in comparison to
+“pure” LB codes.</p>
+<p>Here we restrict the documentation to the interface. For a more detailed
+description of the method, please refer to the literature.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Please cite&nbsp;<a class="reference internal" href="ug.html#espresso2" id="id2">[ALK+ed]</a> (Bibtex key espresso2 in <code class="file docutils literal notranslate"><span class="pre">doc/sphinx/zref.bib</span></code>) if you use the LB fluid and <a class="reference internal" href="ug.html#lbgpu" id="id3">[RA12]</a> (Bibtex key lbgpu in <code class="file docutils literal notranslate"><span class="pre">doc/sphinx/zref.bib</span></code>) if you use the GPU implementation.</p>
+</div>
+<div class="section" id="setting-up-a-lb-fluid">
+<span id="id4"></span><h2>12.1. Setting up a LB fluid<a class="headerlink" href="#setting-up-a-lb-fluid" title="Permalink to this headline">¶</a></h2>
+<p>The following minimal example illustrates how to use the LBM in <cite>ESPResSo</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">lb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lb</span><span class="o">.</span><span class="n">LBFluid</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dens</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">visc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fric</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lb</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To use the GPU accelerated variant, replace line 5 in the example above by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lb</span><span class="o">.</span><span class="n">LBFluidGPU</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dens</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">visc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fric</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LB</span></code> or <code class="docutils literal notranslate"><span class="pre">LB_GPU</span></code> required</p>
+</div>
+<p>To use the (much faster) GPU implementation of the LBM, use
+<a class="reference internal" href="espressomd.html#espressomd.lb.LBFluidGPU" title="espressomd.lb.LBFluidGPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lb.LBFluidGPU</span></code></a> in place of <a class="reference internal" href="espressomd.html#espressomd.lb.LBFluid" title="espressomd.lb.LBFluid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lb.LBFluid</span></code></a>.</p>
+<p>The command initializes the fluid with a given set of parameters. It is
+also possible to change parameters on the fly, but this will only rarely
+be done in practice. Before being able to use the LBM, it is necessary
+to set up a box of a desired size. The parameter is used to set the
+lattice constant of the fluid, so the size of the box in every direction
+must be a multiple of <code class="docutils literal notranslate"><span class="pre">agrid</span></code>.</p>
+<p>In the following, we discuss the parameters that can be supplied to the LBM in <cite>ESPResSo</cite>. The detailed interface definition is available at <a class="reference internal" href="espressomd.html#espressomd.lb.LBFluid" title="espressomd.lb.LBFluid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lb.LBFluid</span></code></a>.</p>
+<p>The LB scheme and the MD scheme are not synchronized: In one LB time
+step typically several MD steps are performed. This allows to speed up
+the simulations and is adjusted with the parameter <code class="docutils literal notranslate"><span class="pre">tau</span></code>, the LB time step.
+The parameters <code class="docutils literal notranslate"><span class="pre">dens</span></code> and <code class="docutils literal notranslate"><span class="pre">visc</span></code> set up the density and (kinematic) viscosity of the
+LB fluid in (usual) MD units. Internally the LB implementation works
+with a different set of units: all lengths are expressed in <code class="docutils literal notranslate"><span class="pre">agrid</span></code>, all times
+in <code class="docutils literal notranslate"><span class="pre">tau</span></code> and so on.
+LB nodes are located at 0.5, 1.5, 2.5, etc.
+(in terms of <code class="docutils literal notranslate"><span class="pre">agrid</span></code>). This has important implications for the location of
+hydrodynamic boundaries which are generally considered to be halfway
+between two nodes for flat, axis-aligned walls. For more complex boundary geometries, the hydrodynamic boundary location deviates from this midpoint and the deviation decays to first order in <code class="docutils literal notranslate"><span class="pre">agrid</span></code>.
+The LBM should
+<em>not be used as a black box</em>, but only after a careful check of all
+parameters that were applied.</p>
+<p>In the following, we describe a number of optional parameters.
+The parameter <code class="docutils literal notranslate"><span class="pre">ext_force_density</span></code> takes a three dimensional vector as an
+<cite>array_like</cite>, representing a homogeneous external body force density in MD
+units to be applied to the fluid. The
+parameter <code class="docutils literal notranslate"><span class="pre">bulk_visc</span></code> allows one to tune the bulk viscosity of the fluid and is given in
+MD units. In the limit of low Mach number, the flow does not compress the fluid and the resulting flow field is therefore independent of the bulk viscosity. It is however known that the value of the viscosity does affect
+the quality of the implemented link-bounce-back method. <code class="docutils literal notranslate"><span class="pre">gamma_even</span></code> and <code class="docutils literal notranslate"><span class="pre">gamma_odd</span></code> are the
+relaxation parameters for the kinetic modes. These fluid parameters do not correspond to any macroscopic fluid properties, but do influence numerical properties of the algorithm, such as the magnitude of the error at boundaries. Unless you are an expert, leave their defaults unchanged. If you do change them, note that they are to be given in LB units.</p>
+<p>Before running a simulation at least the following parameters must be
+set up: <code class="docutils literal notranslate"><span class="pre">agrid</span></code>, <code class="docutils literal notranslate"><span class="pre">tau</span></code>, <code class="docutils literal notranslate"><span class="pre">visc</span></code>, <code class="docutils literal notranslate"><span class="pre">dens</span></code>, <code class="docutils literal notranslate"><span class="pre">fric</span></code>. For the other parameters, the following are taken: <code class="docutils literal notranslate"><span class="pre">bulk_visc=0</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma_odd=0</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma_even=0</span></code>, <code class="docutils literal notranslate"><span class="pre">ext_force_density=[0,0,0]</span></code>.</p>
+</div>
+<div class="section" id="checkpointing-lb">
+<span id="id5"></span><h2>12.2. Checkpointing LB<a class="headerlink" href="#checkpointing-lb" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">binary</span><span class="p">)</span>
+<span class="n">lb</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">binary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first command saves all of the LB fluid nodes’ populations
+to an ascii (<code class="docutils literal notranslate"><span class="pre">binary=0</span></code>) or binary (<code class="docutils literal notranslate"><span class="pre">binary=1</span></code>) format respectively. The load command loads
+the populations from a checkpoint file written with <code class="docutils literal notranslate"><span class="pre">lb.save_checkpoint</span></code>. In both cases <code class="docutils literal notranslate"><span class="pre">path</span></code> specifies the location of the checkpoint file. This is useful for restarting a simulation either
+on the same machine or a different machine. Some care should be taken
+when using the binary format as the format of doubles can depend on both
+the computer being used as well as the compiler. One thing that one
+needs to be aware of is that loading the checkpoint also requires the
+user to reuse the old forces. This is necessary since the coupling force
+between the particles and the fluid has already been applied to the
+fluid. Failing to reuse the old forces breaks momentum conservation,
+which is in general a problem. It is particularly problematic for bulk
+simulations as the system as a whole acquires a drift of the center of
+mass, causing errors in the calculation of velocities and diffusion
+coefficients. The correct way to restart an LB simulation is to first
+load in the particles with the correct forces, and use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">number_of_steps</span><span class="p">,</span> <span class="n">reuse_forces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>upon the first call to <a class="reference internal" href="running.html#integrator"><span class="std std-ref">run</span></a>. This causes the
+old forces to be reused and thus conserves momentum.</p>
+</div>
+<div class="section" id="lb-as-a-thermostat">
+<span id="id6"></span><h2>12.3. LB as a thermostat<a class="headerlink" href="#lb-as-a-thermostat" title="Permalink to this headline">¶</a></h2>
+<p>The LB fluid can be used to thermalize particles, while also including their hydrodynamic interactions. To enable the LB thermostat, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">kT</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The LBM implementation in <cite>ESPResSo</cite> uses Ahlrichs and Dünweg’s point coupling
+method to couple MD particles the LB fluid. This coupling consists of a
+frictional and a random force, similar to the <a class="reference internal" href="system_setup.html#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>:</p>
+<div class="math notranslate nohighlight">
+\[\vec{F} = -\gamma \left(\vec{v}-\vec{u}\right) + \vec{F}_R.\]</div>
+<p>The momentum acquired by the particles is then transferred back to the
+fluid using a linear interpolation scheme, to preserve total momentum.
+In the GPU implementation the force can alternatively be interpolated
+using a three point scheme which couples the particles to the nearest 27
+LB nodes. This can be called using “lbfluid 3pt” and is described in
+Dünweg and Ladd by equation 301 <a class="reference internal" href="ug.html#duenweg08a" id="id7">[DunwegL08]</a>.</p>
+<p>The frictional force tends to decrease the relative
+velocity between the fluid and the particle whereas the random forces
+are chosen so large that the average kinetic energy per particle
+corresponds to the given temperature, according to a fluctuation
+dissipation theorem. No other thermostatting mechanism is necessary
+then. Please switch off any other thermostat before starting the LB
+thermostatting mechanism.</p>
+<p>The LBM implementation provides a fully thermalized LB fluid, all
+nonconserved modes, including the pressure tensor, fluctuate correctly
+according to the given temperature and the relaxation parameters. All
+fluctuations can be switched off by setting the temperature to 0.</p>
+<p>Regarding the unit of the temperature, please refer to
+Section&nbsp;<a class="reference internal" href="introduction.html#on-units"><span class="std std-ref">On units</span></a>.</p>
+</div>
+<div class="section" id="reading-and-setting-properties-of-single-lattice-nodes">
+<span id="id8"></span><h2>12.4. Reading and setting properties of single lattice nodes<a class="headerlink" href="#reading-and-setting-properties-of-single-lattice-nodes" title="Permalink to this headline">¶</a></h2>
+<p>Appending three indices to the <code class="docutils literal notranslate"><span class="pre">lb</span></code> object returns an object that represents the selected LB grid node and allows one to access all of its properties:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">density</span>     <span class="c1"># fluid density (one scalar for LB and LB_GPU, two scalars for SHANCHEN)</span>
+<span class="n">lb</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">velocity</span>    <span class="c1"># fluid velocity (a numpy array of three floats)</span>
+<span class="n">lb</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">pi</span>          <span class="c1"># fluid pressure tensor (a symmetric 3x3 numpy array of floats)</span>
+<span class="n">lb</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">pi_neq</span>      <span class="c1"># nonequilbrium part of the pressure tensor (as above)</span>
+<span class="n">lb</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">boundary</span>    <span class="c1"># flag indicating whether the node is fluid or boundary (fluid: boundary=0, boundary: boundary != 0)</span>
+<span class="n">lb</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">]</span><span class="o">.</span><span class="n">population</span>  <span class="c1"># 19 LB populations (a numpy array of 19 floats, check order from the source code)</span>
+</pre></div>
+</div>
+<p>All of these properties can be read and used in further calculations. Only the property <code class="docutils literal notranslate"><span class="pre">population</span></code> can be modified. The indices <code class="docutils literal notranslate"><span class="pre">x,y,z</span></code> are integers and enumerate the LB nodes in the three directions, starts with 0. To modify <code class="docutils literal notranslate"><span class="pre">boundary</span></code>, refer to <a class="reference internal" href="#setting-up-boundary-conditions"><span class="std std-ref">Setting up boundary conditions</span></a>.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">lb</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">velocity</span><span class="p">)</span>
+
+<span class="n">lb</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">density</span> <span class="o">=</span> <span class="mf">1.2</span>
+</pre></div>
+</div>
+<p>The first line prints the fluid velocity at node 0 0 0 to the screen. The second line sets this fluid node’s density to the value <code class="docutils literal notranslate"><span class="pre">1.2</span></code>.</p>
+</div>
+<div class="section" id="removing-total-fluid-momentum">
+<span id="id9"></span><h2>12.5. Removing total fluid momentum<a class="headerlink" href="#removing-total-fluid-momentum" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only available for <code class="docutils literal notranslate"><span class="pre">LB_GPU</span></code> and <code class="docutils literal notranslate"><span class="pre">SHANCHEN</span></code></p>
+</div>
+<p>Some simulations require the net momentum of the system to vanish. Even if the physics of the system fulfills this condition, numerical errors can introduce drift. Simulations that frequently suffer from this effect are for example free energy profile calculations using <code class="docutils literal notranslate"><span class="pre">SHANCHEN</span></code>, where it might be useful to prevent interface motion, or electrophoretic mobility calculations for mobile objects. Removing the total momentum of the fluid can be achieved using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span><span class="o">.</span><span class="n">remove_momentum</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="output-for-visualization">
+<span id="id10"></span><h2>12.6. Output for visualization<a class="headerlink" href="#output-for-visualization" title="Permalink to this headline">¶</a></h2>
+<p><cite>ESPResSo</cite> implements a number of commands to output fluid field data of the whole fluid into a file at once.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span><span class="o">.</span><span class="n">print_vtk_velocity</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">lb</span><span class="o">.</span><span class="n">print_vtk_boundary</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">lb</span><span class="o">.</span><span class="n">print_velocity</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">lb</span><span class="o">.</span><span class="n">print_boundary</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Currently supported fluid properties are the velocity, and boundary flag in ASCII VTK as well as Gnuplot compatible ASCII output.</p>
+<p>The VTK format is readable by visualization software such as ParaView <a class="footnote-reference" href="#id21" id="id11">[1]</a>
+or Mayavi2 <a class="footnote-reference" href="#id22" id="id12">[2]</a>. If you plan to use ParaView for visualization, note that also the particle
+positions can be exported using the VTK format (see <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.writevtk" title="espressomd.particle_data.ParticleList.writevtk"><code class="xref py py-meth docutils literal notranslate"><span class="pre">writevtk()</span></code></a>).</p>
+<p>The variant</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span><span class="o">.</span><span class="n">print_vtk_velocity</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">bb1</span><span class="p">,</span> <span class="n">bb2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>allows you to only output part of the flow field by specifying an axis aligned
+bounding box through the coordinates <code class="docutils literal notranslate"><span class="pre">bb1</span></code> and <code class="docutils literal notranslate"><span class="pre">bb1</span></code> (lists of three ints) of two of its corners. This
+bounding box can be used to output a slice of the flow field. As an
+example, executing</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lb</span><span class="o">.</span><span class="n">print_vtk_velocity</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>will output the cross-section of the velocity field in a plane
+perpendicular to the <span class="math notranslate nohighlight">\(z\)</span>-axis at <span class="math notranslate nohighlight">\(z = 5\)</span> (assuming the box
+size is 10 in the <span class="math notranslate nohighlight">\(x\)</span>- and <span class="math notranslate nohighlight">\(y\)</span>-direction).</p>
+</div>
+<div class="section" id="choosing-between-the-gpu-and-cpu-implementations">
+<span id="id13"></span><h2>12.7. Choosing between the GPU and CPU implementations<a class="headerlink" href="#choosing-between-the-gpu-and-cpu-implementations" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LB_GPU</span></code> required</p>
+</div>
+<p>Espresso contains an implementation of the LBM for NVIDIA
+GPUs using the CUDA framework. On CUDA-supporting machines this can be
+activated by compiling with the feature <code class="docutils literal notranslate"><span class="pre">LB_GPU</span></code>. Within the
+Python script, the <a class="reference internal" href="espressomd.html#espressomd.lb.LBFluid" title="espressomd.lb.LBFluid"><code class="xref py py-class docutils literal notranslate"><span class="pre">LBFluid</span></code></a> object can be substituted with the <a class="reference internal" href="espressomd.html#espressomd.lb.LBFluidGPU" title="espressomd.lb.LBFluidGPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">LBFluidGPU</span></code></a> object to switch from CPU based to GPU based execution. For further
+information on CUDA support see section&nbsp;<a class="reference internal" href="system_setup.html#gpu-acceleration-with-cuda"><span class="std std-ref">GPU Acceleration with CUDA</span></a>.</p>
+<p>The following minimal example demonstrates how to use the GPU implementation of the LBM in analogy to the example for the CPU given in section <a class="reference internal" href="#setting-up-a-lb-fluid"><span class="std std-ref">Setting up a LB fluid</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">sys</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">lb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lb</span><span class="o">.</span><span class="n">LBFluidGPU</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dens</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">visc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fric</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lb</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For boundary conditions analogous to the CPU
+implementation, the feature <code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES_GPU</span></code> has to be activated.
+The feature <code class="docutils literal notranslate"><span class="pre">LB_GPU</span></code> allows the use of Lees-Edwards boundary conditions. Our implementation follows the paper of <a class="reference internal" href="ug.html#wagner02" id="id14">[WP02]</a>. Note, that there is no extra python interface for the use of Lees-Edwards boundary conditions with the LB algorithm. All information are rather internally derived from the set of the Lees-Edwards offset in the system class. For further information Lees-Edwards boundary conditions please refer to section <a class="reference internal" href="advanced_methods.html#lees-edwards-boundary-conditions"><span class="std std-ref">Lees-Edwards boundary conditions</span></a></p>
+</div>
+<div class="section" id="electrohydrodynamics">
+<span id="id15"></span><h2>12.8. Electrohydrodynamics<a class="headerlink" href="#electrohydrodynamics" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This needs the feature <code class="docutils literal notranslate"><span class="pre">LB_ELECTROHYDRODYNAMICS</span></code>.</p>
+</div>
+</div></blockquote>
+<p>If the feature is activated, the Lattice Boltzmann Code can be
+used to implicitly model surrounding salt ions in an external electric
+field by having the charged particles create flow.</p>
+<p>For that to work, you need to set the electrophoretic mobility
+(multiplied by the external <span class="math notranslate nohighlight">\(E\)</span>-field) <span class="math notranslate nohighlight">\(\mu E\)</span> on the
+particles that should be subject to the field. This effectively acts
+as a velocity offset between the particle and the LB fluid.</p>
+<p>For more information on this method and how it works, read the
+publication&nbsp;<a class="reference internal" href="ug.html#hickey10a" id="id16">[HHHS10]</a>.</p>
+</div>
+<div class="section" id="using-shapes-as-lattice-boltzmann-boundary">
+<span id="id17"></span><h2>12.9. Using shapes as lattice Boltzmann boundary<a class="headerlink" href="#using-shapes-as-lattice-boltzmann-boundary" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES</span></code> required</p>
+</div>
+<p>Lattice Boltzmann boundaries are implemented in the module
+<a class="reference internal" href="espressomd.html#module-espressomd.lbboundaries" title="espressomd.lbboundaries"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.lbboundaries</span></code></a>. You might want to take a look
+at the classes <a class="reference internal" href="espressomd.html#espressomd.lbboundaries.LBBoundary" title="espressomd.lbboundaries.LBBoundary"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lbboundaries.LBBoundary</span></code></a>
+and <a class="reference internal" href="espressomd.html#espressomd.lbboundaries.LBBoundaries" title="espressomd.lbboundaries.LBBoundaries"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lbboundaries.LBBoundaries</span></code></a> for more information.</p>
+<p>Adding a shape-based boundary is straightforward:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lbb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">my_shape</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbb</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lbb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">()</span>
+<span class="n">lbb</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">my_shape</span>
+<span class="n">lbb</span><span class="o">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">system</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbb</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="minimal-usage-example">
+<span id="id18"></span><h3>12.9.1. Minimal usage example<a class="headerlink" href="#minimal-usage-example" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Feature <code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES</span></code> or <code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES_GPU</span></code> required</p>
+</div>
+<p>In order to add a wall as boundary for a lattice Boltzmann fluid
+you could do the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wall</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">(</span><span class="n">dist</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">lbb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">wall</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbb</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-up-boundary-conditions">
+<span id="id19"></span><h3>12.9.2. Setting up boundary conditions<a class="headerlink" href="#setting-up-boundary-conditions" title="Permalink to this headline">¶</a></h3>
+<p>The following example sets up a system consisting of a spherical boundary in the center of the simulation box acting as a no-slip boundary for the LB fluid that is driven by 4 walls with a slip velocity:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">System</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">lbboundaries</span><span class="p">,</span> <span class="n">shapes</span>
+
+<span class="n">sys</span> <span class="o">=</span> <span class="n">System</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+
+<span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span><span class="o">.</span><span class="n">LBFluid</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dens</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">visc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fric</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lb</span><span class="p">)</span>
+
+<span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">]</span>  <span class="c1"># the boundary slip</span>
+<span class="n">walls</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>
+
+<span class="n">wall_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">walls</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">wall_shape</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+
+<span class="n">wall_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="o">=-</span><span class="mi">63</span><span class="p">)</span>
+<span class="n">walls</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">wall_shape</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+
+<span class="n">wall_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">walls</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">wall_shape</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+
+<span class="n">wall_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="o">=-</span><span class="mi">63</span><span class="p">)</span>
+<span class="n">walls</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">wall_shape</span><span class="p">,</span> <span class="n">velocity</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">wall</span> <span class="ow">in</span> <span class="n">walls</span><span class="p">:</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">wall</span><span class="p">)</span>
+
+<span class="n">sphere_shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="mi">33</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">33</span><span class="p">],</span> <span class="n">direction</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">lbboundaries</span><span class="o">.</span><span class="n">LBBoundary</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">sphere_shape</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">lbboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sphere</span><span class="p">)</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">4000</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">sphere</span><span class="o">.</span><span class="n">get_force</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>After integrating the system for a sufficient time to reach the steady state, the hydrodynamic drag force exerted on the sphere is evaluated.</p>
+<p>The LB boundaries use the same <a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">shapes</span></code></a> objects to specify their geometry as <a class="reference internal" href="espressomd.html#module-espressomd.constraints" title="espressomd.constraints"><code class="xref py py-mod docutils literal notranslate"><span class="pre">constraints</span></code></a> do for particles. This allows the user to quickly set up a system with boundary conditions that simultaneously act on the fluid and particles. For a complete description of all available shapes, refer to <a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a>.</p>
+<p>Intersecting boundaries are in principle possible but must be treated
+with care. In the current implementation, all nodes that are
+within at least one boundary are treated as boundary nodes.</p>
+<p>Currently, only the so called “link-bounce-back” algorithm for wall
+nodes is available. This creates a boundary that is located
+approximately midway between the lattice nodes, so in the above example <code class="docutils literal notranslate"><span class="pre">wall[0]</span></code>
+corresponds to a boundary at <span class="math notranslate nohighlight">\(x=1.5\)</span>. Note that the
+location of the boundary is unfortunately not entirely independent of
+the viscosity. This can be seen when using the sample script with a high
+viscosity.</p>
+<p>The bounce back boundary conditions permit it to set the velocity at the boundary
+to a nonzero value via the <code class="docutils literal notranslate"><span class="pre">v</span></code> property of an <code class="docutils literal notranslate"><span class="pre">LBBoundary</span></code> object. This allows to create shear flow and boundaries
+moving relative to each other. The velocity boundary conditions are
+implemented according to <a class="reference internal" href="ug.html#succi01a" id="id20">[Suc01]</a> eq.&nbsp;12.58. Using
+this implementation as a blueprint for the boundary treatment, an
+implementation of the Ladd-Coupling should be relatively
+straightforward. The <code class="docutils literal notranslate"><span class="pre">LBBoundary</span></code> object furthermore possesses a property <code class="docutils literal notranslate"><span class="pre">force</span></code>, which keeps track of the hydrodynamic drag force exerted onto the boundary by the moving fluid.</p>
+<table class="docutils footnote" frame="void" id="id21" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id11">[1]</a></td><td><a class="reference external" href="http://www.paraview.org/">http://www.paraview.org/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id22" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id12">[2]</a></td><td><a class="reference external" href="http://code.enthought.com/projects/mayavi/">http://code.enthought.com/projects/mayavi/</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">12. Lattice Boltzmann</a><ul>
+<li><a class="reference internal" href="#setting-up-a-lb-fluid">12.1. Setting up a LB fluid</a></li>
+<li><a class="reference internal" href="#checkpointing-lb">12.2. Checkpointing LB</a></li>
+<li><a class="reference internal" href="#lb-as-a-thermostat">12.3. LB as a thermostat</a></li>
+<li><a class="reference internal" href="#reading-and-setting-properties-of-single-lattice-nodes">12.4. Reading and setting properties of single lattice nodes</a></li>
+<li><a class="reference internal" href="#removing-total-fluid-momentum">12.5. Removing total fluid momentum</a></li>
+<li><a class="reference internal" href="#output-for-visualization">12.6. Output for visualization</a></li>
+<li><a class="reference internal" href="#choosing-between-the-gpu-and-cpu-implementations">12.7. Choosing between the GPU and CPU implementations</a></li>
+<li><a class="reference internal" href="#electrohydrodynamics">12.8. Electrohydrodynamics</a></li>
+<li><a class="reference internal" href="#using-shapes-as-lattice-boltzmann-boundary">12.9. Using shapes as lattice Boltzmann boundary</a><ul>
+<li><a class="reference internal" href="#minimal-usage-example">12.9.1. Minimal usage example</a></li>
+<li><a class="reference internal" href="#setting-up-boundary-conditions">12.9.2. Setting up boundary conditions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="analysis.html" title="13. Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="constraints.html" title="11. Single particle forces (constraints)"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Apr 26, 2019.
+    </div>
+  </body>
+</html>

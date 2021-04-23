@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>5. Running the simulation &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="6. Non-bonded interactions" href="inter_non-bonded.html" />
+    <link rel="prev" title="4. Setting up particles" href="particles.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="inter_non-bonded.html" title="6. Non-bonded interactions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="particles.html" title="4. Setting up particles"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-the-simulation">
+<span id="id1"></span><h1>5. Running the simulation<a class="headerlink" href="#running-the-simulation" title="Permalink to this headline">¶</a></h1>
+<p>To run the integrator call the method
+<a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.run" title="espressomd.integrate.Integrator.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.Integrator.run()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">,</span> <span class="n">recalc_forces</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reuse_forces</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">number_of_steps</span></code> is the number of time steps the integrator
+should perform. The two main integration schemes of <em>ESPResSo</em> are the Velocity Verlet algorithm
+and an adaption of the Velocity Verlet algorithm to simulate an NPT ensemble.
+A steepest descent implementation is also available.</p>
+<div class="section" id="velocity-verlet-algorithm">
+<span id="id2"></span><h2>5.1. Velocity Verlet algorithm<a class="headerlink" href="#velocity-verlet-algorithm" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.set_vv" title="espressomd.integrate.Integrator.set_vv"><code class="xref py py-func docutils literal notranslate"><span class="pre">espressomd.integrate.Integrator.set_vv()</span></code></a></p>
+<p>The equations of motion for the trajectory of point-like particles read</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\dot v_i(t) = F_i(\{x_j\},v_i,t)/m_i \\ \dot x_i(t) = v_i(t),\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(x_i\)</span>, <span class="math notranslate nohighlight">\(v_i\)</span>, <span class="math notranslate nohighlight">\(m_i\)</span> are position, velocity and mass of
+particle <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(F_i(\{x_j\},v_i,t)\)</span> the forces acting on it.
+These forces comprise all interactions with other particles and external fields
+as well as non-deterministic contributions described in <a class="reference internal" href="system_setup.html#thermostats"><span class="std std-ref">Thermostats</span></a>.</p>
+<p>For numerical integration, this equation is discretized to the following steps (<a class="bibtex reference internal" href="zreferences.html#rapaport04" id="id3">[Rap04]</a> eqs. 3.5.8 - 3.5.10):</p>
+<ol class="arabic simple">
+<li><p>Calculate the velocity at the half step</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[v(t+dt/2) = v(t) + \frac{F(x(t),v(t-dt/2),t)}{m} dt/2\]</div>
+<ol class="arabic simple" start="2">
+<li><p>Calculate the new position</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[x(t+dt) = x(t) + v(t+dt/2) dt\]</div>
+<ol class="arabic simple" start="3">
+<li><p>Calculate the force based on the new position</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[F = F(x(t+dt), v(t+dt/2), t+dt)\]</div>
+<ol class="arabic simple" start="4">
+<li><p>Calculate the new velocity</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[v(t+dt) = v(t+dt/2) + \frac{F(x(t+dt),t+dt)}{m} dt/2\]</div>
+<p>Note that this implementation of the Velocity Verlet algorithm reuses
+forces in step 1. That is, they are computed once in step 3,
+but used twice, in step 4 and in step 1 of the next iteration. In the first time
+step after setting up, there are no forces present yet. Therefore, <em>ESPResSo</em> has
+to compute them before the first time step. That has two consequences:
+first, random forces are redrawn, resulting in a narrower distribution
+of the random forces, which we compensate by stretching. Second,
+coupling forces of e.g. the lattice-Boltzmann fluid cannot be computed
+and are therefore lacking in the first half time step. In order to
+minimize these effects, <em>ESPResSo</em> has a quite conservative heuristics to decide
+whether a change makes it necessary to recompute forces before the first
+time step. Therefore, calling 100 times
+<a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.run" title="espressomd.integrate.Integrator.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.Integrator.run()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">steps=1</span></code> does the
+same as with <code class="docutils literal notranslate"><span class="pre">steps=100</span></code>, apart from some small calling overhead.</p>
+<p>However, for checkpointing, there is no way for <em>ESPResSo</em> to tell that the forces
+that you read back in actually match the parameters that are set.
+Therefore, <em>ESPResSo</em> would recompute the forces before the first time step, which
+makes it essentially impossible to checkpoint LB simulations, where it
+is vital to keep the coupling forces. To work around this, there is
+an additional parameter <code class="docutils literal notranslate"><span class="pre">reuse_forces</span></code>, which tells integrate to not recalculate
+the forces for the first time step, but use that the values still stored
+with the particles. Use this only if you are absolutely sure that the
+forces stored match your current setup!</p>
+<p>The opposite problem occurs when timing interactions: In this case, one
+would like to recompute the forces, despite the fact that they are
+already correctly calculated. To this aim, the option <code class="docutils literal notranslate"><span class="pre">recalc_forces</span></code> can be used to
+enforce force recalculation.</p>
+</div>
+<div class="section" id="isotropic-npt-integrator">
+<span id="id4"></span><h2>5.2. Isotropic NPT integrator<a class="headerlink" href="#isotropic-npt-integrator" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.set_isotropic_npt" title="espressomd.integrate.Integrator.set_isotropic_npt"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_isotropic_npt()</span></code></a></p>
+<p>As the NPT thermostat alters the way the equations of motion are integrated, it is
+discussed here and only a brief summary is given in <a class="reference internal" href="system_setup.html#thermostats"><span class="std std-ref">Thermostats</span></a>.</p>
+<p>To activate the NPT integrator, use <a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.set_isotropic_npt" title="espressomd.integrate.Integrator.set_isotropic_npt"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_isotropic_npt()</span></code></a>
+with parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ext_pressure</span></code>: The external pressure</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">piston</span></code>: The mass of the applied piston</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">direction</span></code>: Flags to enable/disable box dimensions to be subject to fluctuations. By default, all directions are enabled.</p></li>
+</ul>
+</div></blockquote>
+<p>Additionally, a NPT thermostat has to be set by <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_npt" title="espressomd.thermostat.Thermostat.set_npt"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_npt()</span></code></a>
+with parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kT</span></code>: Thermal energy of the heat bath</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gamma0</span></code>: Friction coefficient of the bath</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gammav</span></code>: Artificial friction coefficient for the volume fluctuations.</p></li>
+</ul>
+</div></blockquote>
+<p>A code snippet would look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_npt</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gammav</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_isotropic_npt</span><span class="p">(</span><span class="n">ext_pressure</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">piston</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The physical meaning of these parameters is described below:</p>
+<p>The relaxation towards a desired pressure <span class="math notranslate nohighlight">\(P\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">ext_pressure</span></code>)
+is enabled by treating the box
+volume <span class="math notranslate nohighlight">\(V\)</span> as a degree of freedom with corresponding momentum <span class="math notranslate nohighlight">\(\Pi = Q\dot{V}\)</span>,
+where <span class="math notranslate nohighlight">\(Q\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">piston</span></code>) is an artificial piston mass.
+Which box dimensions are affected to change the volume can be controlled by a list of
+boolean flags for parameter <code class="docutils literal notranslate"><span class="pre">direction</span></code>.
+An additional energy <span class="math notranslate nohighlight">\(H_V = 1/(2Q)\Pi + PV\)</span>
+associated with the volume is postulated. This results in a “force” on the box such that</p>
+<div class="math notranslate nohighlight">
+\[\dot{\Pi} = \mathcal{P} - P\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{P} = \frac{1}{Vd} \sum_{i,j} f_{ij}x_{ij} + \frac{1}{Vd} \sum_i m_i v_i^2\]</div>
+<p>Here <span class="math notranslate nohighlight">\(\mathcal{P}\)</span> is the instantaneous pressure, <span class="math notranslate nohighlight">\(d\)</span> the dimension of the system (number of flags set by <code class="docutils literal notranslate"><span class="pre">direction</span></code>), <span class="math notranslate nohighlight">\(f_{ij}\)</span> the short range interaction force between particles <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span> and <span class="math notranslate nohighlight">\(x_{ij}= x_j - x_i\)</span>.</p>
+<p>In addition to this deterministic force, a friction <span class="math notranslate nohighlight">\(-\frac{\gamma^V}{Q}\Pi(t)\)</span> and noise <span class="math notranslate nohighlight">\(\sqrt{k_B T \gamma^V} \eta(t)\)</span> are added for the box
+volume dynamics and the particle dynamics. This introduces three new parameters:
+The friction coefficient for the box <span class="math notranslate nohighlight">\(\gamma^V\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">gammav</span></code>), the friction coefficient of the particles <span class="math notranslate nohighlight">\(\gamma^0\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">gamma0</span></code>) and the thermal energy <span class="math notranslate nohighlight">\(k_BT\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">kT</span></code>).
+For a discussion of these terms and their discretisation, see <a class="reference internal" href="system_setup.html#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>, which uses the same approach, but only for particles.
+As a result of box geometry changes, the particle positions and velocities have to be rescaled
+during integration.</p>
+<p>The discretisation consists of the following steps (see <a class="bibtex reference internal" href="zreferences.html#kolb99a" id="id5">[KDunweg99]</a> for a full derivation of the algorithm):</p>
+<ol class="arabic simple">
+<li><p>Calculate the particle velocities at the half step</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[v'(t+dt/2) = v(t) + \frac{F(x(t),v(t-dt/2),t)}{m} dt/2\]</div>
+<ol class="arabic simple" start="2">
+<li><p>Calculate the instantaneous pressure and “volume momentum”</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\mathcal{P} = \mathcal{P}(x(t),V(t),f(x(t)), v'(t+dt/2))\]</div>
+<div class="math notranslate nohighlight">
+\[\Pi(t+dt/2) = \Pi(t) + (\mathcal{P}-P) dt/2 -\frac{\gamma^V}{Q}\Pi(t) dt/2  +  \sqrt{k_B T \gamma^V dt} \overline{\eta}\]</div>
+<ol class="arabic simple" start="3">
+<li><p>Calculate box volume and scaling parameter <span class="math notranslate nohighlight">\(L\)</span> at half step and full step, scale the simulation box accordingly</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[V(t+dt/2) = V(t) + \frac{\Pi(t+dt/2)}{Q} dt/2\]</div>
+<div class="math notranslate nohighlight">
+\[L(t+dt/2) = V(t+dt/2)^{1/d}\]</div>
+<div class="math notranslate nohighlight">
+\[V(t+dt) = V(t+dt/2) + \frac{\Pi(t+dt/2)}{Q} dt/2\]</div>
+<div class="math notranslate nohighlight">
+\[L(t+dt) = V(t+dt)^{1/d}\]</div>
+<ol class="arabic simple" start="4">
+<li><p>Update particle positions and scale velocities</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[x(t+dt) = \frac{L(t+dt)}{L(t)} \left[ x(t) + \frac{L^2(t)}{L^2(t+dt/2)} v(t+dt/2) dt \right]\]</div>
+<div class="math notranslate nohighlight">
+\[v(t+dt/2) = \frac{L(t)}{L(t+dt)} v'(t+dt/2)\]</div>
+<ol class="arabic simple" start="5">
+<li><p>Calculate forces, instantaneous pressure and “volume momentum”</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[F = F(x(t+dt),v(t+dt/2),t)\]</div>
+<div class="math notranslate nohighlight">
+\[\mathcal{P} = \mathcal{P}(x(t+dt),V(t+dt),f(x(t+dt)), v(t+dt/2))\]</div>
+<div class="math notranslate nohighlight">
+\[\Pi(t+dt) = \Pi(t+dt/2) + (\mathcal{P}-P) dt/2 -\frac{\gamma^V}{Q}\Pi(t+dt/2) dt/2  +  \sqrt{k_B T \gamma^V dt} \overline{\eta}\]</div>
+<ol class="arabic simple" start="6">
+<li><p>Update the velocities</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[v(t+dt) = v(t+dt/2) + \frac{F(t+dt)}{m} dt/2\]</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>The NPT algorithm is only tested for all 3 directions enabled for scaling. Usage of <code class="docutils literal notranslate"><span class="pre">direction</span></code> is considered an experimental feature.</p></li>
+<li><p>In step 4, only those coordinates are scaled for which <code class="docutils literal notranslate"><span class="pre">direction</span></code> is set.</p></li>
+<li><p>For the instantaneous pressure, the same limitations of applicability hold as described in <a class="reference internal" href="analysis.html#pressure"><span class="std std-ref">Pressure</span></a>.</p></li>
+<li><p>The particle forces <span class="math notranslate nohighlight">\(F\)</span> include interactions as well as a friction and noise term analogous to the terms in the <a class="reference internal" href="system_setup.html#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>.</p></li>
+<li><p>The particle forces are only calculated in step 5 and then reused in step 1 of the next iteration. See <a class="reference internal" href="#velocity-verlet-algorithm"><span class="std std-ref">Velocity Verlet algorithm</span></a> for the implications of that.</p></li>
+</ul>
+</div>
+<div class="section" id="rotational-degrees-of-freedom-and-particle-anisotropy">
+<span id="id6"></span><h2>5.3. Rotational degrees of freedom and particle anisotropy<a class="headerlink" href="#rotational-degrees-of-freedom-and-particle-anisotropy" title="Permalink to this headline">¶</a></h2>
+<p>When the feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> is compiled in, particles not only have a position, but also an orientation that changes with an angular velocity. A torque on a particle leads to a change in angular velocity depending on the particles rotational inertia. The property <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.rinertia" title="espressomd.particle_data.ParticleHandle.rinertia"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.rinertia</span></code></a> has to be specified as the three eigenvalues of the particles rotational inertia tensor.</p>
+<p>The rotational degrees of freedom are also integrated using a velocity Verlet scheme.
+The implementation is based on a quaternion representation of the particle orientation and described in <a class="bibtex reference internal" href="zreferences.html#omelyan98" id="id7">[Ome98]</a>.</p>
+<p>When the Langevin thermostat is enabled, the rotational degrees of freedom are also thermalized.</p>
+<p>Whether or not rotational degrees of freedom are propagated, is controlled on a per-particle and per-axis level, where the axes are the Cartesian axes of the particle in its body-fixed frame.
+It is important to note that starting from version 4.0 and unlike in earlier versions of <em>ESPResSo</em>, the particles’ rotation is disabled by default.
+In this way, just compiling in the <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> feature no longer changes the physics of the system.</p>
+<p>The rotation of a particle is controlled via the <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.rotation" title="espressomd.particle_data.ParticleHandle.rotation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.rotation</span></code></a> property. E.g., the following code adds a particle with rotation enabled on the x axis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">rotation</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>The orientation of a particle is stored as a quaternion in the <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.quat" title="espressomd.particle_data.ParticleHandle.quat"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.quat</span></code></a> property. For a value of (1,0,0,0), the body and space frames coincide.</p></li>
+<li><p>The space-frame direction of the particle’s z-axis in its body frame is accessible through the <code class="docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.director</span></code> property.</p></li>
+<li><p>Any other vector can be converted from body to space fixed frame using the <code class="docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.convert_vector_body_to_space</span></code> method.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">DIPOLES</span></code> are compiled in, the particles dipole moment is always co-aligned with the z-axis in the body-fixed frame.</p></li>
+<li><p>Changing the particles dipole moment and director will re-orient the particle such that its z-axis in space frame is aligned parallel to the given vector. No guarantees are made for the other two axes after setting the director or the dipole moment.</p></li>
+</ul>
+<p>The following particle properties are related to rotation:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.dip" title="espressomd.particle_data.ParticleHandle.dip"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.dip</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.director" title="espressomd.particle_data.ParticleHandle.director"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.director</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.ext_torque" title="espressomd.particle_data.ParticleHandle.ext_torque"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.ext_torque</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.gamma_rot" title="espressomd.particle_data.ParticleHandle.gamma_rot"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.gamma_rot</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.gamma_rot" title="espressomd.particle_data.ParticleHandle.gamma_rot"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.gamma_rot</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.omega_body" title="espressomd.particle_data.ParticleHandle.omega_body"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.omega_body</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.omega_lab" title="espressomd.particle_data.ParticleHandle.omega_lab"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.omega_lab</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.quat" title="espressomd.particle_data.ParticleHandle.quat"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.quat</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.rinertia" title="espressomd.particle_data.ParticleHandle.rinertia"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.rinertia</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.rotation" title="espressomd.particle_data.ParticleHandle.rotation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.rotation</span></code></a></p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.torque_lab" title="espressomd.particle_data.ParticleHandle.torque_lab"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.torque_lab</span></code></a></p></li>
+</ul>
+</div>
+<div class="section" id="steepest-descent">
+<span id="id8"></span><h2>5.4. Steepest descent<a class="headerlink" href="#steepest-descent" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.set_steepest_descent" title="espressomd.integrate.Integrator.set_steepest_descent"><code class="xref py py-func docutils literal notranslate"><span class="pre">espressomd.integrate.Integrator.set_steepest_descent()</span></code></a></p>
+<p>This feature is used to propagate each particle by a small distance parallel to the force acting on it.
+When only conservative forces for which a potential exists are in use, this is equivalent to a steepest descent energy minimization.
+A common application is removing overlap between randomly placed particles.</p>
+<p>Please note that the behavior is undefined if a thermostat is activated.
+It runs a simple steepest descent algorithm:</p>
+<div class="math notranslate nohighlight">
+\[\vec{r}_{i+1} = \vec{r}_i + \min(\gamma \vec{F}_i, \vec{r}_{\text{max_displacement}}),\]</div>
+<p>while the maximal force is bigger than <code class="docutils literal notranslate"><span class="pre">f_max</span></code> or for at most <code class="docutils literal notranslate"><span class="pre">max_steps</span></code> times. The energy
+is relaxed by <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, while the change per coordinate per step is limited to <code class="docutils literal notranslate"><span class="pre">max_displacement</span></code>.
+The combination of <code class="docutils literal notranslate"><span class="pre">gamma</span></code> and <code class="docutils literal notranslate"><span class="pre">max_displacement</span></code> can be used to get a poor man’s adaptive update.
+Rotational degrees of freedom are treated similarly: each particle is
+rotated around an axis parallel to the torque acting on the particle.
+Please be aware of the fact that this needs not to converge to a local
+minimum in periodic boundary conditions. Translational and rotational
+coordinates that are fixed using the <code class="docutils literal notranslate"><span class="pre">fix</span></code> and <code class="docutils literal notranslate"><span class="pre">rotation</span></code> attribute of particles are not altered.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_steepest_descent</span><span class="p">(</span>
+    <span class="n">f_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_displacement</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_vv</span><span class="p">()</span>  <span class="c1"># to switch back to velocity verlet</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">5. Running the simulation</a><ul>
+<li><a class="reference internal" href="#velocity-verlet-algorithm">5.1. Velocity Verlet algorithm</a></li>
+<li><a class="reference internal" href="#isotropic-npt-integrator">5.2. Isotropic NPT integrator</a></li>
+<li><a class="reference internal" href="#rotational-degrees-of-freedom-and-particle-anisotropy">5.3. Rotational degrees of freedom and particle anisotropy</a></li>
+<li><a class="reference internal" href="#steepest-descent">5.4. Steepest descent</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="inter_non-bonded.html" title="6. Non-bonded interactions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="particles.html" title="4. Setting up particles"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Dec 13, 2019.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,356 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>espressomd.shapes &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../espressomd.html" accesskey="U">espressomd</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.shapes</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2018 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="Cylinder"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Cylinder">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Cylinder</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A cylinder shape.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    center : array_like :obj:`float`</span>
+<span class="sd">             Coordinates of the center of the cylinder.</span>
+<span class="sd">    axis : array_like :obj:`float`</span>
+<span class="sd">           Axis of the cylinder.</span>
+<span class="sd">    radius : :obj:`float`</span>
+<span class="sd">             Radius of the cylinder.</span>
+<span class="sd">    length : :obj:`float`</span>
+<span class="sd">             Length of the cylinder.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">                Surface orientation, for +1 the normal points</span>
+<span class="sd">                out of the mantel, for -1 it points inward.</span>
+<span class="sd">    open : :obj:`bool`</span>
+<span class="sd">            cylinder is open or has caps.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Cylinder&quot;</span></div>
+
+
+<div class="viewcode-block" id="Ellipsoid"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Ellipsoid">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Ellipsoid</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An ellipsoid.</span>
+
+<span class="sd">    For now only ellipsoids of revolution are supported.</span>
+<span class="sd">    The symmetry axis is aligned parallel to the x-direction.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    center : :obj:`array_like`</span>
+<span class="sd">       Coordinates of the center of the ellipsoid.</span>
+<span class="sd">    a : :obj:`float`</span>
+<span class="sd">       Semiaxis along the axis of rotational symmetry.</span>
+<span class="sd">    b : :obj:`float`</span>
+<span class="sd">       Equatorial semiaxes.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">       Surface orientation, for +1 the normal points</span>
+<span class="sd">       out of the mantel, for -1 it points inward.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Ellipsoid&quot;</span></div>
+
+
+<div class="viewcode-block" id="HollowCone"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.HollowCone">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">HollowCone</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A hollow cone shape.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inner_radius : :obj:`float`</span>
+<span class="sd">        Inner radius of the cone.</span>
+<span class="sd">    outer_radius  : :obj:`float`</span>
+<span class="sd">        Outer radius of the cone.</span>
+<span class="sd">    opening_angle : :obj:`float`</span>
+<span class="sd">        Opening angle of the cone (in rad).</span>
+<span class="sd">    axis : array_like :obj:`float`</span>
+<span class="sd">        Axis of symmetry, prescribes orientation of the cone.</span>
+<span class="sd">    center : array_like :obj:`float`</span>
+<span class="sd">        Position of the cone.</span>
+<span class="sd">    width : :obj:`float`</span>
+<span class="sd">        Wall thickness of the cone.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">        Surface orientation, for +1 the normal points</span>
+<span class="sd">        out of the mantel, for -1 it points inward.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::HollowCone&quot;</span></div>
+
+
+<div class="viewcode-block" id="Maze"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Maze">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Maze</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Spherical cavities on a regular grid that are</span>
+<span class="sd">    connected by tubes.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cylrad : :obj:`float`</span>
+<span class="sd">             Radius of the tubes.</span>
+<span class="sd">    dim : :obj:`float`</span>
+<span class="sd">          Dimension of the maze.</span>
+<span class="sd">    nsphere : :obj:`int`</span>
+<span class="sd">              Number of spherical cavities.</span>
+<span class="sd">    sphrad : :obj:`float`</span>
+<span class="sd">             Radius of the spherical cavities.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Maze&quot;</span></div>
+
+
+<div class="viewcode-block" id="Rhomboid"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Rhomboid">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Rhomboid</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An parallelepiped.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : array_like :obj:`float`</span>
+<span class="sd">        First base vector.</span>
+<span class="sd">    b : array_like :obj:`float`</span>
+<span class="sd">        Second base vector.</span>
+<span class="sd">    c : array_like :obj:`float`</span>
+<span class="sd">        Third base vector.</span>
+<span class="sd">    corner : array_like :obj:`float`</span>
+<span class="sd">             Lower left corner of the rhomboid.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">                Surface orientation, for +1 the normal points</span>
+<span class="sd">                out of the mantel, for -1 it points inward.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Rhomboid&quot;</span></div>
+
+
+<div class="viewcode-block" id="Slitpore"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Slitpore">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Slitpore</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    .. image:: figures/slitpore.png</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    channel_width : :obj:`float`</span>
+<span class="sd">    lower_smoothing_radius : :obj:`float`</span>
+<span class="sd">    pore_length : :obj:`float`</span>
+<span class="sd">    pore_mouth : :obj:`float`</span>
+<span class="sd">    pore_width : :obj:`float`</span>
+<span class="sd">    upper_smoothing_radius : :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Slitpore&quot;</span></div>
+
+
+<div class="viewcode-block" id="Sphere"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Sphere">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Sphere</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A sphere.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    center : array_like :obj:`float`</span>
+<span class="sd">             Center of the sphere</span>
+<span class="sd">    radius : :obj:`float`</span>
+<span class="sd">             Radius of the sphere.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">                Surface orientation, for +1 the normal points</span>
+<span class="sd">                out of the mantel, for -1 it points inward.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Sphere&quot;</span></div>
+
+
+<div class="viewcode-block" id="SpheroCylinder"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.SpheroCylinder">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SpheroCylinder</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A cylinder with hemispheres as caps.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    center : array_like :obj:`float`</span>
+<span class="sd">             Coordinates of the center of the cylinder.</span>
+<span class="sd">    axis : array_like :obj:`float`</span>
+<span class="sd">           Axis of the cylinder.</span>
+<span class="sd">    radius : :obj:`float`</span>
+<span class="sd">             Radius of the cylinder.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">                Surface orientation, for +1 the normal points</span>
+<span class="sd">                out of the mantel, for -1 it points inward.</span>
+<span class="sd">    length : :obj:`float`</span>
+<span class="sd">             Length of the cylinder (not including the caps).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::SpheroCylinder&quot;</span></div>
+
+
+<div class="viewcode-block" id="Stomatocyte"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Stomatocyte">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Stomatocyte</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inner_radius : :obj:`float`</span>
+<span class="sd">        Inner radius of the stomatocyte.</span>
+<span class="sd">    outer_radius : :obj:`float`</span>
+<span class="sd">        Outer radius of the stomatocyte.</span>
+<span class="sd">    axis : array_like :obj:`float`</span>
+<span class="sd">        Symmetry axis, prescribing the orientation of the stomatocyte.</span>
+<span class="sd">    center : array_like :obj:`float`</span>
+<span class="sd">        Position of the stomatocyte.</span>
+<span class="sd">    layer_width : :obj:`float`</span>
+<span class="sd">        Scaling parameter.</span>
+<span class="sd">    direction : :obj:`int`</span>
+<span class="sd">        Surface orientation, for +1 the normal points</span>
+<span class="sd">        out of the mantel, for -1 it points inward.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Stomatocyte&quot;</span></div>
+
+
+<div class="viewcode-block" id="Wall"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.Wall">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Wall</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An infinite plane.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dist : :obj:`float`</span>
+<span class="sd">           Distance from the origin.</span>
+<span class="sd">    normal : array_like :obj:`int`</span>
+<span class="sd">             Normal vector of the plan (needs not to be length 1).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::Wall&quot;</span></div>
+
+
+<div class="viewcode-block" id="SimplePore"><a class="viewcode-back" href="../../espressomd.html#espressomd.shapes.SimplePore">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SimplePore</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Two parallel infinite planes, and a cylindrical orfice connecting them.</span>
+<span class="sd">    The cylinder and the planes are connected by torus segments with an</span>
+<span class="sd">    adjustable radius.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    radius: float</span>
+<span class="sd">       The radius of the pore.</span>
+<span class="sd">    length: float</span>
+<span class="sd">       The distance between the planes.</span>
+<span class="sd">    smoothing_radius: float</span>
+<span class="sd">       Radius of the torus segments</span>
+<span class="sd">    axis: array_like</span>
+<span class="sd">       Axis of the cylinder and normal of the planes</span>
+<span class="sd">    center: array_like</span>
+<span class="sd">       Position of the center of the cylinder.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Shapes::SimplePore&quot;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../espressomd.html" >espressomd</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Apr 26, 2019.
+    </div>
+  </body>
+</html>

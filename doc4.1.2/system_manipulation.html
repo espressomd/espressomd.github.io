@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>10. System manipulation &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="11. Single particle forces (constraints)" href="constraints.html" />
+    <link rel="prev" title="9. Magnetostatics / Dipolar interactions" href="magnetostatics.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="constraints.html" title="11. Single particle forces (constraints)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="magnetostatics.html" title="9. Magnetostatics / Dipolar interactions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="system-manipulation">
+<span id="id1"></span><h1>10. System manipulation<a class="headerlink" href="#system-manipulation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changing-the-box-volume">
+<span id="id2"></span><h2>10.1. Changing the box volume<a class="headerlink" href="#changing-the-box-volume" title="Permalink to this headline">¶</a></h2>
+<p>This is implemented in
+<a class="reference internal" href="espressomd.html#espressomd.system.System.change_volume_and_rescale_particles" title="espressomd.system.System.change_volume_and_rescale_particles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.system.System.change_volume_and_rescale_particles()</span></code></a>
+with the parameters <code class="docutils literal notranslate"><span class="pre">d_new</span></code> for the new length and <code class="docutils literal notranslate"><span class="pre">dir</span></code> for the
+coordinates to work on and <code class="docutils literal notranslate"><span class="pre">&quot;xyz&quot;</span></code> for isotropic.</p>
+<p>Changes the volume of either a cubic simulation box to the new volume or
+its given x-/y-/z-/xyz-extension to the new box-length, and
+isotropically adjusts the particles coordinates as well. The function
+returns the new volume of the deformed simulation box.</p>
+</div>
+<div class="section" id="stopping-particles">
+<span id="id3"></span><h2>10.2. Stopping particles<a class="headerlink" href="#stopping-particles" title="Permalink to this headline">¶</a></h2>
+<p>To stop particles you can use the functionality implemented in the
+<a class="reference internal" href="espressomd.html#module-espressomd.galilei" title="espressomd.galilei"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.galilei</span></code></a> module.  The corresponding class
+<a class="reference internal" href="espressomd.html#espressomd.galilei.GalileiTransform" title="espressomd.galilei.GalileiTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.galilei.GalileiTransform</span></code></a> which is wrapped inside
+the <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a> instance as
+<a class="reference internal" href="espressomd.html#espressomd.system.System.galilei" title="espressomd.system.System.galilei"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System.galilei</span></code></a> has two functions:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference internal" href="espressomd.html#espressomd.galilei.GalileiTransform.kill_particle_motion" title="espressomd.galilei.GalileiTransform.kill_particle_motion"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.galilei.GalileiTransform.kill_particle_motion()</span></code></a>:</dt><dd><p>halts all particles in the current simulation, setting their
+velocities to zero, as well as their angular momentum if the
+feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> has been compiled in.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="espressomd.html#espressomd.galilei.GalileiTransform.kill_particle_forces" title="espressomd.galilei.GalileiTransform.kill_particle_forces"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.galilei.GalileiTransform.kill_particle_forces()</span></code></a>:</dt><dd><p>sets all forces on the particles to zero, as well as all torques if
+the feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> has been compiled in.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="fixing-the-center-of-mass">
+<span id="id4"></span><h2>10.3. Fixing the center of mass<a class="headerlink" href="#fixing-the-center-of-mass" title="Permalink to this headline">¶</a></h2>
+<p>This interaction type applies a constraint on particles of the specified
+types such that during the integration the center of mass of these particles is
+fixed. This is accomplished as follows: The sum of all the forces acting
+on particles of type are calculated. These include all the forces due to
+other interaction types and also the thermostat. Next a force equal in
+magnitude, but in the opposite direction is applied to all the
+particles. This force is divided on the particles of type relative to
+their respective mass. Under periodic boundary conditions, this fixes
+the itinerant center of mass, that is, the one obtained from the
+unfolded coordinates.</p>
+<p>Center of mass fixing can be activated via  <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">comfixed</span><span class="o">.</span><span class="n">types</span> <span class="o">=</span> <span class="n">list_of_types_to_fix</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="capping-the-force-during-warmup">
+<span id="id5"></span><h2>10.4. Capping the force during warmup<a class="headerlink" href="#capping-the-force-during-warmup" title="Permalink to this headline">¶</a></h2>
+<p>Non-bonded interactions are often used to model the hard core repulsion
+between particles. Most of the potentials in the section are therefore
+singular at zero distance, and forces usually become very large for
+distances below the particle size. This is not a problem during the
+simulation, as particles will simply avoid overlapping. However,
+creating an initial dense random configuration without overlap is often
+difficult. By artificially capping the forces, it is possible to simulate a system
+with overlaps. By gradually raising the cap value, possible overlaps
+become unfavorable, and the system equilibrates to an overlap-free
+configuration.</p>
+<p>Force capping can be activated via  <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">force_cap</span> <span class="o">=</span> <span class="n">F_max</span>
+</pre></div>
+</div>
+<p>This command will limit the magnitude of the force to <span class="math notranslate nohighlight">\(r F_\mathrm{max}\)</span>.
+Energies are not affected by the capping, so the energy can be used to
+identify the remaining overlap. The force capping is switched off by setting
+<span class="math notranslate nohighlight">\(F_\mathrm{max}=0\)</span>.</p>
+</div>
+<div class="section" id="galilei-transform-and-particle-velocity-manipulation">
+<span id="id6"></span><h2>10.5. Galilei Transform and Particle Velocity Manipulation<a class="headerlink" href="#galilei-transform-and-particle-velocity-manipulation" title="Permalink to this headline">¶</a></h2>
+<p>The following class <a class="reference internal" href="espressomd.html#espressomd.galilei.GalileiTransform" title="espressomd.galilei.GalileiTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.galilei.GalileiTransform</span></code></a> may be useful
+in affecting the velocity of the system.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">gt</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">galilei</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Particle motion and rotation</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gt</span><span class="o">.</span><span class="n">kill_particle_motion</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This command halts all particles in the current simulation, setting
+their velocities to zero, as well as their angular momentum if the
+option <code class="docutils literal notranslate"><span class="pre">rotation</span></code> is specified and the feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> has been
+compiled in.</p>
+<ul>
+<li><p>Forces and torques acting on the particles</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gt</span><span class="o">.</span><span class="n">kill_particle_forces</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This command sets all forces on the particles to zero, as well as all
+torques if the option <code class="docutils literal notranslate"><span class="pre">torque</span></code> is specified and the feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code>
+has been compiled in.</p>
+</li>
+<li><p>The center of mass of the system</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gt</span><span class="o">.</span><span class="n">system_CMS</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Returns the center of mass of the whole system. It currently does not
+factor in the density fluctuations of the lattice-Boltzmann fluid.</p>
+</li>
+<li><p>The center-of-mass velocity</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gt</span><span class="o">.</span><span class="n">system_CMS_velocity</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Returns the velocity of the center of mass of the whole system.</p>
+</li>
+<li><p>The Galilei transform</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gt</span><span class="o">.</span><span class="n">galilei_transform</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Subtracts the velocity of the center of mass of the whole system from
+every particle’s velocity, thereby performing a Galilei transform into
+the reference frame of the center of mass of the system. This
+transformation is useful for example in combination with the DPD
+thermostat, since there, a drift in the velocity of the whole system
+leads to an offset in the reported temperature.</p>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">10. System manipulation</a><ul>
+<li><a class="reference internal" href="#changing-the-box-volume">10.1. Changing the box volume</a></li>
+<li><a class="reference internal" href="#stopping-particles">10.2. Stopping particles</a></li>
+<li><a class="reference internal" href="#fixing-the-center-of-mass">10.3. Fixing the center of mass</a></li>
+<li><a class="reference internal" href="#capping-the-force-during-warmup">10.4. Capping the force during warmup</a></li>
+<li><a class="reference internal" href="#galilei-transform-and-particle-velocity-manipulation">10.5. Galilei Transform and Particle Velocity Manipulation</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="constraints.html" title="11. Single particle forces (constraints)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="magnetostatics.html" title="9. Magnetostatics / Dipolar interactions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Dec 13, 2019.
+    </div>
+  </body>
+</html>

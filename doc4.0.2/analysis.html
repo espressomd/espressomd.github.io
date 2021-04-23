@@ -1,0 +1,805 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>13. Analysis &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="14. Input and Output" href="io.html" />
+    <link rel="prev" title="12. Lattice Boltzmann" href="lb.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="io.html" title="14. Input and Output"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="lb.html" title="12. Lattice Boltzmann"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="analysis">
+<span id="id1"></span><h1>13. Analysis<a class="headerlink" href="#analysis" title="Permalink to this headline">¶</a></h1>
+<p><cite>ESPResSo</cite> provides two concepts of system analysis:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#direct-analysis-routines"><span class="std std-ref">Direct analysis routines</span></a>: The <a class="reference internal" href="espressomd.html#module-espressomd.analyze" title="espressomd.analyze"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.analyze</span></code></a> module provides
+online-calculation of specialized local and global observables with
+calculation and data accumulation performed in the core.</li>
+<li><a class="reference internal" href="#observables-and-correlators"><span class="std std-ref">Observables and correlators</span></a>: This provides a more flexible concept of
+in-core analysis, where a certain observable (<a class="reference internal" href="#available-observables"><span class="std std-ref">Available observables</span></a>),
+a rule for data accumulation (ref Accumulators) and/or correlation (<a class="reference internal" href="#correlations"><span class="std std-ref">Correlations</span></a>) can be defined.</li>
+</ul>
+<div class="section" id="direct-analysis-routines">
+<span id="id2"></span><h2>13.1. Direct analysis routines<a class="headerlink" href="#direct-analysis-routines" title="Permalink to this headline">¶</a></h2>
+<p>The direct analysis commands can be classified into two types:</p>
+<ul>
+<li><p class="first">Instantaneous analysis routines, that only take into account the current configuration of the system:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#energies"><span class="std std-ref">Energies</span></a></li>
+<li><a class="reference internal" href="#pressure"><span class="std std-ref">Pressure</span></a></li>
+<li><a class="reference internal" href="#momentum-of-the-system"><span class="std std-ref">Momentum of the System</span></a></li>
+<li><a class="reference internal" href="#minimal-distances-between-particles"><span class="std std-ref">Minimal distances between particles</span></a></li>
+<li><a class="reference internal" href="#particles-in-the-neighborhood"><span class="std std-ref">Particles in the neighborhood</span></a></li>
+<li><a class="reference internal" href="#particle-distribution"><span class="std std-ref">Particle distribution</span></a></li>
+<li><a class="reference internal" href="#cylindrical-average"><span class="std std-ref">Cylindrical Average</span></a></li>
+<li><a class="reference internal" href="#radial-distribution-function"><span class="std std-ref">Radial distribution function</span></a> with <code class="docutils literal notranslate"><span class="pre">rdf_type='rdf'</span></code></li>
+<li><a class="reference internal" href="#structure-factor"><span class="std std-ref">Structure factor</span></a></li>
+<li><a class="reference internal" href="#center-of-mass"><span class="std std-ref">Center of mass</span></a></li>
+<li><a class="reference internal" href="#moment-of-inertia-matrix"><span class="std std-ref">Moment of inertia matrix</span></a></li>
+<li><a class="reference internal" href="#gyration-tensor"><span class="std std-ref">Gyration tensor</span></a></li>
+<li><a class="reference internal" href="#stress-tensor"><span class="std std-ref">Stress Tensor</span></a></li>
+<li><a class="reference internal" href="#local-stress-tensor"><span class="std std-ref">Local Stress Tensor</span></a></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="first docutils">
+<dt>Analysis on stored configurations, added by <a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.append" title="espressomd.analyze.Analysis.append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.append()</span></code></a>:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#radial-distribution-function"><span class="std std-ref">Radial distribution function</span></a> with <code class="docutils literal notranslate"><span class="pre">rdf_type='&lt;rdf&gt;'</span></code></li>
+<li><a class="reference internal" href="#chains"><span class="std std-ref">Chains</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="section" id="energies">
+<span id="id3"></span><h3>13.1.1. Energies<a class="headerlink" href="#energies" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.energy" title="espressomd.analyze.Analysis.energy"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.energy()</span></code></a></p>
+<p>Returns the energies of the system.
+The different energetic contributions to the total energy can also be obtained (kinetic, bonded,non-bonded, Coulomb).</p>
+<p>For example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">energy</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">energy</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;kinetic&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;bonded&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;non_bonded&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="momentum-of-the-system">
+<span id="id4"></span><h3>13.1.2. Momentum of the System<a class="headerlink" href="#momentum-of-the-system" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.analyze_linear_momentum" title="espressomd.analyze.Analysis.analyze_linear_momentum"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.analyze_linear_momentum()</span></code></a></p>
+<p>This command returns the total linear momentum of the particles and the
+lattice Boltzmann (LB) fluid, if one exists. Giving the optional
+parameters either causes the command to ignore the contribution of LB or
+of the particles.</p>
+</div>
+<div class="section" id="minimal-distances-between-particles">
+<span id="id5"></span><h3>13.1.3. Minimal distances between particles<a class="headerlink" href="#minimal-distances-between-particles" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.min_dist" title="espressomd.analyze.Analysis.min_dist"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.min_dist()</span></code></a>
+Returns the minimal distance between all particles in the system.</p>
+<p>When used with type-lists as arguments, then the minimal distance between particles of only those types is determined.</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.dist_to" title="espressomd.analyze.Analysis.dist_to"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.dist_to()</span></code></a></p>
+<p>Returns the minimal distance of all particles to either a particle (when used with an argument <code class="docutils literal notranslate"><span class="pre">id</span></code>)
+or a position coordinate when used with a vector <code class="docutils literal notranslate"><span class="pre">pos</span></code>.</p>
+<p>For example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">i</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">dist_to</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">7.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">dist_to</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">1.4142135623730951</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">mindist</span><span class="p">()</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="particles-in-the-neighborhood">
+<span id="id6"></span><h3>13.1.4. Particles in the neighborhood<a class="headerlink" href="#particles-in-the-neighborhood" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.nbhood" title="espressomd.analyze.Analysis.nbhood"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.nbhood()</span></code></a></p>
+<p>Returns a list of the particle ids of that fall within a given radius of a target position.
+For example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">idlist</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">nbhood</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">r_catch</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="particle-distribution">
+<span id="id7"></span><h3>13.1.5. Particle distribution<a class="headerlink" href="#particle-distribution" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.distribution" title="espressomd.analyze.Analysis.distribution"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.distribution()</span></code></a></p>
+<p>Returns the distance distribution of particles
+(probability of finding a particle of a certain type at a specified distance around
+a particle of another specified type, disregarding the fact that a spherical shell of a
+larger radius covers a larger volume).
+The distance is defined as the <em>minimal</em> distance between a particle of one group to any of the other
+group.</p>
+<p>Two arrays are returned corresponding to the normalized distribution and the bins midpoints, for example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">box_l</span> <span class="o">=</span> <span class="mf">10.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="n">box_l</span><span class="p">,</span> <span class="n">box_l</span><span class="p">,</span> <span class="n">box_l</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">i</span> <span class="o">*</span> <span class="n">system</span><span class="o">.</span><span class="n">box_l</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bins</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">distribution</span><span class="p">(</span><span class="n">type_list_a</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">type_list_b</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="gp">... </span>                                           <span class="n">r_min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">r_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">bins</span><span class="p">)</span>
+<span class="go">[ 0.5  1.5  2.5  3.5  4.5  5.5  6.5  7.5  8.5  9.5]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+<span class="go">[ 1.  0.  0.  0.  0.  0.  0.  0.  0.  0.]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cylindrical-average">
+<span id="id8"></span><h3>13.1.6. Cylindrical Average<a class="headerlink" href="#cylindrical-average" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.cylindrical_average" title="espressomd.analyze.Analysis.cylindrical_average"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.cylindrical_average()</span></code></a></p>
+<p>Calculates the particle distribution using cylindrical binning.</p>
+<p>The volume considered is inside a cylinder defined by the parameters <code class="docutils literal notranslate"><span class="pre">center</span></code>, <code class="docutils literal notranslate"><span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">length</span></code> and  <code class="docutils literal notranslate"><span class="pre">radius</span></code>.</p>
+<p>The geometrical details of the cylindrical binning is defined using <code class="docutils literal notranslate"><span class="pre">bins_axial</span></code> and <code class="docutils literal notranslate"><span class="pre">bins_radial</span></code> which are the number bins in the axial and radial directions (respectively).
+See figure <a class="reference internal" href="#id9"><span class="std std-ref">Geometry for the cylindrical binning</span></a> for a visual representation of the binning geometry.</p>
+<div class="figure align-center" id="id41">
+<span id="id9"></span><a class="reference internal image-reference" href="_images/analysis_cylindrical_average.png"><img alt="Geometry for the cylindrical binning" src="_images/analysis_cylindrical_average.png" style="height: 6.00000cm;" /></a>
+<p class="caption"><span class="caption-text">Geometry for the cylindrical binning</span></p>
+</div>
+<p>The command returns a list of lists. The outer list contains all data
+combined whereas each inner list contains one line. Each lines stores a
+different combination of the radial and axial index. The output might
+look something like this</p>
+<div class="highlight-numpy notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.05</span> <span class="o">-</span><span class="mf">0.25</span> <span class="mf">0.0314159</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+  <span class="p">[</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mf">0.05</span> <span class="mf">0.25</span> <span class="mf">0.0314159</span> <span class="mf">31.831</span> <span class="mf">1.41421</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">]</span>
+  <span class="o">...</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>In this case two different particle types were present.
+The columns of the respective lines are coded like this</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="12%" />
+<col width="11%" />
+<col width="10%" />
+<col width="9%" />
+<col width="7%" />
+<col width="8%" />
+<col width="8%" />
+<col width="7%" />
+<col width="9%" />
+<col width="7%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">index_radial</th>
+<th class="head">index_axial</th>
+<th class="head">pos_radial</th>
+<th class="head">pos_axial</th>
+<th class="head">binvolume</th>
+<th class="head">density</th>
+<th class="head">v_radial</th>
+<th class="head">v_axial</th>
+<th class="head">density</th>
+<th class="head">v_radial</th>
+<th class="head">v_axial</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>0</td>
+<td>0.05</td>
+<td>-0.25</td>
+<td>0.0314159</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>0</td>
+<td>1</td>
+<td>0.05</td>
+<td>0.25</td>
+<td>0.0314159</td>
+<td>31.831</td>
+<td>1.41421</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>As one can see the columns <cite>density</cite>, <cite>v_radial</cite> and <cite>v_axial</cite> appear twice.
+The order of appearance corresponds to the order of the types in the argument <code class="docutils literal notranslate"><span class="pre">types</span></code>.
+For example if was set to <code class="docutils literal notranslate"><span class="pre">types=[0,</span> <span class="pre">1]</span></code> then the first triple is associated to type 0 and
+the second triple to type 1.</p>
+</div>
+<div class="section" id="radial-distribution-function">
+<span id="id10"></span><h3>13.1.7. Radial distribution function<a class="headerlink" href="#radial-distribution-function" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.rdf" title="espressomd.analyze.Analysis.rdf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.rdf()</span></code></a></p>
+<p>Calculates a radial distribution function for given particle type and binning.
+The <code class="docutils literal notranslate"><span class="pre">rdf_type</span></code> defines if the analysis is performed on the current configuration (<code class="docutils literal notranslate"><span class="pre">rdf_type='rdf'</span></code>)
+or on averaged configurations stored with <a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.append" title="espressomd.analyze.Analysis.append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">analyze.append()</span></code></a> (<code class="docutils literal notranslate"><span class="pre">rdf_type='&lt;rdf&gt;'</span></code>).</p>
+<p>For example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rdf_bins</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">r_min</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">r_max</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">box_l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span>
+<span class="n">r</span><span class="p">,</span> <span class="n">rdf_01</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">rdf</span><span class="p">(</span><span class="n">rdf_type</span><span class="o">=</span><span class="s1">&#39;&lt;rdf&gt;&#39;</span><span class="p">,</span> <span class="n">type_list_a</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">type_list_b</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                           <span class="n">r_min</span><span class="o">=</span><span class="n">r_min</span><span class="p">,</span> <span class="n">r_max</span><span class="o">=</span><span class="n">r_max</span><span class="p">,</span> <span class="n">r_bins</span><span class="o">=</span><span class="n">rdf_bins</span><span class="p">)</span>
+<span class="n">rdf_fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;rdf.dat&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rdf_bins</span><span class="p">):</span>
+    <span class="n">rdf_fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%1.5e</span><span class="s2"> </span><span class="si">%1.5e</span><span class="s2"> </span><span class="si">%1.5e</span><span class="s2"> </span><span class="si">%1.5e</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rdf_01</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+<span class="n">rdf_fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="structure-factor">
+<span id="id11"></span><h3>13.1.8. Structure factor<a class="headerlink" href="#structure-factor" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.structure_factor" title="espressomd.analyze.Analysis.structure_factor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.structure_factor()</span></code></a></p>
+<p>Calculate the structure factor for given types.</p>
+<p>Returns the spherically averaged structure factor <span class="math notranslate nohighlight">\(S(q)\)</span> of
+particles specified in . <span class="math notranslate nohighlight">\(S(q)\)</span> is calculated for all possible
+wave vectors, <span class="math notranslate nohighlight">\(\frac{2\pi}{L} &lt;= q &lt;= \frac{2\pi}{L}\)</span> <cite>order</cite>.</p>
+</div>
+<div class="section" id="center-of-mass">
+<span id="id12"></span><h3>13.1.9. Center of mass<a class="headerlink" href="#center-of-mass" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.center_of_mass" title="espressomd.analyze.Analysis.center_of_mass"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.center_of_mass()</span></code></a></p>
+<p>Returns the center of mass of particles of the given type given by <code class="docutils literal notranslate"><span class="pre">part_type</span></code>.</p>
+</div>
+<div class="section" id="moment-of-inertia-matrix">
+<span id="id13"></span><h3>13.1.10. Moment of inertia matrix<a class="headerlink" href="#moment-of-inertia-matrix" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.moment_of_inertia_matrix" title="espressomd.analyze.Analysis.moment_of_inertia_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.moment_of_inertia_matrix()</span></code></a></p>
+<p>Returns the 3x3 moment of inertia matrix for particles of a given type.</p>
+</div>
+<div class="section" id="gyration-tensor">
+<span id="id14"></span><h3>13.1.11. Gyration tensor<a class="headerlink" href="#gyration-tensor" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.gyration_tensor" title="espressomd.analyze.Analysis.gyration_tensor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.gyration_tensor()</span></code></a></p>
+<p>Analyze the gyration tensor of particles of a given type, or of all particles in the system if no type is given. Returns a dictionary containing the squared radius of gyration, three shape descriptors (asphericity, acylindricity, and relative shape anisotropy), eigenvalues of the gyration tensor and their corresponding eigenvectors. The eigenvalues are sorted in descending order.</p>
+</div>
+<div class="section" id="pressure">
+<span id="id15"></span><h3>13.1.12. Pressure<a class="headerlink" href="#pressure" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.pressure" title="espressomd.analyze.Analysis.pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.pressure()</span></code></a></p>
+<p>Computes the instantaneous virial pressure for an isotropic and homogeneous system. It
+returns all the contributions to the total pressure as well as the total pressure (see <a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.pressure" title="espressomd.analyze.Analysis.pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.pressure()</span></code></a>).</p>
+<p>The instantaneous pressure is calculated (if there are no electrostatic interactions)
+by the volume averaged, direction averaged instantaneous virial pressure</p>
+<div class="math notranslate nohighlight" id="equation-eqptens">
+<span class="eqno">(1)<a class="headerlink" href="#equation-eqptens" title="Permalink to this equation">¶</a></span>\[p = \frac{2E_{kinetic}}{Vf} + \frac{\sum_{j&gt;i} {F_{ij}r_{ij}}}{3V}\]</div>
+<p>where <span class="math notranslate nohighlight">\(f=3\)</span> is the number of translational degrees of freedom of
+each particle, <span class="math notranslate nohighlight">\(V\)</span> is the volume of the system,
+<span class="math notranslate nohighlight">\(E_{kinetic}\)</span> is the kinetic energy, <span class="math notranslate nohighlight">\(F_{ij}\)</span> the force
+between particles i and j, and <span class="math notranslate nohighlight">\(r_{ij}\)</span> is the distance between
+them. The kinetic energy divided by the degrees of freedom is</p>
+<div class="math notranslate nohighlight">
+\[\frac{2E_{kinetic}}{f} = \frac{1}{3}\sum_{i} {m_{i}v_{i}^{2}}.\]</div>
+<p>Note that Equation&nbsp;<a class="reference internal" href="#equation-eqptens">(1)</a> can only be applied to pair potentials and
+central forces. Description of how contributions from other interactions
+are calculated is beyond the scope of this manual. Three body potentials
+are implemented following the procedure in
+Ref.&nbsp;<a class="reference internal" href="ug.html#thompson09a" id="id16">[TPM09]</a>. A different formula is used to
+calculate contribution from electrostatic interactions. For
+electrostatic interactions in P3M, the <span class="math notranslate nohighlight">\(k\)</span>-space contribution is implemented according to <a class="reference internal" href="ug.html#essmann1995smooth" id="id17">[EPB+95]</a>.
+The implementation of the Coulomb P3M pressure is tested against LAMMPS.</p>
+<p>Four-body dihedral potentials are not included. Except of
+VIRTUAL_SITES_RELATIVE constraints all other
+constraints of any kind are not currently accounted for in the pressure
+calculations. The pressure is no longer correct, e.g., when particles
+are confined to a plane.</p>
+<p>Note: The different contributions which are returned are the summands that arise from force splitting <span class="math notranslate nohighlight">\(\vec{F}_{i,j}={\vec{F}_{i,j}}_\text{bonded}+{\vec{F}_{i,j}}_\text{nonbonded}+...\)</span> in the virial pressure formula. Later when the user calculates the ensemble average via e.g. <span class="math notranslate nohighlight">\(\langle p \rangle \approx 1/N \sum_{i=1}^N p_i\)</span> however the ensemble average with all interactions present is performed. That means the contributions are not easy to interpret! Those are the contributions to the stress/pressure in a system where all interactions are present and therefore in a coupled system.</p>
+</div>
+<div class="section" id="stress-tensor">
+<span id="id18"></span><h3>13.1.13. Stress Tensor<a class="headerlink" href="#stress-tensor" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.stress_tensor" title="espressomd.analyze.Analysis.stress_tensor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.stress_tensor()</span></code></a></p>
+<p>Computes the volume averaged instantaneous stress tensor of the system with options which are
+described by in <code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.System.analysis.stress_tensor()</span></code>. It is called a stress tensor but the sign convention follows that of a pressure tensor.
+In general do only use it for (on average) homogeneous systems. For inhomogeneous systems you need to use the local stress tensor.</p>
+<p>The instantaneous virial stress tensor is calculated by</p>
+<div class="math notranslate nohighlight">
+\[p_{(k,l)} = \frac{\sum_{i} {m_{i}v_{i}^{(k)}v_{i}^{(l)}}}{V} + \frac{\sum_{j&gt;i}{F_{ij}^{(k)}r_{ij}^{(l)}}}{V}\]</div>
+<p>where the notation is the same as for the pressure. The superscripts <span class="math notranslate nohighlight">\(k\)</span>
+and <span class="math notranslate nohighlight">\(l\)</span> correspond to the components in the tensors and vectors.</p>
+<p>If electrostatic interactions are present then also the coulombic parts of the stress tensor need to be calculated. If P3M is present, then the instantaneous stress tensor is added to the above equation in accordance with <a class="reference internal" href="ug.html#essmann1995smooth" id="id19">[EPB+95]</a> :</p>
+<div class="math notranslate nohighlight">
+\[p^\text{Coulomb, P3M}_{(k,l)} =p^\text{Coulomb, P3M, dir}_{(k,l)} + p^\text{Coulomb, P3M, rec}_{(k,l)},\]</div>
+<p>where the first summand is the short ranged part and the second summand is the long ranged part.</p>
+<p>The short ranged part is given by:</p>
+<div class="math notranslate nohighlight">
+\[p^\text{Coulomb, P3M, dir}_{(k,l)}= \frac{1}{4\pi \epsilon_0 \epsilon_r} \frac{1}{2V} \sum_{\vec{n}}^* \sum_{i,j=1}^N q_i q_j \left( \frac{ \mathrm{erfc}(\beta |\vec{r}_j-\vec{r}_i+\vec{n}|)}{|\vec{r}_j-\vec{r}_i+\vec{n}|^3} +\frac{2\beta \pi^{-1/2} \exp(-(\beta |\vec{r}_j-\vec{r}_i+\vec{n}|)^2)}{|\vec{r}_j-\vec{r}_i+\vec{n}|^2} \right) (\vec{r}_j-\vec{r}_i+\vec{n})_k (\vec{r}_j-\vec{r}_i+\vec{n})_l,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\beta\)</span> is the P3M splitting parameter, <span class="math notranslate nohighlight">\(\vec{n}\)</span> identifies the periodic images, the asterisk denotes that terms with <span class="math notranslate nohighlight">\(\vec{n}=\vec{0}\)</span> and i=j are omitted.
+The long ranged (kspace) part is given by:</p>
+<div class="math notranslate nohighlight">
+\[p^\text{Coulomb, P3M, rec}_{(k,l)}= \frac{1}{4\pi \epsilon_0 \epsilon_r} \frac{1}{2 \pi V^2} \sum_{\vec{k} \neq \vec{0}} \frac{\exp(-\pi^2 \vec{k}^2/\beta^2)}{\vec{k}^2} |S(\vec{k})|^2 \cdot (\delta_{k,l}-2\frac{1+\pi^2\vec{k}^2/\beta^2}{\vec{k}^2} \vec{k}_k \vec{k}_l),\]</div>
+<p>where <span class="math notranslate nohighlight">\(S(\vec{k})\)</span> is the Fourier transformed charge density. Compared to Essmann we do not have the contribution <span class="math notranslate nohighlight">\(p^\text{corr}_{k,l}\)</span> since we want to calculate the pressure that arises from all particles in the system.</p>
+<p>Note: The different contributions which are returned are the summands that arise from force splitting <span class="math notranslate nohighlight">\(\vec{F}_{i,j}={\vec{F}_{i,j}}_\text{bonded}+{\vec{F}_{i,j}}_\text{nonbonded}+...\)</span> in the virial stress tensor formula.
+Later when the user calculates the stress tensor via <span class="math notranslate nohighlight">\(\langle p_{(k,l)}\rangle  \approx 1/N \sum_{i=1}^N p_{k,l}\)</span> however the ensemble average with all interactions present is performed.
+That means the contributions are not easy to interpret! Those are the contributions to the stress/pressure in a system where all interactions are present and therefore in a coupled system.</p>
+<p>Note that the angular velocities of the particles are not included in
+the calculation of the stress tensor.</p>
+</div>
+<div class="section" id="local-stress-tensor">
+<span id="id20"></span><h3>13.1.14. Local Stress Tensor<a class="headerlink" href="#local-stress-tensor" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">This feature is not tested.</p>
+</div>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.local_stress_tensor" title="espressomd.analyze.Analysis.local_stress_tensor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.local_stress_tensor()</span></code></a></p>
+<p>A cuboid is defined in the system and divided into bins.
+For each of these bins an instantaneous stress tensor is calculated using the Irving Kirkwood method.
+That is, a given interaction contributes towards the stress tensor in a bin proportional to the fraction of the line connecting the two particles within that bin.</p>
+<p>If the P3M and MMM1D electrostatic methods are used, these interactions
+are not included in the local stress tensor. The DH and RF methods, in
+contrast, are included. Concerning bonded interactions only two body
+interactions (FENE, Harmonic) are included (angular and dihedral are
+not). For all electrostatic interactions only the real space part is
+included.</p>
+<p>Care should be taken when using constraints of any kind, since these are
+not accounted for in the local stress tensor calculations.</p>
+<p>The command is implemented in parallel.</p>
+<p>{ { LocalStressTensor } { { } { } } }</p>
+<p>specifying the local pressure tensor in each bin.</p>
+</div>
+<div class="section" id="chains">
+<span id="id21"></span><h3>13.1.15. Chains<a class="headerlink" href="#chains" title="Permalink to this headline">¶</a></h3>
+<p>All analysis functions in this section require the topology of the chains to be set correctly.
+The above set of functions is designed to facilitate analysis of molecules.
+Molecules are expected to be a group of particles comprising a contiguous range of particle IDs.
+Each molecule is a set of consecutively numbered particles and all molecules are supposed to consist of the same number of particles.</p>
+<p>Some functions in this group require that the particles constituting a molecule are connected into
+linear chains (particle <span class="math notranslate nohighlight">\(n\)</span> is connected to <span class="math notranslate nohighlight">\(n+1\)</span> and so on)
+while others are applicable to molecules of whatever topology.</p>
+<div class="section" id="end-to-end-distance">
+<span id="id22"></span><h4>13.1.15.1. End-to-end distance<a class="headerlink" href="#end-to-end-distance" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.calc_re" title="espressomd.analyze.Analysis.calc_re"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.calc_re()</span></code></a></p>
+<p>Returns the quadratic end-to-end-distance and its root averaged over all chains.</p>
+</div>
+<div class="section" id="radius-of-gyration">
+<span id="id23"></span><h4>13.1.15.2. Radius of gyration<a class="headerlink" href="#radius-of-gyration" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.calc_rg" title="espressomd.analyze.Analysis.calc_rg"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.calc_rg()</span></code></a></p>
+<p>Returns the radius of gyration averaged over all chains.
+It is a radius of a sphere, which would have the same moment of inertia as the
+molecule, defined as</p>
+<div class="math notranslate nohighlight">
+\[\label{eq:Rg}
+R_{\mathrm G}^2 = \frac{1}{N} \sum\limits_{i=1}^{N} \left(\vec r_i - \vec r_{\mathrm{cm}}\right)^2\,,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\vec r_i\)</span> are position vectors of individual particles
+constituting a molecule and <span class="math notranslate nohighlight">\(\vec r_{\mathrm{cm}}\)</span> is the position
+vector of its center of mass. The sum runs over all <span class="math notranslate nohighlight">\(N\)</span> particles
+comprising the molecule. For more information see any polymer science
+book, e.g.&nbsp;<a class="reference internal" href="ug.html#rubinstein03a" id="id24">[RC03]</a>.</p>
+</div>
+<div class="section" id="hydrodynamic-radius">
+<span id="id25"></span><h4>13.1.15.3. Hydrodynamic radius<a class="headerlink" href="#hydrodynamic-radius" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.calc_rh" title="espressomd.analyze.Analysis.calc_rh"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.analyze.Analysis.calc_rh()</span></code></a></p>
+<p>Returns the hydrodynamic radius averaged over all chains.
+The following formula is used for the computation:</p>
+<div class="math notranslate nohighlight">
+\[\label{eq:Rh}
+\frac{1}{R_{\mathrm H}} = \frac{2}{N(N-1)} \sum\limits_{i=1}^{N} \sum\limits_{j&lt;i}^{N} \frac{1}{|\vec r_i - \vec r_j|}\,,\]</div>
+<p>The above-mentioned formula is only valid under certain assumptions. For
+more information, see Chapter 4 and equation 4.102
+in&nbsp;<a class="reference internal" href="ug.html#doi86a" id="id26">[DE86]</a>.
+Note that the hydrodynamic radius is sometimes defined in a similar fashion but with a denominator of <span class="math notranslate nohighlight">\(N^2\)</span> instead of <span class="math notranslate nohighlight">\(N(N-1)\)</span> in the prefactor.
+Both versions are equivalent in the <span class="math notranslate nohighlight">\(N\rightarrow \infty\)</span> limit but give numerically different values for finite polymers.</p>
+</div>
+</div>
+</div>
+<div class="section" id="observables-and-correlators">
+<span id="id27"></span><h2>13.2. Observables and correlators<a class="headerlink" href="#observables-and-correlators" title="Permalink to this headline">¶</a></h2>
+<p>Analysis in the core is a new concept introduced in since version 3.1.
+It was motivated by the fact, that sometimes it is desirable that the
+analysis functions do more than just return a value to the scripting
+interface. For some observables it is desirable to be sampled every few
+integration steps. In addition, it should be possible to pass the
+observable values to other functions which compute history-dependent
+quantities, such as correlation functions. All this should be done
+without the need to interrupt the integration by passing the control to
+the script level and back, which produces a significant overhead when
+performed too often.</p>
+<p>Some observables in the core have their corresponding counterparts in
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.analysis</span></code> module. However, only the core-observables can be used
+on the fly with the toolbox of the correlator and on the fly analysis of
+time series.
+Similarly, some special cases of using the correlator have
+their redundant counterparts in <code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.analysis</span></code>,
+but the correlator provides a general and
+versatile toolbox which can be used with any implemented
+core-observables.</p>
+<p>The first step of the core analysis is to create an observable.
+An observable in the sense of the core analysis can be considered as a
+rule how to compute a certain set of numbers from a given state of the
+system or a role how to collect data from other observables. Any
+observable is represented as a single array of double values. Any more
+complex shape (tensor, complex number, …) must be compatible to this
+prerequisite. Every observable however documents the storage order.</p>
+<p>The observables can be used in parallel simulations. However,
+not all observables carry out their calculations in parallel.
+Instead, the entire particle configuration is collected on the head node, and the calculations are carried out there.
+This is only performance-relevant if the number of processor cores is large and/or interactions are calculated very frequently.</p>
+<div class="section" id="creating-an-observable">
+<span id="id28"></span><h3>13.2.1. Creating an observable<a class="headerlink" href="#creating-an-observable" title="Permalink to this headline">¶</a></h3>
+<p>The observables are represented as Python classes derived from <a class="reference internal" href="espressomd.html#espressomd.observables.Observable" title="espressomd.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.observables.Observable</span></code></a>. They are contained in
+the <code class="docutils literal notranslate"><span class="pre">espressomd.observables</span></code> module. An observable is instantiated as
+follows</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.observables</span> <span class="k">import</span> <span class="n">ParticlePositions</span>
+<span class="n">part_pos</span> <span class="o">=</span> <span class="n">ParticlePositions</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Here, the keyword argument <code class="docutils literal notranslate"><span class="pre">ids</span></code> specifies the ids of the particles,
+which the observable should take into account.</p>
+<p>The current value of an observable can be obtained using its calculate()-method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">par_pos</span><span class="o">.</span><span class="n">calculate</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="available-observables">
+<span id="id29"></span><h3>13.2.2. Available observables<a class="headerlink" href="#available-observables" title="Permalink to this headline">¶</a></h3>
+<p>The following observables are available:</p>
+<ul>
+<li><p class="first">Observables working on a given set of particles specified as follows</p>
+<blockquote>
+<div><ul class="simple">
+<li>ParticlePositions: Positions of the particles, in the format
+<span class="math notranslate nohighlight">\(x_1,\ y_1,\ z_1,\ x_2,\ y_2,\ z_2,\ \dots\ x_n,\ y_n,\ z_n\)</span>.
+The particles are ordered according to the list of ids passed to the observable.</li>
+<li>ParticleVelocities: Velocities of the particles in the form
+<span class="math notranslate nohighlight">\(v_{x1},\ v_{y1},\ v_{z1},\ v_{x2},\ v_{y2},\ v_{z2},\ \dots\ v_{xn},\ v_{yn},\ v_{zn}\)</span>.
+The particles are ordered according to the list of ids passed to the observable.</li>
+<li>ParticleForces: Forces on the particles in the form
+<span class="math notranslate nohighlight">\(f_{x1},\ f_{y1},\ f_{z1},\ f_{x2},\ f_{y2},\ f_{z2},\ \dots\ f_{xn},\ f_{yn},\ f_{zn}\)</span>.</li>
+<li>ParticleBodyVelocities: the particles’ velocities in their respective body-fixed frames (as per their orientation in space stored in their quaternions).
+<span class="math notranslate nohighlight">\(v_{x1},\ v_{y1},\ v_{z1},\ v_{x2},\ v_{y2},\ v_{z2},\ \dots\ v_{xn},\ v_{yn},\ v_{zn}\)</span>.
+The particles are ordered according to the list of ids passed to the observable.</li>
+<li>ParticleAngularVelocities: The particles’ angular velocities in the space-fixed frame
+<span class="math notranslate nohighlight">\(\omega^x_1,\ \omega^y_1,\ \omega^z_1,\ \omega^x_2,\ \omega^y_2,\ \omega^z_2, \dots\ \omega^x_n,\ \omega^y_n,\ \omega^z_n\)</span>.
+The particles are ordered according to the list of ids passed to the observable.</li>
+<li>ParticleBodyAngularVelocities: As above, but in the particles’ body-fixed frame.</li>
+<li>ParticleCurrent: Product of the particles’ velocity and charge
+<span class="math notranslate nohighlight">\(m_1 v^x_1, m_1 v^y_1, m_1 v^z_1, \ldots\)</span>
+The particles are ordered according to the list of ids passed to the observable.</li>
+<li>Current: Total current of the system
+<span class="math notranslate nohighlight">\(\sum_i m_i v^x_i, \sum_i m_i v^y_i, \sum_i m_i v^z_i, \ldots\)</span></li>
+<li>DipoleMoment: Total electric dipole moment of the system obtained based on unfolded positions
+<span class="math notranslate nohighlight">\(\sum_i q_i r^x_i, \sum_i q_i r^y_i, \sum_i q_i r^z_i\)</span></li>
+<li>MagneticDipoleMoment: Total magnetic dipole moment of the system based on the <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.dip" title="espressomd.particle_data.ParticleHandle.dip"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.dip</span></code></a> property.
+<span class="math notranslate nohighlight">\(\sum_i \mu^x_i, \sum_i \mu^y_i, \sum_i \mu^z_i\)</span></li>
+<li>ComPosition: The system’s center of mass based on unfolded coordinates
+<span class="math notranslate nohighlight">\(\frac{1}{\sum_i m_i} \left( \sum_i m_i r^x_i, \sum_i m_i r^y_i, \sum_i m_i r^z_i\right)\)</span></li>
+<li>ComVelocity: Velocity of the center of mass
+<span class="math notranslate nohighlight">\(\frac{1}{\sum_i m_i} \left( \sum_i m_i v^x_i, \sum_i m_i v^y_i, \sum_i m_i v^z_i\right)\)</span></li>
+<li>ComForce: Sum of the forces on the particles
+<span class="math notranslate nohighlight">\(\sum_i f^x_i, \sum_i f^y_i, \sum_i f^z_i\)</span></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Profile observables sampling the spatial profile of various quantities</p>
+<blockquote>
+<div><ul class="simple">
+<li>DensityProfile</li>
+<li>FluxDensityProfile</li>
+<li>ForceDensityProfile</li>
+<li>LBVelocityProfile</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">System-wide observables
+StressTensor: Total stress tensor (see <a class="reference internal" href="#stress-tensor"><span class="std std-ref">Stress Tensor</span></a>)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="correlations">
+<span id="id30"></span><h3>13.2.3. Correlations<a class="headerlink" href="#correlations" title="Permalink to this headline">¶</a></h3>
+<p>Time correlation functions are ubiquitous in statistical mechanics and
+molecular simulations when dynamical properties of many-body systems are
+concerned. A prominent example is the velocity autocorrelation function,
+<span class="math notranslate nohighlight">\(\left&lt; \mathbf{v}(t) \cdot \mathbf{v}(t+\tau) \right&gt;\)</span> which is
+used in the Green-Kubo relations. In general, time correlation functions
+are of the form</p>
+<div class="math notranslate nohighlight">
+\[C(\tau) = \left&lt;A\left(t\right) \otimes B\left(t+\tau\right)\right&gt;\,,
+\label{eq:corr.def}\]</div>
+<p>where <span class="math notranslate nohighlight">\(t\)</span> is time, <span class="math notranslate nohighlight">\(\tau\)</span> is the lag time (time difference)
+between the measurements of (vector) observables <span class="math notranslate nohighlight">\(A\)</span> and
+<span class="math notranslate nohighlight">\(B\)</span>, and <span class="math notranslate nohighlight">\(\otimes\)</span> is an operator which produces the vector
+quantity <span class="math notranslate nohighlight">\(C\)</span> from <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span>. The ensemble average
+<span class="math notranslate nohighlight">\(\left&lt; \cdot \right&gt;\)</span> is taken over all time origins&nbsp;<span class="math notranslate nohighlight">\(t\)</span>.
+Correlation functions describing dynamics of large and complex molecules
+such as polymers span many orders of magnitude, ranging from MD time
+step up to the total simulation time.</p>
+<p>A correlator takes one or two observables, obtains values from them during the simulation and
+finally uses a fast correlation algorithm which enables efficient computation
+of correlation functions spanning many orders of magnitude in the lag time.</p>
+<p>The implementation for computing averages and error estimates of a time series
+of observables relies on estimates of autocorrelation functions and the
+respective autocorrelation times. The correlator provides the same
+functionality as a by-product of computing the correlation function.</p>
+<p>An example of the usage of observables and correlations is provided in
+the script <code class="file docutils literal notranslate"><span class="pre">samples/observables_correlators.py</span></code>.</p>
+<div class="section" id="creating-a-correlation">
+<span id="id31"></span><h4>13.2.3.1. Creating a correlation<a class="headerlink" href="#creating-a-correlation" title="Permalink to this headline">¶</a></h4>
+<p>Each correlator is represented by an instance of the <a class="reference internal" href="espressomd.html#espressomd.accumulators.Correlator" title="espressomd.accumulators.Correlator"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.accumulators.Correlator</span></code></a>. Please see its documentation for an explanation of the arguments that have to be passed to the constructor.</p>
+<p>Correlators can be registered for automatic updating during the
+integration by adding them to <a class="reference internal" href="espressomd.html#espressomd.system.System.auto_update_accumulators" title="espressomd.system.System.auto_update_accumulators"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.auto_update_accumulators</span></code></a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">auto_update_accumulators</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Alternatively, an update can triggered by calling the <code class="docutils literal notranslate"><span class="pre">update()</span></code> method of the correlator instance. In that case, one has to make sure to call the update in the correct time intervals.</p>
+<p>The current on-the-fly correlation result can of a correlator can be obtained using its <code class="docutils literal notranslate"><span class="pre">result()</span></code> method.
+The final result (including the latest data in the buffers) is obtained using the <code class="docutils literal notranslate"><span class="pre">finalize()</span></code> method. After this, no further update of the correlator is possible.</p>
+</div>
+<div class="section" id="example-calculating-a-particle-s-diffusion-coefficient">
+<span id="id32"></span><h4>13.2.3.2. Example: Calculating a particle’s diffusion coefficient<a class="headerlink" href="#example-calculating-a-particle-s-diffusion-coefficient" title="Permalink to this headline">¶</a></h4>
+<p>For setting up an observable and correlator to obtain the mean square displacement of particle 0, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pos_obs</span> <span class="o">=</span> <span class="n">ParticlePositions</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,))</span>
+<span class="n">c_pos</span> <span class="o">=</span> <span class="n">Correlator</span><span class="p">(</span><span class="n">obs1</span><span class="o">=</span><span class="n">pos_obs</span><span class="p">,</span> <span class="n">tau_lin</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">delta_N</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                   <span class="n">corr_operation</span><span class="o">=</span><span class="s2">&quot;square_distance_componentwise&quot;</span><span class="p">,</span> <span class="n">compress1</span><span class="o">=</span><span class="s2">&quot;discard1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To obtain the velocity auto-correlation function of particle 0, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">ParticleVelocities</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,))</span>
+<span class="n">c_vel</span> <span class="o">=</span> <span class="n">Correlator</span><span class="p">(</span><span class="n">obs1</span><span class="o">=</span><span class="n">vel_obs</span><span class="p">,</span> <span class="n">tau_lin</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">tau_max</span><span class="o">=</span><span class="mf">20.</span><span class="p">,</span> <span class="n">delta_N</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="n">corr_operation</span><span class="o">=</span><span class="s2">&quot;scalar_product&quot;</span><span class="p">,</span> <span class="n">compress1</span><span class="o">=</span><span class="s2">&quot;discard1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The full example can be found in <code class="file docutils literal notranslate"><span class="pre">samples/diffusion_coefficient.py</span></code>.</p>
+</div>
+</div>
+<div class="section" id="details-of-the-multiple-tau-correlation-algorithm">
+<span id="id33"></span><h3>13.2.4. Details of the multiple tau correlation algorithm<a class="headerlink" href="#details-of-the-multiple-tau-correlation-algorithm" title="Permalink to this headline">¶</a></h3>
+<p>Here we briefly describe the multiple tau correlator which is
+implemented in <cite>ESPResSo</cite>. For a more detailed description and discussion of its
+behavior with respect to statistical and systematic errors, please read
+the cited literature. This type of correlator has been in use for years
+in the analysis of dynamic light
+scattering&nbsp;<a class="reference internal" href="ug.html#schatzel88a" id="id34">[SchatzelDS88]</a>. About a decade later it
+found its way to the Fluorescence Correlation Spectroscopy
+(FCS)&nbsp;<a class="reference internal" href="ug.html#magatti01a" id="id35">[MF01]</a>. The book of Frenkel and
+Smit&nbsp;<a class="reference internal" href="ug.html#frenkel02b" id="id36">[FS02]</a> describes its application for the
+special case of the velocity autocorrelation function.</p>
+<div class="figure" id="id42">
+<a class="reference internal image-reference" href="_images/correlator_scheme.png"><img alt="Schematic representation of buffers in the correlator." src="_images/correlator_scheme.png" style="width: 747.0px; height: 390.0px;" /></a>
+<p class="caption"><span class="caption-text">Schematic representation of buffers in the correlator.</span></p>
+</div>
+<p>Let us consider a set of <span class="math notranslate nohighlight">\(N\)</span> observable values as schematically
+shown in figure&nbsp;[fig:dataSet], where a value of index <span class="math notranslate nohighlight">\(i\)</span> was
+measured in time <span class="math notranslate nohighlight">\(i\delta t\)</span>. We are interested in computing the
+correlation function according to equation&nbsp; for a range lag times
+<span class="math notranslate nohighlight">\(\tau = (i-j)\delta t\)</span> between the measurements <span class="math notranslate nohighlight">\(i\)</span> and
+<span class="math notranslate nohighlight">\(j\)</span>. To simplify the notation, we further drop <span class="math notranslate nohighlight">\(\delta t\)</span>
+when referring to observables and lag times.</p>
+<p>The trivial implementation takes all possible pairs of values
+corresponding to lag times
+<span class="math notranslate nohighlight">\(\tau \in [{\tau_{\mathrm{min}}}:{\tau_{\mathrm{max}}}]\)</span>. Without
+loss of generality, let us further consider
+<span class="math notranslate nohighlight">\({\tau_{\mathrm{min}}}=0\)</span>. The computational effort for such an
+algorithm scales as
+<span class="math notranslate nohighlight">\({\cal O} \bigl({\tau_{\mathrm{max}}}^2\bigr)\)</span>. As a rule of
+thumb, this is feasible if <span class="math notranslate nohighlight">\({\tau_{\mathrm{max}}}&lt; 10^3\)</span>. The
+multiple tau correlator provides a solution to compute the correlation
+functions for arbitrary range of the lag times by coarse-graining the
+high <span class="math notranslate nohighlight">\(\tau\)</span> values. It applies the naive algorithm to a relatively
+small range of lag times <span class="math notranslate nohighlight">\(\tau \in [0:p-1]\)</span>. This we refer to as
+compression level 0. To compute the correlations for lag times
+<span class="math notranslate nohighlight">\(\tau \in [p:2(p-1)]\)</span>, the original data are first coarse-grained,
+so that <span class="math notranslate nohighlight">\(m\)</span> values of the original data are compressed to produce
+a single data point in the higher compression level. Thus the lag time
+between the neighboring values in the higher compression level
+increases by a factor of <span class="math notranslate nohighlight">\(m\)</span>, while the number of stored values
+decreases by the same factor and the number of correlation operations at
+this level reduces by a factor of <span class="math notranslate nohighlight">\(m^2\)</span>. Correlations for lag
+times <span class="math notranslate nohighlight">\(\tau \in [2p:4(p-1)]\)</span> are computed at compression level 2,
+which is created in an analogous manner from level 1. This can continue
+hierarchically up to an arbitrary level for which enough data is
+available. Due to the hierarchical reduction of the data, the algorithm
+scales as
+<span class="math notranslate nohighlight">\({\cal O} \bigl( p^2 \log({\tau_{\mathrm{max}}}) \bigr)\)</span>. Thus an
+additional order of magnitude in <span class="math notranslate nohighlight">\({\tau_{\mathrm{max}}}\)</span> costs
+just a constant extra effort.</p>
+<p>The speedup is gained at the expense of statistical accuracy. The loss
+of accuracy occurs at the compression step. In principle one can use any
+value of <span class="math notranslate nohighlight">\(m\)</span> and <span class="math notranslate nohighlight">\(p\)</span> to tune the algorithm performance.
+However, it turns out that using a high <span class="math notranslate nohighlight">\(m\)</span> dilutes the data at
+high <span class="math notranslate nohighlight">\(\tau\)</span>. Therefore <span class="math notranslate nohighlight">\(m=2\)</span> is hard-coded in the correlator
+and cannot be modified by user. The value of <span class="math notranslate nohighlight">\(p\)</span> remains an
+adjustable parameter which can be modified by user by setting when
+defining a correlation. In general, one should choose <span class="math notranslate nohighlight">\(p \gg m\)</span> to
+avoid loss of statistical accuracy. Choosing <span class="math notranslate nohighlight">\(p=16\)</span> seems to be
+safe but it may depend on the properties of the analyzed correlation
+functions. A detailed analysis has been performed in
+Ref.&nbsp;<a class="reference internal" href="ug.html#ramirez10a" id="id37">[RSVL10]</a>.</p>
+<p>The choice of the compression function also influences the statistical
+accuracy and can even lead to systematic errors. The default compression
+function is which discards the second for the compressed values and
+pushes the first one to the higher level. This is robust and can be
+applied universally to any combination of observables and correlation
+operation. On the other hand, it reduces the statistical accuracy as the
+compression level increases. In many cases, the compression operation
+can be applied, which averages the two neighboring values and the
+average then enters the higher level, preserving almost the full
+statistical accuracy of the original data. In general, if averaging can
+be safely used or not, depends on the properties of the difference</p>
+<div class="math notranslate nohighlight">
+\[\frac{1}{2} (A_i \otimes B_{i+p} + A_{i+1} \otimes B_{i+p+1} ) -
+\frac{1}{2} (A_i + A_{i+1} ) \otimes \frac{1}{2} (B_{i+p} +  B_{i+p+1})
+\label{eq:difference}\]</div>
+<p>For example in the case of velocity autocorrelation function, the
+above-mentioned difference has a small value and a random sign,
+different contributions cancel each other. On the other hand, in the of
+the case of mean square displacement the difference is always positive,
+resulting in a non-negligible systematic error. A more general
+discussion is presented in Ref.&nbsp;<a class="reference internal" href="ug.html#ramirez10a" id="id38">[RSVL10]</a>.</p>
+</div>
+</div>
+<div class="section" id="accumulators">
+<span id="id39"></span><h2>13.3. Accumulators<a class="headerlink" href="#accumulators" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mean-variance-calculator">
+<span id="id40"></span><h3>13.3.1. Mean-variance calculator<a class="headerlink" href="#mean-variance-calculator" title="Permalink to this headline">¶</a></h3>
+<p>In order to calculate the running mean and variance of an observable
+<a class="reference internal" href="espressomd.html#espressomd.accumulators.MeanVarianceCalculator" title="espressomd.accumulators.MeanVarianceCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.accumulators.MeanVarianceCalculator</span></code></a> can be used:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.observables</span>
+<span class="kn">import</span> <span class="nn">espressomd.accumulators</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">])</span>
+<span class="n">position_observable</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">observables</span><span class="o">.</span><span class="n">ParticlePositions</span><span class="p">(</span><span class="n">ids</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,))</span>
+<span class="n">accumulator</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">accumulators</span><span class="o">.</span><span class="n">MeanVarianceCalculator</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">position_observable</span><span class="p">,</span> <span class="n">delta_N</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">auto_update_accumulators</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">accumulator</span><span class="p">)</span>
+<span class="c1"># Perform integration (not shown)</span>
+<span class="nb">print</span> <span class="n">accumulator</span><span class="o">.</span><span class="n">get_mean</span><span class="p">()</span>
+<span class="nb">print</span> <span class="n">accumulator</span><span class="o">.</span><span class="n">get_variance</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In the example above the automatic update of the accumulator is used. However,
+it’s also possible to manually update the accumulator by calling
+<a class="reference internal" href="espressomd.html#espressomd.accumulators.MeanVarianceCalculator.update" title="espressomd.accumulators.MeanVarianceCalculator.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.accumulators.MeanVarianceCalculator.update()</span></code></a>.</p>
+</div>
+</div>
+<div class="section" id="cluster-analysis">
+<h2>13.4. Cluster analysis<a class="headerlink" href="#cluster-analysis" title="Permalink to this headline">¶</a></h2>
+<p><cite>ESPResSo</cite> provides support for online cluster analysis. Here, a cluster is a group of particles, such that you can get from any particle to any second particle by at least one path of neighboring particles.
+I.e., if particle B is a neighbor of particle A, particle C is a neighbor of A and particle D is a neighbor of particle B, all four particles are part of the same cluster.
+The cluster analysis is available in parallel simulations, but the analysis is carried out on the head node, only.</p>
+<p>Whether or not two particles are neighbors is defined by a pair criterion. The available criteria can be found in <a class="reference internal" href="espressomd.html#module-espressomd.pair_criteria" title="espressomd.pair_criteria"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.pair_criteria</span></code></a>.
+For example, a distance criterion which will consider particles as neighbors if they are closer than 0.11 is created as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.pair_criteria</span> <span class="k">import</span> <span class="n">DistanceCriterion</span>
+<span class="n">dc</span> <span class="o">=</span> <span class="n">DistanceCriterion</span><span class="p">(</span><span class="n">cut_off</span><span class="o">=</span><span class="mf">0.11</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To obtain the cluster structure of a system, an instance of <a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.ClusterStructure" title="espressomd.cluster_analysis.ClusterStructure"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.cluster_analysis.ClusterStructure</span></code></a> has to be created.
+To to create a cluster structure with above criterion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.cluster_analysis</span> <span class="k">import</span> <span class="n">ClusterStructure</span>
+<span class="n">cs</span> <span class="o">=</span> <span class="n">ClusterStructure</span><span class="p">(</span><span class="n">distance_criterion</span><span class="o">=</span><span class="n">dc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In most cases, the cluster analysis is carried out by calling the <a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.ClusterStructure.run_for_all_pairs" title="espressomd.cluster_analysis.ClusterStructure.run_for_all_pairs"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">espressomd.cluster_analysis.ClusterStructure.run_for_all_pairs</span></code></a> method. When the pair criterion is purely based on bonds,  <a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.ClusterStructure.run_for_bonded_particles" title="espressomd.cluster_analysis.ClusterStructure.run_for_bonded_particles"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">espressomd.cluster_analysis.ClusterStructure.run_for_bonded_particles</span></code></a> can be used.</p>
+<p>The results can be accessed via ClusterStructure.clusters, which is an instance of
+<a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.Clusters" title="espressomd.cluster_analysis.Clusters"><code class="xref any py py-class docutils literal notranslate"><span class="pre">espressomd.cluster_analysis.Clusters</span></code></a>.</p>
+<p>Individual clusters are represented by instances of
+<a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.Cluster" title="espressomd.cluster_analysis.Cluster"><code class="xref any py py-class docutils literal notranslate"><span class="pre">espressomd.cluster_analysis.Cluster</span></code></a>, which provides access to the particles contained in a cluster as well as per-cluster analysis routines such as radius of gyration, center of mass and longest distance.
+Note that the cluster objects do not contain copies of the particles, but refer to the particles in the simulation. Hence, the objects become outdated if the simulation system changes. On the other hand, it is possible to directly manipulate the particles contained in a cluster.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">13. Analysis</a><ul>
+<li><a class="reference internal" href="#direct-analysis-routines">13.1. Direct analysis routines</a><ul>
+<li><a class="reference internal" href="#energies">13.1.1. Energies</a></li>
+<li><a class="reference internal" href="#momentum-of-the-system">13.1.2. Momentum of the System</a></li>
+<li><a class="reference internal" href="#minimal-distances-between-particles">13.1.3. Minimal distances between particles</a></li>
+<li><a class="reference internal" href="#particles-in-the-neighborhood">13.1.4. Particles in the neighborhood</a></li>
+<li><a class="reference internal" href="#particle-distribution">13.1.5. Particle distribution</a></li>
+<li><a class="reference internal" href="#cylindrical-average">13.1.6. Cylindrical Average</a></li>
+<li><a class="reference internal" href="#radial-distribution-function">13.1.7. Radial distribution function</a></li>
+<li><a class="reference internal" href="#structure-factor">13.1.8. Structure factor</a></li>
+<li><a class="reference internal" href="#center-of-mass">13.1.9. Center of mass</a></li>
+<li><a class="reference internal" href="#moment-of-inertia-matrix">13.1.10. Moment of inertia matrix</a></li>
+<li><a class="reference internal" href="#gyration-tensor">13.1.11. Gyration tensor</a></li>
+<li><a class="reference internal" href="#pressure">13.1.12. Pressure</a></li>
+<li><a class="reference internal" href="#stress-tensor">13.1.13. Stress Tensor</a></li>
+<li><a class="reference internal" href="#local-stress-tensor">13.1.14. Local Stress Tensor</a></li>
+<li><a class="reference internal" href="#chains">13.1.15. Chains</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#observables-and-correlators">13.2. Observables and correlators</a><ul>
+<li><a class="reference internal" href="#creating-an-observable">13.2.1. Creating an observable</a></li>
+<li><a class="reference internal" href="#available-observables">13.2.2. Available observables</a></li>
+<li><a class="reference internal" href="#correlations">13.2.3. Correlations</a></li>
+<li><a class="reference internal" href="#details-of-the-multiple-tau-correlation-algorithm">13.2.4. Details of the multiple tau correlation algorithm</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#accumulators">13.3. Accumulators</a><ul>
+<li><a class="reference internal" href="#mean-variance-calculator">13.3.1. Mean-variance calculator</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cluster-analysis">13.4. Cluster analysis</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="io.html" title="14. Input and Output"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="lb.html" title="12. Lattice Boltzmann"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Apr 26, 2019.
+    </div>
+  </body>
+</html>

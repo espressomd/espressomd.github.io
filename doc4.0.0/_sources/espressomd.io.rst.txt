@@ -1,0 +1,29 @@
+espressomd\.io package
+======================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    espressomd.io.writer
+
+Submodules
+----------
+
+espressomd\.io\.mpiio module
+----------------------------
+
+.. automodule:: espressomd.io.mpiio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: espressomd.io
+    :members:
+    :undoc-members:
+    :show-inheritance:

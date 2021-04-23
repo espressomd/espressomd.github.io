@@ -1,0 +1,655 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>1. Contact the Developers &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="espressomd" href="modules.html" />
+    <link rel="prev" title="19. Appendix" href="appendix.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="espressomd"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="appendix.html" title="19. Appendix"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="contact-the-developers">
+<span id="id1"></span><h1>1. Contact the Developers<a class="headerlink" href="#contact-the-developers" title="Permalink to this headline">¶</a></h1>
+<p>To contact the <cite>ESPResSo</cite> developers, please write an email to the developers mailing list:
+<a class="reference external" href="mailto:espressomd-devel&#37;&#52;&#48;nongnu&#46;org">espressomd-devel<span>&#64;</span>nongnu<span>&#46;</span>org</a>
+to subscribe to the developers’ mailing list go to
+<a class="reference external" href="http://lists.nongnu.org/mailman/listinfo/espressomd-devel">http://lists.nongnu.org/mailman/listinfo/espressomd-devel</a></p>
+<div class="section" id="before-you-start-a-development-project">
+<span id="id2"></span><h2>1.1. Before you start a development project<a class="headerlink" href="#before-you-start-a-development-project" title="Permalink to this headline">¶</a></h2>
+<p>Before you start a development project for <cite>ESPResSo</cite>, please always write to the developers mailing list and describe the project.
+This is to avoid that several people work on the same thing at the same time. Also, implementation details can be discussed in advance. In many cases, existing developers can point to re-usable code and simpler solutions.</p>
+</div>
+</div>
+<div class="section" id="development-environment">
+<span id="id3"></span><h1>2. Development Environment<a class="headerlink" href="#development-environment" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="required-development-tools">
+<span id="id4"></span><h2>2.1. Required Development Tools<a class="headerlink" href="#required-development-tools" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">First of all, please install the dependencies for compiling <cite>ESPResSo</cite>. See the section on “Getting, compiling and running” in the user guide.</p>
+</li>
+<li><p class="first">To be able to access the development version of <cite>ESPResSo</cite>, you will need
+the distributed versioning control system <a class="reference external" href="http://git-scm.com/">git</a>.</p>
+</li>
+<li><p class="first">To build the sphinx documentation, you will need the Python packages listed in <code class="file docutils literal notranslate"><span class="pre">requirements.txt</span></code> in the top-level source directory. To install them, issue:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade --user -r requirements.txt
+</pre></div>
+</div>
+<p>Note, that some distributions now use <code class="docutils literal notranslate"><span class="pre">pip</span></code> for Python3 and <code class="docutils literal notranslate"><span class="pre">pip2</span></code> for Python 2.</p>
+</li>
+<li><p class="first">To build the tutorials, you will need LaTeX.</p>
+</li>
+<li><p class="first">To compile the Doxygen code documentation, you will need to have the
+tool <a class="reference external" href="http://www.doxygen.org/">doxygen</a>.</p>
+</li>
+</ul>
+<p>All of these tools should be easy to install on most Unix operating
+systems.</p>
+</div>
+<div class="section" id="getting-the-development-code">
+<span id="id5"></span><h2>2.2. Getting the Development Code<a class="headerlink" href="#getting-the-development-code" title="Permalink to this headline">¶</a></h2>
+<p>We use Github for storing the source code and its history, and for managing the development process.
+The repository is located at <a class="reference external" href="http://github.com/espressomd/espresso">http://github.com/espressomd/espresso</a>.
+To get the current development code, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone git://github.com/espressomd/espresso
+</pre></div>
+</div>
+<p>This will create a directory named “espresso” which contains the code.
+The build process does not differ from the one for release versions described in the users’ guide.</p>
+</div>
+<div class="section" id="build-system">
+<h2>2.3. Build System<a class="headerlink" href="#build-system" title="Permalink to this headline">¶</a></h2>
+<p>The build system of <cite>ESPResSo</cite> is based on CMake.</p>
+<p>The central source files of the build system are the following:</p>
+<ul class="simple">
+<li><code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code></li>
+<li>Contents of the <code class="file docutils literal notranslate"><span class="pre">cmake</span></code> directory</li>
+<li>The <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> files in the <code class="file docutils literal notranslate"><span class="pre">src/</span></code>, <code class="file docutils literal notranslate"><span class="pre">doc/</span></code>, and <code class="file docutils literal notranslate"><span class="pre">testsuite/</span></code> directories and their sub-directories</li>
+</ul>
+<p>The most common reasons for editing these files are:</p>
+<ul class="simple">
+<li>Adding new source files</li>
+<li>Adding new external dependencies</li>
+</ul>
+<div class="section" id="adding-new-source-files">
+<h3>2.3.1. Adding New Source Files<a class="headerlink" href="#adding-new-source-files" title="Permalink to this headline">¶</a></h3>
+<p>To add new files to <cite>ESPResSo</cite> (like C++ source files or header files) you
+need to look at the <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> in the directory where the file is located.</p>
+<ul>
+<li><p class="first">Please note that .hpp-header files usually do not have to be added to <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code></p>
+</li>
+<li><p class="first">In some cases (e.g., <code class="file docutils literal notranslate"><span class="pre">src/core/CMakeLists.txt</span></code>), the <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> contains a wild-card include like this:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">file</span><span class="p">(</span><span class="s">GLOB</span> <span class="s">EspressoCore_SRC</span> <span class="s">*.cpp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, placing a file with that ending is enough.</p>
+</li>
+<li><p class="first">In other cases, the files are explicitly included (e.g., <code class="file docutils literal notranslate"><span class="pre">testsuite/CMakeLists.txt</span></code>):</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">py_tests</span>  <span class="s">bondedInteractions.py</span>
+              <span class="s">cellsystem.py</span>
+              <span class="s">constraint_shape_based.py</span>
+              <span class="s">coulomb_cloud_wall.py</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In that case, add the new file to the list.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="testsuite">
+<h2>2.4. Testsuite<a class="headerlink" href="#testsuite" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>New or significantly changed features will only be accepted, if they have a test case.
+This is to make sure, the feature is not broken by future changes to <cite>ESPResSo</cite>, and so other users can get an impression of what behavior is guaranteed to work.</li>
+<li>There are two kinds of tests:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>C++-unit tests, testing individual C++ functions and classes. They make use of the boost unit test framework and reside in <code class="file docutils literal notranslate"><span class="pre">src/core/unit_tests</span></code></li>
+<li>Python integration tests, testing the Python interface and (physical) results of features. They reside in <code class="file docutils literal notranslate"><span class="pre">python</span></code></li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p class="first">To execute the tests, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make check
+</pre></div>
+</div>
+<p>in the top build directory.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="documentation">
+<span id="id6"></span><h1>3. Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
+<p>The documentation of <cite>ESPResSo</cite> consists of four parts:</p>
+<blockquote>
+<div><ul class="simple">
+<li>The users’ guide and developers’ guide are located in <code class="file docutils literal notranslate"><span class="pre">doc/sphinx</span></code>, and make use of the Sphinx Python package</li>
+<li>In-code documentation for the Python interface is located in the various files in src/python/espressomd and also makes use of the Sphinx Python package. We make use of the napoleon extension and use the NumPy documentation style.</li>
+<li>In-code documentation of the C++ core is located in the .cpp and .hpp files in <code class="file docutils literal notranslate"><span class="pre">/src/core</span></code> and its sub-directories and makes use of Doxygen.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="doxygen-code-documentation">
+<h2>3.1. Doxygen Code Documentation<a class="headerlink" href="#doxygen-code-documentation" title="Permalink to this headline">¶</a></h2>
+<p>The documentation of each function should contain a short description,
+if necessary a more detailed description and a description for the
+return value and parameters.</p>
+<p>Look at the documentation of existing files and functions to get a
+feeling how it should be!</p>
+<p>Doxygen is able to understand simple LaTeX&nbsp;and HTML commands as well as
+some special command in order to give the documentation a nice structure
+and to make it more readable. In the following list you find a short
+description of the most common commands we need:</p>
+<ul>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">\anchor</span></code> <em>name</em> <em>description</em></div>
+<div class="line">Create an anchor to which you can refer using the <code class="docutils literal notranslate"><span class="pre">\ref</span></code> command.</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">\ref</span></code> <em>name</em> <code class="docutils literal notranslate"><span class="pre">[&quot;</span></code><em>text</em><code class="docutils literal notranslate"><span class="pre">&quot;]</span></code></div>
+<div class="line">Insert a link to another object in the documentation (<em>e.g.</em>an
+anchor).</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">href=&quot;http://www.your_url.html&quot;&gt;title&lt;/a&gt;</span></code></div>
+<div class="line">Link to an external HTML source.</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">\file</span></code> <em>name</em> <em>description</em></div>
+<div class="line">Special anchor for a file.</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">\image</span> <span class="pre">html</span></code> <em>image</em></div>
+<div class="line">Include a picture. The picture file should reside in the subdir
+<code class="docutils literal notranslate"><span class="pre">doc/doxygen/figs</span></code>. Do not use the HTML <code class="docutils literal notranslate"><span class="pre">&lt;img&gt;</span></code>-tag to include
+pictures, as <a class="reference external" href="http://www.doxygen.org/">doxygen</a> will not copy the pictures into the
+documentation.</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">&lt;ul&gt;</span> <span class="pre">&lt;li&gt;List</span> <span class="pre">entry</span> <span class="pre">1&lt;/li&gt;</span> <span class="pre">&lt;li&gt;List</span> <span class="pre">entry</span> <span class="pre">2&lt;/li&gt;&lt;/ul&gt;</span></code></div>
+<div class="line">Creates a list in the documentation.</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">\param</span></code> <em>name</em> <em>description</em></div>
+<div class="line">Document the parameter of a function.</div>
+</div>
+</li>
+<li><div class="first line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">\return</span></code> <em>description</em></div>
+<div class="line">Document the return value of a function.</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="programmer-s-guide">
+<span id="programmers-s-guide"></span><h1>4. Programmer’s Guide<a class="headerlink" href="#programmer-s-guide" title="Permalink to this headline">¶</a></h1>
+<p>This chapter provides some hints on how to extend <cite>ESPResSo</cite>. It is not
+exhaustive, so for major changes the best documentation are the other
+developers.</p>
+<div class="section" id="source-code-structure">
+<h2>4.1. Source code structure<a class="headerlink" href="#source-code-structure" title="Permalink to this headline">¶</a></h2>
+<p>The source tree has the following structure:</p>
+<ul class="simple">
+<li>src: The actual source code<ul>
+<li>core: The C++ source code of the simulation core</li>
+<li>python/espressomd: Source of the espressomd Python module and its submodules</li>
+<li>script_interface: C++ source code of the script_interface component, which links Python classes to functionality in the simulation core</li>
+</ul>
+</li>
+<li>doc: Documentation<ul>
+<li>sphinx: The sphinx-based documentation, consisting of user and developer guide.</li>
+<li>tutorials/python: Source and pdf files for the introductory tutorials</li>
+<li><a class="reference external" href="http://www.doxygen.org/">doxygen</a>: Build directory for the C++ in-code documentation</li>
+</ul>
+</li>
+<li>testsuite/python: Python integration tests. Note that some C++ unit tests for individual core components are in src/core/unittests</li>
+<li>samples/python: Some sample scripts</li>
+<li>libs: External dependencies (at this point h5xx)</li>
+<li>maintainer: Files used by the maintainers<ul>
+<li>configs: Collection of myconfig.hpp files which activate different sets of features for testing.</li>
+<li>docker: Definitions of the docker images for various distributions used for continuous integration testing</li>
+<li>CI: Support files for the continuous integration testing run on the Travis-CI service.</li>
+<li>jenkins: Outdated support files for the Jenkins continuous integration testing</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="flow-control-and-communications-architecture">
+<h2>4.2. Flow control and communications architecture<a class="headerlink" href="#flow-control-and-communications-architecture" title="Permalink to this headline">¶</a></h2>
+<p>Espresso uses two communication models, namely master-slave and synchronous.</p>
+<ul>
+<li><p class="first">When Espresso does not run an integration, it works in the master-slave mode, i.e. the head node (MPI rank 0) in a parallel simulation
+runs the Python script, whereas all other nodes are idle until they receive a command from the head node. Such commands include particle creation,
+changing of particle properties and changing global simulation parameters.
+When a Python command such as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>is issued, the head node determines, which node is responsible for the given position, and then sends the node the command to place the particle.</p>
+</li>
+<li><p class="first">When an integration is started in Python on the head node, a command to start the integration is sent to all nodes, in the master-slave framework described above.
+Then, Espresso switches into the synchronous mode, in which all nodes run the same code in the integration loop at the same time.
+The code of the main integration loop is in <code class="docutils literal notranslate"><span class="pre">integrate.cpp:integrate_vv()</span></code>.
+When writing code which is run during the main integration loop, no commands making use of the master-slave mechanism can be called.
+When code during the integration loop executes MPI communication, it has to be ensured, that the MPI call is executed on all nodes
+involved in the communication. If this is not done, a deadlock will result.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="adding-calls-to-the-master-slave-framework">
+<h2>4.3. Adding calls to the master-slave framework<a class="headerlink" href="#adding-calls-to-the-master-slave-framework" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="using-an-instance-of-mpicallback">
+<h3>4.3.1. Using an instance of MpiCallback<a class="headerlink" href="#using-an-instance-of-mpicallback" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">Write the callback slave function, which will be executed on all nodes except the head node (0):</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">my_callback</span><span class="p">(</span><span class="kt">int</span> <span class="n">p1</span><span class="p">,</span> <span class="kt">int</span> <span class="n">p2</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Do something. The two int-parameters can be used for anything</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">On all nodes, the callback has to be registered:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;MpiCallbacks.hpp&quot;</span><span class="cp"></span>
+<span class="kt">void</span> <span class="nf">register_my_callback</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">Communication</span><span class="o">::</span><span class="n">mpiCallbacks</span><span class="p">().</span><span class="n">add</span><span class="p">(</span><span class="n">my_callback</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>You can, e.g., call your registration from <code class="docutils literal notranslate"><span class="pre">initialize.cpp:on_program_start()</span></code>
+Instead of a static function, from which a <code class="docutils literal notranslate"><span class="pre">std::function&lt;void(int,int)&gt;</span></code> can be constructed can
+be used. For example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;MpiCallbacks.hpp&quot;</span><span class="cp"></span>
+<span class="kt">void</span> <span class="nf">register_my_callback</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">Communication</span><span class="o">::</span><span class="n">mpiCallbacks</span><span class="p">().</span><span class="n">add</span><span class="p">([](</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="p">){</span> <span class="cm">/* Do something */</span> <span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>can be used to add a lambda function as callback.</p>
+</li>
+<li><p class="first">Then, you can use your callback from the head node:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&quot;MpiCallbacks.hpp&quot;</span><span class="cp"></span>
+<span class="kt">void</span> <span class="nf">call_my_callback</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">Communication</span><span class="o">::</span><span class="n">mpiCallbacks</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="n">my_callback</span><span class="p">,</span> <span class="n">param1</span><span class="p">,</span> <span class="n">param2</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This only works outside the integration loop. After the callback has been called, synchronous mpi communication can be done.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="legacy-callbacks">
+<h3>4.3.2. Legacy callbacks<a class="headerlink" href="#legacy-callbacks" title="Permalink to this headline">¶</a></h3>
+<p>Older code uses callbacks defined in the <code class="docutils literal notranslate"><span class="pre">CALLBACK_LIST</span></code> preprocessor macro in <code class="file docutils literal notranslate"><span class="pre">communications.cpp</span></code>. They are called via <code class="docutils literal notranslate"><span class="pre">mpi_call()</span></code>.
+See <code class="docutils literal notranslate"><span class="pre">communications.cpp:mpi_place_particle()</span></code> for an example.</p>
+</div>
+</div>
+<div class="section" id="adding-new-bonded-interactions">
+<h2>4.4. Adding New Bonded Interactions<a class="headerlink" href="#adding-new-bonded-interactions" title="Permalink to this headline">¶</a></h2>
+<p>To add a new bonded interaction, the following steps have to be taken</p>
+<ul class="simple">
+<li>Simulation core:<ul>
+<li>Define a structure holding the parameters (prefactors, etc.) of the interaction</li>
+<li>Write functions for calculating force and energy, respectively.</li>
+<li>Write a setter function, which takes the parameters of the interactions and stores them in the bonded interactions data structure</li>
+<li>Add calls to the force and energy calculation functions to the force calculation in the integration loop as well as to energy and pressure/stress tensor analysis</li>
+</ul>
+</li>
+<li>Python interface<ul>
+<li>Import the definition of the bond data structure from the simulation core</li>
+<li>Implement a class for the bonded interaction derived from the BondedInteraction base class</li>
+</ul>
+</li>
+</ul>
+<div class="section" id="defining-the-data-structure-for-the-interaction">
+<h3>4.4.1. Defining the data structure for the interaction<a class="headerlink" href="#defining-the-data-structure-for-the-interaction" title="Permalink to this headline">¶</a></h3>
+<p>The data structures for bonded interactions reside in <code class="file docutils literal notranslate"><span class="pre">interaction_data.hpp</span></code>.</p>
+<ul>
+<li><p class="first">Add your interaction to the <code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">BondedInteraction</span></code>.
+This enumeration is used to identify different bonded interactions.</p>
+</li>
+<li><p class="first">Add a typedef struct containing the parameters of the interaction. Use the one for the FENE interaction as template:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+  <span class="kt">double</span> <span class="n">k</span><span class="p">;</span>
+  <span class="p">[...]</span>
+<span class="p">}</span> <span class="n">Fene_bond_parameters</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add a member to the typedef union Bond_parameters. For the FENE bond it looks like this:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Fene_bond_parameters</span> <span class="n">fene</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="functions-for-calculating-force-and-energy-and-for-setting-parameters">
+<h3>4.4.2. Functions for calculating force and energy, and for setting parameters<a class="headerlink" href="#functions-for-calculating-force-and-energy-and-for-setting-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Every interaction resides in its own source .cpp and .hpp. A simple example for a
+bonded interaction is the FENE bond in <code class="file docutils literal notranslate"><span class="pre">src/core/fene.cpp</span></code> and <code class="file docutils literal notranslate"><span class="pre">src/core/fene.hpp</span></code>.
+Use these two files as templates for your interaction.</p>
+<p>Notes:</p>
+<ul>
+<li><p class="first">The names of function arguments mentioned below are taken from the FENE bond in <code class="file docutils literal notranslate"><span class="pre">src/core/fene.cpp</span></code> and <code class="file docutils literal notranslate"><span class="pre">src/core/fene.hpp</span></code>. It is recommended to use the same names for the corresponding functions for your interaction.</p>
+</li>
+<li><p class="first">The recommended signatures of the force and energy functions are:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kr">inline</span> <span class="kt">int</span> <span class="n">calc_fene_pair_force</span><span class="p">(</span><span class="n">Particle</span> <span class="o">*</span><span class="n">p1</span><span class="p">,</span> <span class="n">Particle</span> <span class="o">*</span><span class="n">p2</span><span class="p">,</span>
+                                <span class="n">Bonded_ia_parameters</span> <span class="o">*</span><span class="n">iaparams</span><span class="p">,</span>
+                                <span class="kt">double</span> <span class="n">dx</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="kt">double</span> <span class="n">force</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="kr">inline</span> <span class="kt">int</span> <span class="n">fene_pair_energy</span><span class="p">(</span><span class="n">Particle</span> <span class="o">*</span><span class="n">p1</span><span class="p">,</span> <span class="n">Particle</span> <span class="o">*</span><span class="n">p2</span><span class="p">,</span>
+                            <span class="n">Bonded_ia_parameters</span> <span class="o">*</span><span class="n">iaparams</span><span class="p">,</span>
+                            <span class="kt">double</span> <span class="n">dx</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="kt">double</span> <span class="o">*</span><span class="n">_energy</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">fene</span></code> needs to be replaced by the name of the new interaction.</p>
+</li>
+<li><p class="first">The setter function gets a <code class="docutils literal notranslate"><span class="pre">bond_type</span></code> which is a numerical id identifying the number of the bond type in the simulation. It DOES NOT determine the type of the bond potential (harmonic vs FENE).
+The signature of the setter function has to contain the <code class="docutils literal notranslate"><span class="pre">bond_type</span></code>, the remaining parameters are specific to the interaction. For the FENE bond, e.g., we have:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">fene_set_params</span><span class="p">(</span><span class="kt">int</span> <span class="n">bond_type</span><span class="p">,</span> <span class="kt">double</span> <span class="n">k</span><span class="p">,</span> <span class="kt">double</span> <span class="n">drmax</span><span class="p">,</span> <span class="kt">double</span> <span class="n">r0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A return value of <code class="docutils literal notranslate"><span class="pre">ES_OK</span></code> is returned on success, <code class="docutils literal notranslate"><span class="pre">ES_ERR</span></code> on error, e.g., when parameters are invalid.</p>
+</li>
+<li><p class="first">The setter function must call <code class="docutils literal notranslate"><span class="pre">make_bond_type_exists()</span></code> with that bond type, to allocate the memory for storing the parameters.</p>
+</li>
+<li><p class="first">Afterwards, the bond parameters can be stored in the global variable <code class="docutils literal notranslate"><span class="pre">bonded_ia_params[bond_type]</span></code></p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">bonded_ia_params[bond_type].num</span></code> is the number of particles involved in the bond -1. I.e., 1 for a pairwise bonded potential such as the FENE bond.</p>
+</li>
+<li><p class="first">The parameters for the individual bonded interaction go to the member of <code class="docutils literal notranslate"><span class="pre">Bond_parameters</span></code> for your interaction defined in the previous step. For the FENE bond, this would be:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">bonded_ia_params</span><span class="p">[</span><span class="n">bond_tpe</span><span class="p">].</span><span class="n">p</span><span class="p">.</span><span class="n">fene</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p class="first">At the end of the parameter setter function, do not forget the call to <code class="docutils literal notranslate"><span class="pre">mpi_bcast_ia_params()</span></code>, which will sync the parameters just set to other compute nodes in a parallel simulation.</p>
+</li>
+<li><p class="first">The routines for calculating force and energy return an integer. A return value of 0 means OK, a value of 1 means that the particles are too far apart and the bond is broken. This will stop the integration with a runtime error.</p>
+</li>
+<li><p class="first">The functions for calculating force and energy can make use of a pre-calculated distance vector (dx) pointing from particle 2 to particle 1.</p>
+</li>
+<li><p class="first">The force on particle 1 has to be stored in the force vector  (not added to it). The force on particle 2 will be obtained from Newton’s law.</p>
+</li>
+<li><p class="first">The result of the energy calculation is placed in (NOT added to) the <code class="docutils literal notranslate"><span class="pre">_energy</span></code> argument of the energy calculation function.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="including-the-bonded-interaction-in-the-force-calculation-and-the-energy-and-pressure-analysis">
+<h3>4.4.3. Including the bonded interaction in the force calculation and the energy and pressure analysis<a class="headerlink" href="#including-the-bonded-interaction-in-the-force-calculation-and-the-energy-and-pressure-analysis" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">In <code class="file docutils literal notranslate"><span class="pre">src/core/interaction_data.cpp</span></code>:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Add a name for the interaction to <code class="docutils literal notranslate"><span class="pre">get_name_of_bonded_ia()</span></code>.</li>
+<li>In <code class="docutils literal notranslate"><span class="pre">calc_maximal_cutoff()</span></code>, add a case for the new interaction which
+makes sure that <code class="docutils literal notranslate"><span class="pre">max_cut</span></code> is larger than the interaction range of the
+new interaction, typically the bond length.  This is necessary to ensure
+that, in a parallel simulation, a compute node has access to both bond
+partners. This value is always used as calculated by
+<code class="docutils literal notranslate"><span class="pre">calc_maximal_cutoff</span></code>, therefore it is not strictly necessary that the
+maximal interaction range is stored explicitly.</li>
+<li>Besides this, you have enter the force respectively the energy
+calculation routines in <code class="docutils literal notranslate"><span class="pre">add_bonded_force</span></code>, <code class="docutils literal notranslate"><span class="pre">add_bonded_energy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">add_bonded_virials</span></code> and <code class="docutils literal notranslate"><span class="pre">pressure_calc</span></code>. The pressure occurs ice,
+once for the parallelized isotropic pressure and once for the tensorial
+pressure calculation. For pair forces, the pressure is calculated using
+the virials, for many body interactions currently no pressure is
+calculated.</li>
+<li>Do not forget to include the header file of your interaction.</li>
+</ol>
+</div></blockquote>
+</li>
+<li><p class="first">Force calculation: in <code class="file docutils literal notranslate"><span class="pre">forces_inline.hpp</span></code> in the function
+<code class="docutils literal notranslate"><span class="pre">add_bonded_force()</span></code>, add your bond to the switch statement. For the FENE
+bond, e.g., the code looks like this:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">case</span> <span class="nl">BONDED_IA_FENE</span><span class="p">:</span>
+  <span class="n">bond_broken</span> <span class="o">=</span> <span class="n">calc_fene_pair_force</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">iaparams</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">force</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Energy calculation: add similar code to <code class="docutils literal notranslate"><span class="pre">add_bonded_energy()</span></code> in <code class="file docutils literal notranslate"><span class="pre">energy_inline.hpp</span></code></p>
+</li>
+<li><p class="first">Pressure, stress tensor and virial calculation: If your bonded interaction is
+a pair bond and does not modify the particles involved, add similar code as
+above to <code class="docutils literal notranslate"><span class="pre">pressure.hpp:calc_bonded_pair_force()</span></code>. Otherwise, you have to
+implement a custom solution for virial calculation.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="adding-the-bonded-interaction-in-the-python-interface">
+<h3>4.4.4. Adding the bonded interaction in the Python interface<a class="headerlink" href="#adding-the-bonded-interaction-in-the-python-interface" title="Permalink to this headline">¶</a></h3>
+<p>Please note that the following is Cython code (www.cython.org), rather than pure Python.</p>
+<ul>
+<li><p class="first">In <code class="file docutils literal notranslate"><span class="pre">src/python/espressomd/interactions.pxd</span></code>:</p>
+<ul>
+<li><p class="first">import the parameter data structure from the C++ header file for your interaction. For the FENE bond, this looks like:</p>
+<div class="highlight-cython notranslate"><div class="highlight"><pre><span></span><span class="k">cdef</span> <span class="kr">extern</span> <span class="k">from</span> <span class="s">&quot;interaction_data.hpp&quot;</span><span class="p">:</span>
+    <span class="k">ctypedef</span> <span class="k">struct</span> <span class="nc">Fene_bond_parameters</span><span class="p">:</span>
+        <span class="n">double</span> <span class="n">k</span>
+        <span class="n">double</span> <span class="n">drmax</span>
+        <span class="n">double</span> <span class="n">r0</span>
+        <span class="n">double</span> <span class="n">drmax2</span>
+        <span class="n">double</span> <span class="n">drmax2i</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add your bonded interaction to the Cython copy of the BondedInteractions enum analogous to the one in the core:, described above:</p>
+<div class="highlight-cython notranslate"><div class="highlight"><pre><span></span><span class="k">cdef</span> <span class="k">enum</span> <span class="kt">enum_bonded_interaction</span> <span class="s">&quot;BondedInteraction&quot;</span><span class="p">:</span>
+    <span class="n">BONDED_IA_NONE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1</span><span class="p">,</span>
+    <span class="n">BONDED_IA_FENE</span><span class="p">,</span>
+    <span class="n">BONDED_IA_HARMONIC</span><span class="p">,</span>
+    <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The spelling has to match the one in the C++ enum exactly.</p>
+</li>
+<li><p class="first">Adapt the Cython copy of the bond_parameters union analogous to the C++ core.  The member name has to match the one in C++ exactly:</p>
+<div class="highlight-cython notranslate"><div class="highlight"><pre><span></span><span class="k">ctypedef</span> <span class="n">union</span> <span class="n">bond_parameters</span> <span class="s">&quot;Bond_parameters&quot;</span><span class="p">:</span>
+    <span class="n">Fene_bond_parameters</span> <span class="n">fene</span>
+    <span class="n">Oif_global_forces_bond_parameters</span> <span class="n">oif_global_forces</span>
+    <span class="n">Oif_local_forces_bond_parameters</span> <span class="n">oif_local_forces</span>
+    <span class="n">Harmonic_bond_parameters</span> <span class="n">harmonic</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Import the declaration of the setter function implemented in the core. For the FENE bond, this looks like:</p>
+<div class="highlight-cython notranslate"><div class="highlight"><pre><span></span><span class="k">cdef</span> <span class="kr">extern</span> <span class="k">from</span> <span class="s">&quot;fene.hpp&quot;</span><span class="p">:</span>
+    <span class="nb">int</span> <span class="n">fene_set_params</span><span class="p">(</span><span class="nb">int</span> <span class="n">bond_type</span><span class="p">,</span> <span class="n">double</span> <span class="n">k</span><span class="p">,</span> <span class="n">double</span> <span class="n">drmax</span><span class="p">,</span> <span class="n">double</span> <span class="n">r0</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p class="first">In <code class="file docutils literal notranslate"><span class="pre">src/python/espressomd/interactions.pyx</span></code>:</p>
+<ul>
+<li><p class="first">Implement the Cython class for the bonded interaction, using the one for
+the FENE bond as template. Please use pep8 naming convention:</p>
+<div class="highlight-cython notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">FeneBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        FeneBond initializer. Used to instantiate a FeneBond identifier</span>
+<span class="sd">        with a given set of parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        k : float</span>
+<span class="sd">            Specifies the magnitude of the bond interaction.</span>
+<span class="sd">        d_r_max : float</span>
+<span class="sd">                  Specifies the maximum stretch and compression length of the</span>
+<span class="sd">                  bond.</span>
+<span class="sd">        r_0 : float, optional</span>
+<span class="sd">              Specifies the equilibrium length of the bond.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FeneBond</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BONDED_IA_FENE</span>
+
+    <span class="k">def</span> <span class="nf">type_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;FENE&quot;</span>
+
+    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="s">&quot;d_r_max&quot;</span><span class="p">,</span> <span class="s">&quot;r_0&quot;</span>
+
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="s">&quot;d_r_max&quot;</span>
+
+    <span class="k">def</span> <span class="nf">set_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;r_0&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_params_from_es_core</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> \
+            <span class="p">{</span><span class="s">&quot;k&quot;</span><span class="p">:</span> <span class="n">bonded_ia_params</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">fene</span><span class="o">.</span><span class="n">k</span><span class="p">,</span>
+             <span class="s">&quot;d_r_max&quot;</span><span class="p">:</span> <span class="n">bonded_ia_params</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">fene</span><span class="o">.</span><span class="n">drmax</span><span class="p">,</span>
+             <span class="s">&quot;r_0&quot;</span><span class="p">:</span> <span class="n">bonded_ia_params</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">fene</span><span class="o">.</span><span class="n">r0</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_set_params_in_es_core</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fene_set_params</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s">&quot;k&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s">&quot;d_r_max&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">[</span><span class="s">&quot;r_0&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p class="first">In <code class="file docutils literal notranslate"><span class="pre">testsuite/python/bondedInteractions.py</span></code>:</p>
+<ul>
+<li><p class="first">Add a test case, which verifies that parameters set and gotten from the interaction are consistent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">test_fene</span> <span class="o">=</span> <span class="n">generateTestForBondParams</span><span class="p">(</span>
+    <span class="mi">0</span><span class="p">,</span> <span class="n">FeneBond</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;r_0&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="mf">5.2</span><span class="p">,</span> <span class="s2">&quot;d_r_max&quot;</span><span class="p">:</span> <span class="mf">3.</span><span class="p">})</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">1. Contact the Developers</a><ul>
+<li><a class="reference internal" href="#before-you-start-a-development-project">1.1. Before you start a development project</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#development-environment">2. Development Environment</a><ul>
+<li><a class="reference internal" href="#required-development-tools">2.1. Required Development Tools</a></li>
+<li><a class="reference internal" href="#getting-the-development-code">2.2. Getting the Development Code</a></li>
+<li><a class="reference internal" href="#build-system">2.3. Build System</a><ul>
+<li><a class="reference internal" href="#adding-new-source-files">2.3.1. Adding New Source Files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testsuite">2.4. Testsuite</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#documentation">3. Documentation</a><ul>
+<li><a class="reference internal" href="#doxygen-code-documentation">3.1. Doxygen Code Documentation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#programmer-s-guide">4. Programmer’s Guide</a><ul>
+<li><a class="reference internal" href="#source-code-structure">4.1. Source code structure</a></li>
+<li><a class="reference internal" href="#flow-control-and-communications-architecture">4.2. Flow control and communications architecture</a></li>
+<li><a class="reference internal" href="#adding-calls-to-the-master-slave-framework">4.3. Adding calls to the master-slave framework</a><ul>
+<li><a class="reference internal" href="#using-an-instance-of-mpicallback">4.3.1. Using an instance of MpiCallback</a></li>
+<li><a class="reference internal" href="#legacy-callbacks">4.3.2. Legacy callbacks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#adding-new-bonded-interactions">4.4. Adding New Bonded Interactions</a><ul>
+<li><a class="reference internal" href="#defining-the-data-structure-for-the-interaction">4.4.1. Defining the data structure for the interaction</a></li>
+<li><a class="reference internal" href="#functions-for-calculating-force-and-energy-and-for-setting-parameters">4.4.2. Functions for calculating force and energy, and for setting parameters</a></li>
+<li><a class="reference internal" href="#including-the-bonded-interaction-in-the-force-calculation-and-the-energy-and-pressure-analysis">4.4.3. Including the bonded interaction in the force calculation and the energy and pressure analysis</a></li>
+<li><a class="reference internal" href="#adding-the-bonded-interaction-in-the-python-interface">4.4.4. Adding the bonded interaction in the Python interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="espressomd"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="appendix.html" title="19. Appendix"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Apr 26, 2019.
+    </div>
+  </body>
+</html>

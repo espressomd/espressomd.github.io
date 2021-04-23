@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9. Magnetostatics / Dipolar interactions &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="10. System manipulation" href="system_manipulation.html" />
+    <link rel="prev" title="8. Electrostatics" href="electrostatics.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="system_manipulation.html" title="10. System manipulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="electrostatics.html" title="8. Electrostatics"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">9. </span>Magnetostatics / Dipolar interactions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="magnetostatics-dipolar-interactions">
+<span id="id1"></span><h1><span class="section-number">9. </span>Magnetostatics / Dipolar interactions<a class="headerlink" href="#magnetostatics-dipolar-interactions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dipolar-interaction">
+<span id="id2"></span><h2><span class="section-number">9.1. </span>Dipolar interaction<a class="headerlink" href="#dipolar-interaction" title="Permalink to this headline">¶</a></h2>
+<p><em>ESPResSo</em> contains methods to calculate the interactions between point dipoles</p>
+<div class="math notranslate nohighlight">
+\[U^{Dip}(\vec{r}) = D \cdot \left( \frac{(\vec{\mu}_i \cdot \vec{\mu}_j)}{r^3}
+  - \frac{3  (\vec{\mu}_i \cdot \vec{r})  (\vec{\mu}_j \cdot \vec{r}) }{r^5} \right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(r=|\vec{r}|\)</span>.
+The prefactor <span class="math notranslate nohighlight">\(D\)</span> is can be set by the user and is given by</p>
+<div class="math notranslate nohighlight" id="equation-dipolar-prefactor">
+<span class="eqno">(1)<a class="headerlink" href="#equation-dipolar-prefactor" title="Permalink to this equation">¶</a></span>\[D =\frac{\mu_0 \mu}{4\pi}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu_0\)</span> and <span class="math notranslate nohighlight">\(\mu\)</span> are the vacuum permittivity and the
+relative permittivity of the background material, respectively.</p>
+<p>Magnetostatic interactions are activated via the actor framework:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.magnetostatics</span> <span class="kn">import</span> <span class="n">DipolarDirectSumCpu</span>
+
+<span class="n">direct_sum</span> <span class="o">=</span> <span class="n">DipolarDirectSumCpu</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">direct_sum</span><span class="p">)</span>
+<span class="c1"># ...</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">direct_sum</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The magnetostatics algorithms for periodic boundary conditions require
+some knowledge to use them properly. Uneducated use can result in
+completely unphysical simulations.</p>
+<div class="section" id="dipolar-p3m">
+<span id="id3"></span><h3><span class="section-number">9.1.1. </span>Dipolar P3M<a class="headerlink" href="#dipolar-p3m" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarP3M" title="espressomd.magnetostatics.DipolarP3M"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatics.DipolarP3M</span></code></a></p>
+<p>This is the dipolar version of the P3M algorithm, described in <a class="bibtex reference internal" href="zreferences.html#cerda08d" id="id4">[CerdaBLH08]</a>.</p>
+<p>Make sure that you know the relevance of the P3M parameters before using
+P3M! If you are not sure, read the following references</p>
+<p>Note that dipolar P3M does not work with non-cubic boxes.</p>
+<p>The parameters of the dipolar P3M method can be tuned automatically, by
+providing <code class="docutils literal notranslate"><span class="pre">accuracy=&lt;TARGET_ACCURACY&gt;</span></code> to the method. It is also possible to
+pass a subset of the method parameters such as <code class="docutils literal notranslate"><span class="pre">mesh</span></code>. In that case, only
+the omitted parameters are tuned:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span> <span class="k">as</span> <span class="nn">magnetostatics</span>
+<span class="n">p3m</span> <span class="o">=</span> <span class="n">magnetostatics</span><span class="o">.</span><span class="n">DipolarP3M</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">accuracy</span><span class="o">=</span><span class="mf">1E-4</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p3m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is important to note that the error estimates given in <a class="bibtex reference internal" href="zreferences.html#cerda08d" id="id5">[CerdaBLH08]</a>
+used in the tuning contain assumptions about the system. In particular, a
+homogeneous system is assumed. If this is no longer the case during the
+simulation, actual force and torque errors can be significantly larger.</p>
+</div>
+<div class="section" id="dipolar-layer-correction-dlc">
+<span id="id6"></span><h3><span class="section-number">9.1.2. </span>Dipolar Layer Correction (DLC)<a class="headerlink" href="#dipolar-layer-correction-dlc" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatic_extensions.DLC" title="espressomd.magnetostatic_extensions.DLC"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatic_extensions.DLC</span></code></a></p>
+<p>The dipolar layer correction (DLC) is used in conjunction with the dipolar P3M
+method to calculate dipolar interactions in a 2D-periodic system.
+It is based on <a class="bibtex reference internal" href="zreferences.html#brodka04a" id="id7">[Brodka04]</a> and the dipolar version of
+<a class="reference internal" href="electrostatics.html#electrostatic-layer-correction-elc"><span class="std std-ref">Electrostatic Layer Correction (ELC)</span></a>.</p>
+<p>Usage notes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The non-periodic direction is always the <strong>z-direction</strong>.</p></li>
+<li><p>The method relies on a slab of the simulation box perpendicular to the
+z-direction not to contain particles. The size in z-direction of this slab
+is controlled by the <code class="docutils literal notranslate"><span class="pre">gap_size</span></code> parameter. The user has to ensure that
+no particles enter this region by means of constraints or by fixing the
+particles’ z-coordinate. When there is no empty slab of the specified size,
+the method will silently produce wrong results.</p></li>
+<li><p>The method can be tuned using the <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> parameter. In contrast to
+the electrostatic method, it refers to the energy. Furthermore, it is
+assumed that all dipole moment are as large as the largest of the dipoles
+in the system.</p></li>
+</ul>
+</div></blockquote>
+<p>The method is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span> <span class="k">as</span> <span class="nn">magnetostatics</span>
+<span class="kn">import</span> <span class="nn">espressomd.magnetostatic_extensions</span> <span class="k">as</span> <span class="nn">magnetostatic_extensions</span>
+
+<span class="n">p3m</span> <span class="o">=</span> <span class="n">magnetostatics</span><span class="o">.</span><span class="n">DipolarP3M</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">accuracy</span><span class="o">=</span><span class="mf">1E-4</span><span class="p">)</span>
+<span class="n">dlc</span> <span class="o">=</span> <span class="n">magnetostatic_extensions</span><span class="o">.</span><span class="n">DLC</span><span class="p">(</span><span class="n">maxPWerror</span><span class="o">=</span><span class="mf">1E-5</span><span class="p">,</span> <span class="n">gap_size</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p3m</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dlc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="dipolar-direct-sum">
+<span id="id8"></span><h2><span class="section-number">9.2. </span>Dipolar direct sum<a class="headerlink" href="#dipolar-direct-sum" title="Permalink to this headline">¶</a></h2>
+<p>This interaction calculates energies and forces between dipoles by
+explicitly summing over all pairs. For the directions in which the
+system is periodic (as defined by <code class="docutils literal notranslate"><span class="pre">system.periodicity</span></code>), it applies the
+minimum image convention, i.e. the interaction is effectively cut off at
+half a box length.</p>
+<p>The direct summation methods are mainly intended for non-periodic systems which cannot be solved using the dipolar P3M method.
+Due to the long-range nature of dipolar interactions, Direct summation with minimum image convention does not yield good accuracy with periodic systems.</p>
+<p>Two methods are available:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumCpu" title="espressomd.magnetostatics.DipolarDirectSumCpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumCpu</span></code></a>
+performs the calculation in double precision on the Cpu.</p></li>
+<li><p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumGpu" title="espressomd.magnetostatics.DipolarDirectSumGpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumGpu</span></code></a>
+performs the calculations in single precision on a Cuda-capable graphics card.
+The implementation is optimized for large systems of several thousand
+particles. It makes use of one thread per particle. When there are fewer
+particles than the number of threads the gpu can execute simultaneously,
+the rest of the gpu remains idle. Hence, the method will perform poorly
+for small systems.</p></li>
+</ul>
+<p>To use the methods, create an instance of either
+<a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumCpu" title="espressomd.magnetostatics.DipolarDirectSumCpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumCpu</span></code></a> or
+<a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumGpu" title="espressomd.magnetostatics.DipolarDirectSumGpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumGpu</span></code></a> and add it to the
+system’s list of active actors. The only required parameter is the Prefactor
+<a class="reference internal" href="#equation-dipolar-prefactor">(1)</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.magnetostatics</span> <span class="kn">import</span> <span class="n">DipolarDirectSumGpu</span>
+<span class="n">dds</span> <span class="o">=</span> <span class="n">DipolarDirectSumGpu</span><span class="p">(</span><span class="n">bjerrum_length</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dds</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For testing purposes, a variant of the dipolar direct sum is available which
+adds periodic copies to the system in periodic directions:
+<a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu" title="espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumWithReplicaCpu</span></code></a>.
+As it is very slow, this method is not intended to do simulations, but
+rather to check the results you get from more efficient methods like P3M.</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumCpu" title="espressomd.magnetostatics.DipolarDirectSumCpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumCpu</span></code></a> and
+<a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu" title="espressomd.magnetostatics.DipolarDirectSumWithReplicaCpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSumWithReplicaCpu</span></code></a>
+do not support MPI parallelization.</p>
+</div>
+<div class="section" id="barnes-hut-octree-sum-on-gpu">
+<span id="id9"></span><h2><span class="section-number">9.3. </span>Barnes-Hut octree sum on GPU<a class="headerlink" href="#barnes-hut-octree-sum-on-gpu" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarBarnesHutGpu" title="espressomd.magnetostatics.DipolarBarnesHutGpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatics.DipolarBarnesHutGpu</span></code></a></p>
+<p>This interaction calculates energies and forces between dipoles by
+summing over the spatial octree cells (aka <code class="docutils literal notranslate"><span class="pre">leaves</span></code>).
+Far enough cells are considered as a single dipole with a cumulative
+vector in the cell center of mass. Parameters which determine that the
+cell is far enough are <span class="math notranslate nohighlight">\(I_{\mathrm{tol}}^2\)</span> and
+<span class="math notranslate nohighlight">\(\varepsilon^2\)</span> which define a fraction of the cell and
+an additive distance respectively. For the detailed description of the
+Barnes-Hut method application to the dipole-dipole interactions, please
+refer to <a class="bibtex reference internal" href="zreferences.html#polyakov2013" id="id10">[PLD+13]</a>.</p>
+<p>To use the method, create an instance of <a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarBarnesHutGpu" title="espressomd.magnetostatics.DipolarBarnesHutGpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarBarnesHutGpu</span></code></a>
+and add it to the system’s list of active actors:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.magnetostatics</span> <span class="kn">import</span> <span class="n">DipolarBarnesHutGpu</span>
+<span class="n">bh</span> <span class="o">=</span> <span class="n">DipolarBarnesHutGpu</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="n">pf_dds_gpu</span><span class="p">,</span> <span class="n">epssq</span><span class="o">=</span><span class="mf">200.0</span><span class="p">,</span> <span class="n">itolsq</span><span class="o">=</span><span class="mf">8.0</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bh</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="scafacos-magnetostatics">
+<span id="id11"></span><h2><span class="section-number">9.4. </span>ScaFaCoS magnetostatics<a class="headerlink" href="#scafacos-magnetostatics" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.Scafacos" title="espressomd.magnetostatics.Scafacos"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatics.Scafacos</span></code></a></p>
+<p><em>ESPResSo</em> can use the methods from the ScaFaCoS <em>Scalable fast Coulomb solvers</em>
+library for dipoles, if the methods support dipolar calculations. The feature
+<code class="docutils literal notranslate"><span class="pre">SCAFACOS_DIPOLES</span></code> has to be added to <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code> to activate this
+feature. Dipolar calculations are only included in the <code class="docutils literal notranslate"><span class="pre">dipolar</span></code> branch of
+the ScaFaCoS code.</p>
+<p>To use ScaFaCoS, create an instance of <a class="reference internal" href="espressomd.html#espressomd.magnetostatics.Scafacos" title="espressomd.magnetostatics.Scafacos"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scafacos</span></code></a>
+and add it to the list of active actors. Three parameters have to be specified:
+<code class="docutils literal notranslate"><span class="pre">prefactor</span></code>, <code class="docutils literal notranslate"><span class="pre">method_name</span></code>, <code class="docutils literal notranslate"><span class="pre">method_params</span></code>. The method-specific
+parameters are described in the ScaFaCoS manual. In addition, methods
+supporting tuning have a parameter <code class="docutils literal notranslate"><span class="pre">tolerance_field</span></code> which sets the desired
+root mean square accuracy for the magnetic field.</p>
+<p>For details of the various methods and their parameters please refer to
+the ScaFaCoS manual. To use this feature, ScaFaCoS has to be built as a
+shared library. ScaFaCoS can be used only once, either for Coulomb or for
+dipolar interactions.</p>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">9. Magnetostatics / Dipolar interactions</a><ul>
+<li><a class="reference internal" href="#dipolar-interaction">9.1. Dipolar interaction</a><ul>
+<li><a class="reference internal" href="#dipolar-p3m">9.1.1. Dipolar P3M</a></li>
+<li><a class="reference internal" href="#dipolar-layer-correction-dlc">9.1.2. Dipolar Layer Correction (DLC)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dipolar-direct-sum">9.2. Dipolar direct sum</a></li>
+<li><a class="reference internal" href="#barnes-hut-octree-sum-on-gpu">9.3. Barnes-Hut octree sum on GPU</a></li>
+<li><a class="reference internal" href="#scafacos-magnetostatics">9.4. ScaFaCoS magnetostatics</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="system_manipulation.html" title="10. System manipulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="electrostatics.html" title="8. Electrostatics"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">9. </span>Magnetostatics / Dipolar interactions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2020, The ESPResSo project.
+      Last updated on Jul 08, 2020.
+    </div>
+  </body>
+</html>

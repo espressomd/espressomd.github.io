@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>espressomd.io.writer.vtf &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../../espressomd.html" accesskey="U">espressomd</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.io.writer.vtf</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2018 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+
+<div class="viewcode-block" id="vtf_pid_map"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.vtf.vtf_pid_map">[docs]</a><span class="k">def</span> <span class="nf">vtf_pid_map</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a VTF particle index map to ESPResSo ``id``.</span>
+<span class="sd">    This fills the gap for particle ID&#39;s as required by VMD</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    system: espressomd.System() object</span>
+<span class="sd">    types : :obj:`str`</span>
+<span class="sd">            Specifies the particle types. The id mapping depends on which</span>
+<span class="sd">            particles are going to be printed. This should be the same as</span>
+<span class="sd">            the one used in writevsf() and writevsf().</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict:   A dictionary where the values are the VTF indices and the keys are the ESPresSo particle ``id``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">types</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+    <span class="n">id_to_write</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">t</span> <span class="ow">or</span> <span class="n">t</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="n">id_to_write</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">id_to_write</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">id_to_write</span><span class="p">))))</span>
+
+
+<div class="viewcode-block" id="writevsf"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.vtf.writevsf">[docs]</a><span class="k">def</span> <span class="nf">writevsf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    writes a VST (VTF Structure Format) to a file.</span>
+<span class="sd">    This can be used to write the header of a VTF file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    system: espressomd.System() object</span>
+<span class="sd">    types : :obj:`str`</span>
+<span class="sd">            Specifies the particle types. The string &#39;all&#39; will write all particles</span>
+<span class="sd">    fp : file</span>
+<span class="sd">               File pointer to write to.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">vtf_index</span> <span class="o">=</span> <span class="n">vtf_pid_map</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">types</span><span class="p">)</span>
+    <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;unitcell </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">vtf_id</span><span class="p">,</span> <span class="ow">in</span> <span class="n">vtf_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;atom </span><span class="si">{}</span><span class="s2"> radius 1 name </span><span class="si">{}</span><span class="s2"> type </span><span class="si">{}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vtf_id</span><span class="p">,</span>
+                                                              <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span>
+                                                                  <span class="n">pid</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                                                              <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">vtf_id</span><span class="p">,</span> <span class="ow">in</span> <span class="n">vtf_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span><span class="o">.</span><span class="n">bonds</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">vtf_index</span><span class="p">):</span>
+                <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;bond </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span></div>
+                    <span class="n">vtf_id</span><span class="p">,</span> <span class="n">vtf_index</span><span class="p">[</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">id</span><span class="p">]))</span>
+
+
+<div class="viewcode-block" id="writevcf"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.vtf.writevcf">[docs]</a><span class="k">def</span> <span class="nf">writevcf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    writes a VCF (VTF Coordinate Format) to a file.</span>
+<span class="sd">    This can be used to write a timestep to a VTF file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    system: espressomd.System() object</span>
+<span class="sd">    types : :obj:`str`</span>
+<span class="sd">            Specifies the particle types. The string &#39;all&#39; will write all particles</span>
+<span class="sd">    fp : file</span>
+<span class="sd">               File pointer to write to.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vtf_index</span> <span class="o">=</span> <span class="n">vtf_pid_map</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">types</span><span class="p">)</span>
+    <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">timestep indexed</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="n">vtf_id</span><span class="p">,</span> <span class="ow">in</span> <span class="n">vtf_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span></div>
+        <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vtf_id</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span><span class="p">)))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../../espressomd.html" >espressomd</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Jan 25, 2019.
+    </div>
+  </body>
+</html>

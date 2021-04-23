@@ -1,0 +1,187 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>espressomd.io.writer.h5md &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../../espressomd.html" accesskey="U">espressomd</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.io.writer.h5md</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2018 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;Interface module for the H5md core implementation.&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">six</span> <span class="k">import</span> <span class="n">iteritems</span>
+
+<span class="kn">from</span> <span class="nn">...script_interface</span> <span class="k">import</span> <span class="n">PScriptInterface</span>  <span class="c1"># pylint: disable=import</span>
+
+
+<div class="viewcode-block" id="H5md"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md">[docs]</a><span class="k">class</span> <span class="nc">H5md</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;H5md file object.</span>
+
+<span class="sd">    Used for accessing the H5MD core implementation via the</span>
+<span class="sd">    PScriptInterface.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">       Bonds will be written to the file automatically if they exist.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : :obj:`str`</span>
+<span class="sd">               Name of the trajectory file.</span>
+<span class="sd">    write_pos : :obj:`bool`, optional</span>
+<span class="sd">                If positions should be written.</span>
+<span class="sd">    write_vel : :obj:`bool`, optional</span>
+<span class="sd">                If velocities should be written.</span>
+<span class="sd">    write_force : :obj:`bool`, optional</span>
+<span class="sd">                  If forces should be written.</span>
+<span class="sd">    write_species : :obj:`bool`, optional</span>
+<span class="sd">                 If types (called &#39;species&#39; in the H5MD specification) should be written.</span>
+<span class="sd">    write_mass : :obj:`bool`, optional</span>
+<span class="sd">                 If masses should be written.</span>
+<span class="sd">    write_charge : :obj:`bool`, opional</span>
+<span class="sd">                   If charges should be written.</span>
+<span class="sd">    write_ordered : :obj:`bool`, optional</span>
+<span class="sd">                    If particle properties should be ordered according to</span>
+<span class="sd">                    ids.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">write_ordered</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_params</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">,</span> <span class="s2">&quot;write_ordered&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;filename&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;filename&#39; parameter missing.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">what</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;write_pos&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">,</span>
+                     <span class="s1">&#39;write_vel&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="s1">&#39;write_force&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">,</span>
+                     <span class="s1">&#39;write_species&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">,</span>
+                     <span class="s1">&#39;write_mass&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">,</span>
+                     <span class="s1">&#39;write_charge&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">what_bin</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">j</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">what_bin</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">what</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> has to be a bool value.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_params</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unknown parameter </span><span class="si">{}</span><span class="s2"> for H5MD writer.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span> <span class="o">=</span> <span class="n">PScriptInterface</span><span class="p">(</span>
+            <span class="s2">&quot;ScriptInterface::Writer::H5mdScript&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span>
+                                      <span class="n">what</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">what_bin</span><span class="p">,</span>
+                                      <span class="n">scriptname</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                      <span class="n">write_ordered</span><span class="o">=</span><span class="n">write_ordered</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;init_file&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="H5md.get_params"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.get_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the parameters from the scriptinterface.&quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+
+<div class="viewcode-block" id="H5md.write"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call the H5md write method.&quot;&quot;&quot;</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;write&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="H5md.flush"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call the H5md flush method.&quot;&quot;&quot;</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;flush&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="H5md.close"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close the H5md file.&quot;&quot;&quot;</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h5md_instance</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;close&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../../espressomd.html" >espressomd</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Jan 25, 2019.
+    </div>
+  </body>
+</html>

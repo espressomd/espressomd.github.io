@@ -1,0 +1,481 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>14. Input and Output &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="15. Online-visualization" href="visualization.html" />
+    <link rel="prev" title="13. Analysis" href="analysis.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="visualization.html" title="15. Online-visualization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="analysis.html" title="13. Analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="input-and-output">
+<span id="id1"></span><h1>14. Input and Output<a class="headerlink" href="#input-and-output" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="checkpointing-and-restoring-a-simulation">
+<span id="no-generic-checkpointing"></span><h2>14.1. Checkpointing and restoring a simulation<a class="headerlink" href="#checkpointing-and-restoring-a-simulation" title="Permalink to this headline">¶</a></h2>
+<p>One of the most asked-for feature that seems to be missing is
+<em>checkpointing</em>, a simple way to store and restore the current
+state of the simulation, and to be able to write this state to or read
+it from a file. This would be most useful to be able to restart a
+simulation from a specific point in time.</p>
+<p>Unfortunately, it is impossible to provide a simple command
+(<code class="docutils literal notranslate"><span class="pre">checkpoint</span></code>), out of two reasons. The main reason is that it has no
+way to determine what information constitutes the actual state of the
+simulation. Scripts sometimes use variables that
+contain essential information about a simulation: the stored values of
+an observable that was computed in previous time steps, counters, etc.
+These would have to be contained in a checkpoint. However, not all
+variables are of interest.</p>
+<p>Another problem with a generic checkpoint would be the control flow of
+the script. In principle, the checkpoint would have to store where in
+the script the checkpointing function was called to be able to return
+there. All this is even further complicated by the fact that <em>ESPResSo</em> is
+running in parallel.</p>
+<p>Having said that, <em>ESPResSo</em> does provide functionality which aims to store the state of the simulation engine.
+In addition, variables declared in the simulation script can be added to the checkpoint.
+The checkpoint data can then later be restored by calling one
+load function that will automatically process the checkpoint data by
+setting the user variables and restore the components of the simulation.
+Furthermore, the checkpointing can be triggered by system signals that
+are invoked for example when the simulation is aborted by the user or by
+a timeout.</p>
+<p>The checkpointing functionality is difficult to test for all possible simulation setups. Therefore, it is to be used with care.
+It is strongly recommended to keep track of the times in the simulation run where a checkpoint was written and restored and manually verify that the observables of interest do not jump or drift after restoring the checkpoint.
+Moreover, please carefully read the limitations mentioned below.</p>
+<p>Checkpointing is implemented by the <a class="reference internal" href="espressomd.html#espressomd.checkpointing.Checkpoint" title="espressomd.checkpointing.Checkpoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.checkpointing.Checkpoint</span></code></a> class. It is instanced as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd</span> <span class="kn">import</span> <span class="n">checkpointing</span>
+<span class="n">checkpoint</span> <span class="o">=</span> <span class="n">checkpointing</span><span class="o">.</span><span class="n">Checkpoint</span><span class="p">(</span><span class="n">checkpoint_id</span><span class="o">=</span><span class="s2">&quot;mycheckpoint&quot;</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">checkpoint_id</span></code> denotes the identifier for a checkpoint. Legal characters for an id
+are “0-9”, “a-zA-Z”, “-“, “_”.
+The parameter <code class="docutils literal notranslate"><span class="pre">checkpoint_path</span></code>, specifies the relative or absolute path where the checkpoints are
+stored. The current working directory is assumed, when this parameter is skipped.</p>
+<p>After the simulation system and user variables are set up, they can be
+registered for checkpointing.
+Name the string of the object or user variable that should be registered for
+checkpointing.</p>
+<p>To give an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_var</span> <span class="o">=</span> <span class="s2">&quot;some variable value&quot;</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="c1"># ... set system properties like time_step here ...</span>
+<span class="n">checkpoint</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;system&quot;</span><span class="p">)</span>
+<span class="n">checkpoint</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;my_var&quot;</span><span class="p">)</span>
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>will register the user variable <code class="docutils literal notranslate"><span class="pre">my_var</span></code> and the instance of the simulation system. The checkpoint can be saved via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">checkpoint</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To trigger the checkpoint when Ctrl+C is pressed during a running simulation, the corresponding signal has to be registered:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">signal</span>
+<span class="c1"># signal.SIGINT: signal 2, is sent when ctrl+c is pressed</span>
+<span class="n">checkpoint</span><span class="o">.</span><span class="n">register_signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the above example checkpointing is triggered, when the user
+interrupts by pressing Ctrl+C. In this case a new checkpoint is written and the simulation
+quits.</p>
+<p>An existing checkpoint can be loaded with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="kn">import</span> <span class="n">checkpointing</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+
+<span class="n">checkpoint</span> <span class="o">=</span> <span class="n">checkpointing</span><span class="o">.</span><span class="n">Checkpoint</span><span class="p">(</span><span class="n">checkpoint_id</span><span class="o">=</span><span class="s2">&quot;mycheckpoint&quot;</span><span class="p">)</span>
+<span class="n">checkpoint</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will restore the state of the objects registered for checkpointing.
+The checkpointing instance itself will also be restored. I.e., the same variables will be registered for the next checkpoint and the same system signals will be caught as in the initial setup of the checkpointing.</p>
+<p>Be aware of the following limitations:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Checkpointing makes use of the <code class="docutils literal notranslate"><span class="pre">pickle</span></code> python package. Objects will only be restored as far as they support pickling. This is the case for Python’s basic data types, <code class="docutils literal notranslate"><span class="pre">numpy</span></code> arrays and many other objects. Still, pickling support cannot be taken for granted.</p></li>
+<li><p>Pickling support of the <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a> instance and contained objects such as bonded and non-bonded interactions and electrostatics methods. However, there are many more combinations of active interactions and algorithms then can be tested.</p></li>
+<li><p>The active actors, i.e., the content of <code class="docutils literal notranslate"><span class="pre">system.actors</span></code>, are checkpointed. For lattice-Boltzmann fluids, this only includes the parameters such as the lattice constant (<code class="docutils literal notranslate"><span class="pre">agrid</span></code>). The actual flow field has to be saved separately with the lattice-Boltzmann specific methods
+<a class="reference internal" href="espressomd.html#espressomd.lb.HydrodynamicInteraction.save_checkpoint" title="espressomd.lb.HydrodynamicInteraction.save_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.lb.HydrodynamicInteraction.save_checkpoint()</span></code></a>
+and loaded via <a class="reference internal" href="espressomd.html#espressomd.lb.HydrodynamicInteraction.load_checkpoint" title="espressomd.lb.HydrodynamicInteraction.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.lb.HydrodynamicInteraction.load_checkpoint()</span></code></a> after restoring the checkpoint</p></li>
+<li><p>References between Python objects are not maintained during checkpointing. For example, if an instance of a shape and an instance of a constraint containing the shape are checkpointed, these two objects are equal before checkpointing but independent copies which have the same parameters after restoring the checkpoint. Changing one will no longer affect the other.</p></li>
+<li><p>The state of the cell system as well as the MPI node grid are checkpointed. Therefore, checkpoints can only be loaded, when the script runs on the same number of MPI ranks.</p></li>
+<li><p>Checkpoints are not compatible between different <em>ESPResSo</em> versions.</p></li>
+<li><p>Checkpoints may depend on the presence of other Python modules at specific versions. It may therefore not be possible to load a checkpoint in a different environment than where it was loaded.</p></li>
+</ul>
+</div></blockquote>
+<p>For additional methods of the checkpointing class, see <a class="reference internal" href="espressomd.html#espressomd.checkpointing.Checkpoint" title="espressomd.checkpointing.Checkpoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.checkpointing.Checkpoint</span></code></a>.</p>
+</div>
+<div class="section" id="writing-h5md-files">
+<span id="id2"></span><h2>14.2. Writing H5MD-files<a class="headerlink" href="#writing-h5md-files" title="Permalink to this headline">¶</a></h2>
+<p>For large amounts of data it’s a good idea to store it in the hdf5 (H5MD
+is based on hdf5) file format (see <a class="reference external" href="https://www.hdfgroup.org/">https://www.hdfgroup.org/</a> for
+details). Currently <em>ESPResSo</em> supports some basic functions for writing simulation
+data to H5MD files. The implementation is MPI-parallelized and is capable
+of dealing with varying numbers of particles.</p>
+<p>To write data in a hdf5-file according to the H5MD proposal (<a class="reference external" href="https://nongnu.org/h5md/">https://nongnu.org/h5md/</a>), first an object of the class
+<a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.h5md.H5md" title="espressomd.io.writer.h5md.H5md"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.io.writer.h5md.H5md</span></code></a> has to be created and linked to the
+respective hdf5-file. This may, for example, look like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.io.writer</span> <span class="kn">import</span> <span class="n">h5md</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="c1"># ... add particles here</span>
+<span class="n">h5</span> <span class="o">=</span> <span class="n">h5md</span><span class="o">.</span><span class="n">H5md</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s2">&quot;trajectory.h5&quot;</span><span class="p">,</span> <span class="n">write_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">write_vel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If a file with the given filename exists and has a valid H5MD structures,
+it will be backed up to a file with suffix “.bak”. This backup file will be
+deleted when the new file is closed at the end of the simulation with
+<code class="docutils literal notranslate"><span class="pre">h5.close()</span></code>.</p>
+<p>The current implementation allows to write the following properties: positions,
+velocities, forces, species (<em>ESPResSo</em> types), and masses of the particles. In order
+to write any property, you have to set the respective boolean flag as an option
+to the <a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.h5md.H5md" title="espressomd.io.writer.h5md.H5md"><code class="xref py py-class docutils literal notranslate"><span class="pre">H5md</span></code></a> class. Currently available:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">write_pos</span></code>: particle positions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write_vel</span></code>: particle velocities</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write_force</span></code>: particle forces</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write_species</span></code>: particle types</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write_mass</span></code>: particle masses</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write_ordered</span></code>: if particles should be written ordered according to their
+id (implies serial write).</p></li>
+</ul>
+</div></blockquote>
+<p>In simulations with varying numbers of particles (MC or reactions), the
+size of the dataset will be adapted if the maximum number of particles
+increases but will not be decreased. Instead a negative fill value will
+be written to the trajectory for the id. If you have a parallel
+simulation, please keep in mind that the sequence of particles in general
+changes from timestep to timestep. Therefore you have to always use the
+dataset for the ids to track which position/velocity/force/type/mass
+entry belongs to which particle. To write data to the hdf5 file, simply
+call the H5md object <a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.write" title="espressomd.io.writer.h5md.H5md.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code></a> method without any arguments.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">h5</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>After the last write call, you have to call the
+<a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.close" title="espressomd.io.writer.h5md.H5md.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">close()</span></code></a> method to remove
+the backup file, close the datasets, etc.</p>
+<p>H5MD files can be read and modified with the python module h5py (for
+documentation see <a class="reference external" href="https://docs.h5py.org/en/stable/">h5py</a>). For example,
+all positions stored in the file called “h5mdfile.h5” can be read using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
+<span class="n">h5file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;h5mdfile.h5&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="n">positions</span> <span class="o">=</span> <span class="n">h5file</span><span class="p">[</span><span class="s1">&#39;particles/atoms/position/value&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Furthermore, the files can be inspected with the GUI tool hdfview or visually with the
+H5MD VMD plugin (see <a class="reference external" href="https://github.com/h5md/VMD-h5mdplugin">H5MD plugin</a>).</p>
+<p>For other examples, see <code class="file docutils literal notranslate"><span class="pre">/samples/h5md.py</span></code></p>
+</div>
+<div class="section" id="writing-mpi-io-binary-files">
+<span id="id3"></span><h2>14.3. Writing MPI-IO binary files<a class="headerlink" href="#writing-mpi-io-binary-files" title="Permalink to this headline">¶</a></h2>
+<p>This method outputs binary data in parallel and is, thus, also suitable for
+large-scale simulations. Generally, H5MD is the preferred method because the
+data is easily accessible. In contrast to H5MD, the MPI-IO functionality
+outputs data in a <em>machine-dependent format</em>, but has write and read
+capabilities. The usage is quite simple:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.io.mppiio</span> <span class="kn">import</span> <span class="n">mpiio</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="c1"># ... add particles here</span>
+<span class="n">mpiio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;/tmp/mydata&quot;</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">velocities</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bonds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, <code class="file docutils literal notranslate"><span class="pre">/tmp/mydata</span></code> is the prefix used for several files. The call will output
+particle positions, velocities, types and their bonds to the following files in
+folder <code class="file docutils literal notranslate"><span class="pre">/tmp</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.head</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.id</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.pos</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.pref</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.type</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.vel</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.boff</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">mydata.bond</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>Depending on the chosen output, not all of these files might be created.
+To read these in again, simply call <a class="reference internal" href="espressomd.io.html#espressomd.io.mpiio.Mpiio.read" title="espressomd.io.mpiio.Mpiio.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.mpiio.Mpiio.read()</span></code></a>. It has the same signature as
+<a class="reference internal" href="espressomd.io.html#espressomd.io.mpiio.Mpiio.write" title="espressomd.io.mpiio.Mpiio.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.mpiio.Mpiio.write()</span></code></a>.</p>
+<p><em>WARNING</em>: Do not attempt to read these binary files on a machine with a different
+architecture!</p>
+</div>
+<div class="section" id="writing-vtf-files">
+<span id="id4"></span><h2>14.4. Writing VTF files<a class="headerlink" href="#writing-vtf-files" title="Permalink to this headline">¶</a></h2>
+<p>The formats VTF (<strong>V</strong>TF <strong>T</strong>rajectory <strong>F</strong>ormat), VSF
+(<strong>V</strong>TF <strong>S</strong>tructure <strong>F</strong>ormat) and VCF (<strong>V</strong>TF
+<strong>C</strong>oordinate <strong>F</strong>ormat) are formats for the visualization
+software VMD: <a class="bibtex reference internal" href="zreferences.html#humphrey96a" id="id5">[HDS96]</a>. They are intended to
+be human-readable and easy to produce automatically and modify.</p>
+<p>The format distinguishes between <em>structure blocks</em> that contain the
+topological information of the system (the system size, particle names,
+types, radii and bonding information, amongst others), while <em>coordinate
+blocks</em> (a.k.a. as <em>timestep blocks</em>) contain the coordinates for the
+particles at a single timestep. For a visualization with VMD, one
+structure block and at least one coordinate block is required.</p>
+<p>Files in the VSF format contain a single structure block, files in the
+VCF format contain at least one coordinate block, while files in the VTF
+format contain a single structure block (usually as a header) and an arbitrary number of
+coordinate blocks (time frames) afterwards, thus allowing to store all information for
+a whole simulation in a single file. For more details on the format,
+refer to the VTF homepage (<a class="reference external" href="https://github.com/olenz/vtfplugin/wiki">https://github.com/olenz/vtfplugin/wiki</a>).</p>
+<p>Creating files in these formats from within is supported by the commands <a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.vtf.writevsf" title="espressomd.io.writer.vtf.writevsf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.writevsf()</span></code></a>
+and <a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.vtf.writevcf" title="espressomd.io.writer.vtf.writevcf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.writevcf()</span></code></a>, that write a structure and coordinate block (respectively) to the
+given file. To create a standalone VTF file, first use <code class="docutils literal notranslate"><span class="pre">writevsf</span></code> at the beginning of
+the simulation to write the particle definitions as a header, and then <code class="docutils literal notranslate"><span class="pre">writevcf</span></code>
+to generate a timeframe of the simulation state. For example:</p>
+<p>A standalone VTF file can simply be</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.io.writer</span> <span class="kn">import</span> <span class="n">vtf</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trajectory.vtf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w+t&#39;</span><span class="p">)</span>
+
+<span class="c1"># ... add particles here</span>
+
+<span class="c1"># write structure block as header</span>
+<span class="n">vtf</span><span class="o">.</span><span class="n">writevsf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+<span class="c1"># write initial positions as coordinate block</span>
+<span class="n">vtf</span><span class="o">.</span><span class="n">writevcf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+
+<span class="c1"># integrate and write the frame</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_steps</span><span class="p">:</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">vtf</span><span class="o">.</span><span class="n">writevcf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span>
+<span class="n">fp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The structure definitions in the VTF/VSF formats are incremental, the user
+can easily add further structure lines to the VTF/VSF file after a
+structure block has been written to specify further particle properties
+for visualization.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">ids</span></code> of the particles in <em>ESPResSo</em> and VMD may differ. VMD requires
+the particle ids to be enumerated continuously without any holes, while
+this is not required in <em>ESPResSo</em>. When using <code class="docutils literal notranslate"><span class="pre">writevsf</span></code>
+and <code class="docutils literal notranslate"><span class="pre">writevcf</span></code>, the particle ids are
+automatically translated into VMD particle ids. The function allows the
+user to get the VMD particle id for a given <em>ESPResSo</em> particle id.</p>
+<p>One can specify the coordinates of which particles should be written using <code class="docutils literal notranslate"><span class="pre">types</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">types='all'</span></code> is used, all coordinates will be written (in the ordered timestep format).
+Otherwise, has to be a list specifying the pids of the particles.</p>
+<p>Also note, that these formats can not be used to write trajectories
+where the number of particles or their types varies between the
+timesteps. This is a restriction of VMD itself, not of the format.</p>
+<div class="section" id="writevsf-writing-the-topology">
+<span id="id6"></span><h3>14.4.1. <code class="docutils literal notranslate"><span class="pre">writevsf</span></code>: Writing the topology<a class="headerlink" href="#writevsf-writing-the-topology" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.vtf.writevsf" title="espressomd.io.writer.vtf.writevsf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.writevsf()</span></code></a></p>
+<p>Writes a structure block describing the system’s structure to the given channel, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.io.writer</span> <span class="kn">import</span> <span class="n">vtf</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="c1"># ... add particles here</span>
+<span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trajectory.vsf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w+t&#39;</span><span class="p">)</span>
+<span class="n">vtf</span><span class="o">.</span><span class="n">writevsf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output of this command can be
+used for a standalone VSF file, or at the beginning of a VTF file that
+contains a trajectory of a whole simulation.</p>
+</div>
+<div class="section" id="writevcf-writing-the-coordinates">
+<span id="id7"></span><h3>14.4.2. <code class="docutils literal notranslate"><span class="pre">writevcf</span></code>: Writing the coordinates<a class="headerlink" href="#writevcf-writing-the-coordinates" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.vtf.writevcf" title="espressomd.io.writer.vtf.writevcf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.writevcf()</span></code></a></p>
+<p>Writes a coordinate (or timestep) block that contains all coordinates of
+the system’s particles.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.io.writer</span> <span class="kn">import</span> <span class="n">vtf</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="c1"># ... add particles here</span>
+<span class="n">fp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trajectory.vcf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w+t&#39;</span><span class="p">)</span>
+<span class="n">vtf</span><span class="o">.</span><span class="n">writevcf</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="espressomd-io-writer-vtf-vtf-pid-map">
+<span id="vtf-pid-map-going-back-and-forth-between-es-and-vtf-indexing"></span><h3>14.4.3. <a class="reference internal" href="espressomd.io.writer.html#espressomd.io.writer.vtf.vtf_pid_map" title="espressomd.io.writer.vtf.vtf_pid_map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.vtf_pid_map()</span></code></a><a class="headerlink" href="#espressomd-io-writer-vtf-vtf-pid-map" title="Permalink to this headline">¶</a></h3>
+<p>Generates a dictionary which maps <em>ESPResSo</em> particle <code class="docutils literal notranslate"><span class="pre">id</span></code> to VTF indices.
+This is motivated by the fact that the list of <em>ESPResSo</em> particle <code class="docutils literal notranslate"><span class="pre">id</span></code> is allowed to contain <em>holes</em> but VMD
+requires increasing and continuous indexing. The <em>ESPResSo</em> <code class="docutils literal notranslate"><span class="pre">id</span></code> can be used as <em>key</em> to obtain the VTF index as the <em>value</em>, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.io.writer</span> <span class="kn">import</span> <span class="n">vtf</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">vtf_index</span> <span class="o">=</span> <span class="n">vtf</span><span class="o">.</span><span class="n">vtf_pid_map</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+<span class="n">vtf_index</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Note that the <em>ESPResSo</em> particles are ordered in increasing order, thus <code class="docutils literal notranslate"><span class="pre">id=3</span></code> corresponds to the zeroth VTF index.</p>
+</div>
+</div>
+<div class="section" id="writing-various-formats-using-mdanalysis">
+<span id="id8"></span><h2>14.5. Writing various formats using MDAnalysis<a class="headerlink" href="#writing-various-formats-using-mdanalysis" title="Permalink to this headline">¶</a></h2>
+<p>If the MDAnalysis package (<a class="reference external" href="https://mdanalysis.org">https://mdanalysis.org</a>) is installed, it
+is possible to use it to convert frames to any of the supported
+configuration/trajectory formats, including PDB, GROMACS, GROMOS,
+CHARMM/NAMD, AMBER, LAMMPS, …)</p>
+<p>To use MDAnalysis to write in any of these formats, one has first to prepare a stream from
+the <em>ESPResSo</em> particle data using the class <a class="reference internal" href="espressomd.MDA_ESP.html#module-espressomd.MDA_ESP" title="espressomd.MDA_ESP"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.MDA_ESP</span></code></a>, and then read from it
+using MDAnalysis. A simple example is the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">MDAnalysis</span> <span class="k">as</span> <span class="nn">mda</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="kn">import</span> <span class="n">MDA_ESP</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="c1"># ... add particles here</span>
+<span class="n">eos</span> <span class="o">=</span> <span class="n">MDA_ESP</span><span class="o">.</span><span class="n">Stream</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>  <span class="c1"># create the stream</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">mda</span><span class="o">.</span><span class="n">Universe</span><span class="p">(</span><span class="n">eos</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span> <span class="n">eos</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>  <span class="c1"># create the MDA universe</span>
+
+<span class="c1"># example: write a single frame to PDB</span>
+<span class="n">u</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;system.pdb&quot;</span><span class="p">)</span>
+
+<span class="c1"># example: save the trajectory to GROMACS format</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.coordinates.TRR</span> <span class="kn">import</span> <span class="n">TRRWriter</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">TRRWriter</span><span class="p">(</span><span class="s2">&quot;traj.trr&quot;</span><span class="p">,</span> <span class="n">n_atoms</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">))</span>  <span class="c1"># open the trajectory file</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">u</span><span class="o">.</span><span class="n">load_new</span><span class="p">(</span><span class="n">eos</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>  <span class="c1"># load the frame to the MDA universe</span>
+    <span class="n">W</span><span class="o">.</span><span class="n">write_next_timestep</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">trajectory</span><span class="o">.</span><span class="n">ts</span><span class="p">)</span>  <span class="c1"># append it to the trajectory</span>
+</pre></div>
+</div>
+<p>For other examples, see <code class="file docutils literal notranslate"><span class="pre">/samples/MDAnalysisIntegration.py</span></code></p>
+</div>
+<div class="section" id="reading-various-formats-using-mdanalysis">
+<span id="id9"></span><h2>14.6. Reading various formats using MDAnalysis<a class="headerlink" href="#reading-various-formats-using-mdanalysis" title="Permalink to this headline">¶</a></h2>
+<p>MDAnalysis can read various formats, including MD topologies and trajectories.
+To read a PDB file containing a single frame:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MDAnalysis</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">HarmonicBond</span>
+
+<span class="c1"># parse protein structure</span>
+<span class="n">universe</span> <span class="o">=</span> <span class="n">MDAnalysis</span><span class="o">.</span><span class="n">Universe</span><span class="p">(</span><span class="s2">&quot;protein.pdb&quot;</span><span class="p">)</span>
+<span class="c1"># extract only the C-alpha atoms of chain A</span>
+<span class="n">chainA</span> <span class="o">=</span> <span class="n">universe</span><span class="o">.</span><span class="n">select_atoms</span><span class="p">(</span><span class="s2">&quot;name CA and segid A&quot;</span><span class="p">)</span>
+<span class="c1"># use the unit cell as box</span>
+<span class="n">box_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">universe</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+<span class="c1"># setup system</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="n">box_l</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="c1"># configure sphere size sigma and create a harmonic bond</span>
+<span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lennard_jones</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+    <span class="n">epsilon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">HarmonicBond</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">r_0</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="c1"># create particles and add bonds between them</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chainA</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chainA</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+<span class="c1"># visualize protein in 3D</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="kn">import</span> <span class="n">visualization</span>
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">bond_type_radius</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">])</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parsing-pdb-files">
+<span id="id10"></span><h2>14.7. Parsing PDB Files<a class="headerlink" href="#parsing-pdb-files" title="Permalink to this headline">¶</a></h2>
+<p>The feature allows the user to parse simple PDB files, a file format introduced by the protein database to encode molecular structures. Together with a topology file (here ) the structure gets interpolated to the grid. For the input you will need to prepare a PDB file with a force field to generate the topology file. Normally the PDB file extension is <code class="file docutils literal notranslate"><span class="pre">.pdb</span></code>, the topology file extension is <code class="file docutils literal notranslate"><span class="pre">.itp</span></code>. Obviously the PDB file is placed instead of and the topology file instead of .</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">14. Input and Output</a><ul>
+<li><a class="reference internal" href="#checkpointing-and-restoring-a-simulation">14.1. Checkpointing and restoring a simulation</a></li>
+<li><a class="reference internal" href="#writing-h5md-files">14.2. Writing H5MD-files</a></li>
+<li><a class="reference internal" href="#writing-mpi-io-binary-files">14.3. Writing MPI-IO binary files</a></li>
+<li><a class="reference internal" href="#writing-vtf-files">14.4. Writing VTF files</a><ul>
+<li><a class="reference internal" href="#writevsf-writing-the-topology">14.4.1. <code class="docutils literal notranslate"><span class="pre">writevsf</span></code>: Writing the topology</a></li>
+<li><a class="reference internal" href="#writevcf-writing-the-coordinates">14.4.2. <code class="docutils literal notranslate"><span class="pre">writevcf</span></code>: Writing the coordinates</a></li>
+<li><a class="reference internal" href="#espressomd-io-writer-vtf-vtf-pid-map">14.4.3. <code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.io.writer.vtf.vtf_pid_map()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-various-formats-using-mdanalysis">14.5. Writing various formats using MDAnalysis</a></li>
+<li><a class="reference internal" href="#reading-various-formats-using-mdanalysis">14.6. Reading various formats using MDAnalysis</a></li>
+<li><a class="reference internal" href="#parsing-pdb-files">14.7. Parsing PDB Files</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="visualization.html" title="15. Online-visualization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="analysis.html" title="13. Analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Dec 13, 2019.
+    </div>
+  </body>
+</html>

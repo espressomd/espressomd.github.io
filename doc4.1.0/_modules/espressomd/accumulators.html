@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>espressomd.accumulators &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../espressomd.html" accesskey="U">espressomd</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.accumulators</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2019 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptObjectRegistry</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="MeanVarianceCalculator"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.MeanVarianceCalculator">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">MeanVarianceCalculator</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Accumulates results from observables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obs : Instance of :class:`espressomd.observables.Observable`.</span>
+<span class="sd">    delta_N : :obj:`int`</span>
+<span class="sd">        Number of timesteps between subsequent samples for the auto update mechanism.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    update</span>
+<span class="sd">        Update the accumulator (get the current values from the observable).</span>
+<span class="sd">    get_mean</span>
+<span class="sd">        Returns the samples mean values of the respective observable with which the</span>
+<span class="sd">        accumulator was initialized.</span>
+<span class="sd">    get_variance</span>
+<span class="sd">        Returns the samples variance for the observable.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Accumulators::MeanVarianceCalculator&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;get_mean&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;get_variance&quot;</span>
+    <span class="p">)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span></div>
+
+
+<div class="viewcode-block" id="TimeSeries"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.TimeSeries">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TimeSeries</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Records results from observables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obs : Instance of :class:`espressomd.observables.Observable`.</span>
+<span class="sd">    delta_N : :obj:`int`</span>
+<span class="sd">        Number of timesteps between subsequent samples for the auto update mechanism.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    update</span>
+<span class="sd">        Update the accumulator (get the current values from the observable).</span>
+<span class="sd">    time_series</span>
+<span class="sd">        Returns the recorded values of the observable.</span>
+<span class="sd">    clear</span>
+<span class="sd">        Clear the data</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Accumulators::TimeSeries&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;time_series&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear&quot;</span>
+    <span class="p">)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span></div>
+
+
+<div class="viewcode-block" id="Correlator"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.Correlator">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Correlator</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates correlations based on results from observables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obs1 : :class:`espressomd.observables.Observable`</span>
+<span class="sd">        The observable :math:`A` to be correlated with :math:`B` (``obs2``).</span>
+<span class="sd">        If ``obs2`` is omitted, autocorrelation of ``obs1`` is calculated by</span>
+<span class="sd">        default.</span>
+
+<span class="sd">    obs2 : :class:`espressomd.observables.Observable`, optional</span>
+<span class="sd">        The observable :math:`B` to be correlated with :math:`A` (``obs1``).</span>
+
+<span class="sd">    corr_operation : :obj:`str`</span>
+<span class="sd">        The operation that is performed on :math:`A(t)` and</span>
+<span class="sd">        :math:`B(t+\\tau)` to obtain :math:`C(\\tau)`. The</span>
+<span class="sd">        following operations are currently available:</span>
+
+<span class="sd">        * ``&quot;scalar_product&quot;``: Scalar product of :math:`A` and</span>
+<span class="sd">          :math:`B`, i.e., :math:`C=\\sum\\limits_{i} A_i B_i`</span>
+
+<span class="sd">        * ``&quot;componentwise_product&quot;``: Componentwise product of</span>
+<span class="sd">          :math:`A` and :math:`B`, i.e., :math:`C_i = A_i B_i`</span>
+
+<span class="sd">        * ``&quot;square_distance_componentwise&quot;``: Each component of</span>
+<span class="sd">          the correlation vector is the square of the difference</span>
+<span class="sd">          between the corresponding components of the observables, i.e.,</span>
+<span class="sd">          :math:`C_i = (A_i-B_i)^2`. Example: when :math:`A` is</span>
+<span class="sd">          :class:`espressomd.observables.ParticlePositions`, it produces the</span>
+<span class="sd">          mean square displacement (for each component separately).</span>
+
+<span class="sd">        * ``&quot;tensor_product&quot;``: Tensor product of :math:`A` and</span>
+<span class="sd">          :math:`B`, i.e., :math:`C_{i \\cdot l_B + j} = A_i B_j`</span>
+<span class="sd">          with :math:`l_B` the length of :math:`B`.</span>
+
+<span class="sd">        * ``&quot;complex_conjugate_product&quot;``: assuming that the observables</span>
+<span class="sd">          consist of a complex and real part</span>
+<span class="sd">          :math:`A=(A_x+iA_y)`, and :math:`B=(B_x+iB_y)`, this</span>
+<span class="sd">          operation computes the result :math:`C=(C_x+iC_y)`, as:</span>
+
+<span class="sd">          .. math::</span>
+
+<span class="sd">                C_x = A_xB_x + A_yB_y\\\\</span>
+<span class="sd">                C_y = A_yB_x - A_xB_y</span>
+
+<span class="sd">        * ``&quot;fcs_acf&quot;``: Fluorescence Correlation Spectroscopy (FCS)</span>
+<span class="sd">          autocorrelation function, i.e.,</span>
+
+<span class="sd">          .. math::</span>
+
+<span class="sd">               G_i(\\tau) =</span>
+<span class="sd">               \\frac{1}{N} \\left&lt; \\exp \\left(</span>
+<span class="sd">               - \\frac{\\Delta x_i^2(\\tau)}{w_x^2}</span>
+<span class="sd">               - \\frac{\\Delta y_i^2(\\tau)}{w_y^2}</span>
+<span class="sd">               - \\frac{\\Delta z_i^2(\\tau)}{w_z^2}</span>
+<span class="sd">               \\right) \\right&gt;</span>
+
+<span class="sd">          where</span>
+
+<span class="sd">          .. math::</span>
+
+<span class="sd">              \\Delta x_i^2(\\tau) = \\left( x_i(0) - x_i(\\tau) \\right)^2</span>
+
+<span class="sd">          is the square displacement of particle</span>
+<span class="sd">          :math:`i` in the :math:`x` direction, and :math:`w_x`</span>
+<span class="sd">          is the beam waist of the intensity profile of the</span>
+<span class="sd">          exciting laser beam,</span>
+
+<span class="sd">          .. math::</span>
+
+<span class="sd">              W(x,y,z) = I_0 \\exp</span>
+<span class="sd">              \\left( - \\frac{2x^2}{w_x^2} - \\frac{2y^2}{w_y^2} -</span>
+<span class="sd">              \\frac{2z^2}{w_z^2} \\right).</span>
+
+<span class="sd">          The values of :math:`w_x`, :math:`w_y`, and :math:`w_z`</span>
+<span class="sd">          are passed to the correlator as ``args``</span>
+
+<span class="sd">          The above equations are a</span>
+<span class="sd">          generalization of the formula presented by Hoefling</span>
+<span class="sd">          et. al. :cite:`hofling11a`. For more information, see</span>
+<span class="sd">          references therein. Per each 3 dimensions of the</span>
+<span class="sd">          observable, one dimension of the correlation output</span>
+<span class="sd">          is produced. If ``&quot;fcs_acf&quot;`` is used with other observables than</span>
+<span class="sd">          :class:`espressomd.observables.ParticlePositions`, the physical</span>
+<span class="sd">          meaning of the result is unclear.</span>
+
+<span class="sd">    delta_N : :obj:`int`</span>
+<span class="sd">        Number of timesteps between subsequent samples for the auto update mechanism.</span>
+
+<span class="sd">    tau_max : :obj:`float`</span>
+<span class="sd">        This is the maximum value of :math:`\\tau` for which the</span>
+<span class="sd">        correlation should be computed.  Warning: Unless you are using</span>
+<span class="sd">        the multiple tau correlator, choosing ``tau_max`` of more than</span>
+<span class="sd">        ``100 * dt`` will result in a huge computational overhead.  In a</span>
+<span class="sd">        multiple tau correlator with reasonable parameters, ``tau_max``</span>
+<span class="sd">        can span the entire simulation without too much additional cpu time.</span>
+
+<span class="sd">    tau_lin : :obj:`int`</span>
+<span class="sd">        The number of data-points for which the results are linearly spaced</span>
+<span class="sd">        in ``tau``. This is a parameter of the multiple tau correlator. If you</span>
+<span class="sd">        want to use it, make sure that you know how it works. By default, it</span>
+<span class="sd">        is set equal to ``tau_max`` which results in the trivial linear</span>
+<span class="sd">        correlator. By setting ``tau_lin &lt; tau_max`` the multiple</span>
+<span class="sd">        tau correlator is switched on. In many cases, ``tau_lin=16`` is a</span>
+<span class="sd">        good choice but this may strongly depend on the observables you are</span>
+<span class="sd">        correlating. For more information, we recommend to read</span>
+<span class="sd">        ref. :cite:`ramirez10a` or to perform your own tests.</span>
+
+<span class="sd">    compress1 : :obj:`str`</span>
+<span class="sd">        These functions are used to compress the data when</span>
+<span class="sd">        going to the next level of the multiple tau</span>
+<span class="sd">        correlator. This is done by producing one value out of two.</span>
+<span class="sd">        The following compression functions are available:</span>
+
+<span class="sd">        * ``&quot;discard2&quot;``: (default value) discard the second value from the time series, use the first value as the result</span>
+
+<span class="sd">        * ``&quot;discard1&quot;``: discard the first value from the time series, use the second value as the result</span>
+
+<span class="sd">        * ``&quot;linear&quot;``: make a linear combination (average) of the two values</span>
+
+<span class="sd">        If only ``compress1`` is specified, then</span>
+<span class="sd">        the same compression function is used for both</span>
+<span class="sd">        observables. If both ``compress1`` and ``compress2`` are specified,</span>
+<span class="sd">        then ``compress1`` is used for ``obs1`` and ``compress2`` for ``obs2``.</span>
+
+<span class="sd">        Both ``discard1`` and ``discard2`` are safe for all</span>
+<span class="sd">        observables but produce poor statistics in the</span>
+<span class="sd">        tail. For some observables, ``&quot;linear&quot;`` compression</span>
+<span class="sd">        can be used which makes an average of two</span>
+<span class="sd">        neighboring values but produces systematic</span>
+<span class="sd">        errors.  Depending on the observable, the</span>
+<span class="sd">        systematic error using the ``&quot;linear&quot;`` compression</span>
+<span class="sd">        can be anything between harmless and disastrous.</span>
+<span class="sd">        For more information, we recommend to read ref.</span>
+<span class="sd">        :cite:`ramirez10a` or to perform your own tests.</span>
+
+<span class="sd">    compress2 : :obj:`str`, optional</span>
+<span class="sd">        See ``compress1``.</span>
+
+<span class="sd">    args: :obj:`float` of length 3</span>
+<span class="sd">        Three floats which are passed as arguments to the correlation</span>
+<span class="sd">        function.  Currently it is only used by ``&quot;fcs_acf&quot;``.</span>
+<span class="sd">        Other correlation operations will ignore these values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Accumulators::Correlator&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;finalize&quot;</span><span class="p">)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+<div class="viewcode-block" id="Correlator.result"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.Correlator.result">[docs]</a>    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            The result of the correlation function as a 2d-array. </span>
+<span class="sd">            The first column contains the values of the lag time tau.</span>
+<span class="sd">            The second column contains the number of values used to</span>
+<span class="sd">            perform the averaging of the correlation. Further columns contain </span>
+<span class="sd">            the values of the correlation function. The number of these columns</span>
+<span class="sd">            is the dimension of the output of the correlation operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_correlation&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n_result</span><span class="p">,</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim_corr</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="AutoUpdateAccumulators"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.AutoUpdateAccumulators">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">AutoUpdateAccumulators</span><span class="p">(</span><span class="n">ScriptObjectRegistry</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for handling the auto-update of accumulators used by</span>
+<span class="sd">    :class:`espressomd.system.System`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Accumulators::AutoUpdateAccumulators&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+<div class="viewcode-block" id="AutoUpdateAccumulators.add"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.AutoUpdateAccumulators.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds an accumulator instance to the auto-update list.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">accumulator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AutoUpdateAccumulators.remove"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.AutoUpdateAccumulators.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accumulator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes an accumulator from the auto-update list.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">accumulator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AutoUpdateAccumulators.clear"><a class="viewcode-back" href="../../espressomd.html#espressomd.accumulators.AutoUpdateAccumulators.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes all accumulators from the auto-update list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;clear&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../espressomd.html" >espressomd</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Oct 01, 2019.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,439 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>15. Online-visualization &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="16. Advanced Methods" href="advanced_methods.html" />
+    <link rel="prev" title="14. Input and Output" href="io.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="advanced_methods.html" title="16. Advanced Methods"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="io.html" title="14. Input and Output"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="online-visualization">
+<span id="id1"></span><h1>15. Online-visualization<a class="headerlink" href="#online-visualization" title="Permalink to this headline">¶</a></h1>
+<p>With the python interface, <cite>ESPResSo</cite> features two possibilities for
+online-visualization:</p>
+<ol class="arabic simple">
+<li>Using the mlab module to drive <em>Mayavi, a “3D scientific data
+visualization and plotting in Python”</em>. Mayavi has a user-friendly
+GUI to specify the appearance of the output.
+Additional requirements:
+python module <em>mayavi</em>, VTK (package <em>python-vtk</em> for Debian/Ubuntu).
+Note that only VTK from version 7.0.0 and higher has Python 3
+support.</li>
+<li>A direct rendering engine based on <em>pyopengl</em>. As it is developed for <cite>ESPResSo</cite>,
+it supports the visualization of several specific features like
+constraints, particle properties, the cell system, lattice Boltzmann and
+more. It can be adjusted with a large number of parameters to set colors,
+materials, camera and interactive features like assigning callbacks to user
+input.
+Additional requirements:
+python module <em>PyOpenGL</em>.</li>
+</ol>
+<p>Both are not meant to produce high quality renderings, but rather to
+debug your setup and equilibration process.</p>
+<div class="section" id="general-usage">
+<span id="id2"></span><h2>15.1. General usage<a class="headerlink" href="#general-usage" title="Permalink to this headline">¶</a></h2>
+<p>The recommended usage of both tools is similar: Create the visualizer of
+your choice and pass it the <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a> object. Then write
+your integration loop in a separate function, which is started in a
+non-blocking thread. Whenever needed, call <code class="docutils literal notranslate"><span class="pre">update()</span></code> to synchronize
+the renderer with your system. Finally start the blocking visualization
+window with <code class="docutils literal notranslate"><span class="pre">start()</span></code>. See the following minimal code example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">visualization</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+
+<span class="c1">#visualizer = visualization.mayaviLive(system)</span>
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">main_thread</span><span class="p">():</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">visualizer</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">main_thread</span><span class="p">)</span>
+<span class="n">t</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="common-methods-for-opengl-and-mayavi">
+<span id="id3"></span><h2>15.2. Common methods for OpenGL and Mayavi<a class="headerlink" href="#common-methods-for-opengl-and-mayavi" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.mayaviLive.update" title="espressomd.visualization.mayaviLive.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.mayaviLive.update()</span></code></a></div>
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive.update" title="espressomd.visualization.openGLLive.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive.update()</span></code></a></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">update()</span></code> synchronizes system and visualizer, handles keyboard events for
+openGLLive.</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.mayaviLive.start" title="espressomd.visualization.mayaviLive.start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.mayaviLive.start()</span></code></a></div>
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive.start" title="espressomd.visualization.openGLLive.start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive.start()</span></code></a></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">start()</span></code> starts the blocking visualizer window.
+Should be called after a separate thread containing <code class="docutils literal notranslate"><span class="pre">update()</span></code> has been started.</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.mayaviLive.register_callback" title="espressomd.visualization.mayaviLive.register_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.mayaviLive.register_callback()</span></code></a></div>
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive.register_callback" title="espressomd.visualization.openGLLive.register_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive.register_callback()</span></code></a></div>
+</div>
+<p>Registers the method <code class="docutils literal notranslate"><span class="pre">callback()</span></code>, which is called every <code class="docutils literal notranslate"><span class="pre">interval</span></code> milliseconds. Useful for
+live plotting (see sample script samples/python/visualization.py).</p>
+</div>
+<div class="section" id="mayavi-visualizer">
+<span id="id4"></span><h2>15.3. Mayavi visualizer<a class="headerlink" href="#mayavi-visualizer" title="Permalink to this headline">¶</a></h2>
+<p>The Mayavi visualizer is created with the following syntax:</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.visualization.mayaviLive" title="espressomd.visualization.mayaviLive"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.visualization.mayaviLive()</span></code></a></p>
+<dl class="docutils">
+<dt>Required parameters:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">system</span></code>: The <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a> object.</li>
+</ul>
+</dd>
+<dt>Optional keywords:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">particle_sizes</span></code>:</dt>
+<dd><ul class="first last">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (default): The Lennard-Jones sigma value of the self-interaction is used for the particle diameter.</li>
+<li><code class="docutils literal notranslate"><span class="pre">callable</span></code>: A lambda function with one argument. Internally, the numerical particle type is passed to the lambda function to determine the particle radius.</li>
+<li><code class="docutils literal notranslate"><span class="pre">list</span></code>: A list of particle radii, indexed by the particle type.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="opengl-visualizer">
+<span id="id5"></span><h2>15.4. OpenGL visualizer<a class="headerlink" href="#opengl-visualizer" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive" title="espressomd.visualization.openGLLive"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive()</span></code></a></p>
+<p>The optional keywords in <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> are used to adjust the appearance of the visualization.
+The parameters have suitable default values for most simulations.</p>
+<dl class="docutils">
+<dt>Required parameters:</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">system</span></code>: The <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.System()</span></code></a> object.</li>
+</ul>
+</dd>
+<dt>Optional keywords:</dt>
+<dd><ul class="first last simple">
+<li>Have a look at the attribute list in <a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive" title="espressomd.visualization.openGLLive"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive()</span></code></a></li>
+</ul>
+</dd>
+</dl>
+<div class="section" id="running-the-visualizer">
+<span id="id6"></span><h3>15.4.1. Running the visualizer<a class="headerlink" href="#running-the-visualizer" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive.run" title="espressomd.visualization.openGLLive.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive.run()</span></code></a></div>
+</div>
+<p>To visually debug your simulation, <code class="docutils literal notranslate"><span class="pre">run(n)</span></code> can be used to conveniently start
+an integration loop with <code class="docutils literal notranslate"><span class="pre">n</span></code> integration steps in a separate thread once the
+visualizer is initialized:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">visualization</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.00001</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">background_color</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="screenshots">
+<span id="id7"></span><h3>15.4.2. Screenshots<a class="headerlink" href="#screenshots" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive.screenshot" title="espressomd.visualization.openGLLive.screenshot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive.screenshot()</span></code></a></div>
+</div>
+<p>The OpenGL visualizer can also be used for offline rendering.
+After creating the visualizer object, call <code class="docutils literal notranslate"><span class="pre">screenshot(path)</span></code>
+to save an image of your simulation to <code class="docutils literal notranslate"><span class="pre">path</span></code>. Internally, the image is saved
+with <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.imsave</span></code>, so the file format is specified by the
+extension of the filename.  The image size is determined by the keyword
+argument <code class="docutils literal notranslate"><span class="pre">window_size</span></code> of the visualizer. This method can be used to create
+screenshots without blocking the simulation script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="n">visualization</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">window_size</span><span class="o">=</span><span class="p">[</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">visualizer</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="s1">&#39;screenshot_</span><span class="si">{}</span><span class="s1">.jpg&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+
+<span class="c1"># You may consider creating a video with ffmpeg:</span>
+<span class="c1"># ffmpeg -f image2 -framerate 30 -i &#39;screenshot_%d.jpg&#39; output.mp4</span>
+</pre></div>
+</div>
+<p>It is also possible to create a snapshot during online visualization.
+Simply press the <em>enter</em> key to create a snapshot of the current window,
+which saves it to <code class="file docutils literal notranslate"><span class="pre">&lt;scriptname&gt;_n.png</span></code> (with incrementing <code class="docutils literal notranslate"><span class="pre">n</span></code>).</p>
+</div>
+<div class="section" id="colors-and-materials">
+<span id="id8"></span><h3>15.4.3. Colors and Materials<a class="headerlink" href="#colors-and-materials" title="Permalink to this headline">¶</a></h3>
+<p>Colors for particles, bonds and constraints are specified by RGB arrays.
+Materials by an array for the ambient, diffuse, specular and shininess and opacity (ADSSO)
+components. To distinguish particle groups, arrays of RGBA or ADSSO entries are
+used, which are indexed circularly by the numerical particle type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Particle type 0 is red, type 1 is blue (type 2 is red etc)..</span>
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">,</span>
+                                      <span class="n">particle_coloring</span><span class="o">=</span><span class="s1">&#39;type&#39;</span><span class="p">,</span>
+                                      <span class="n">particle_type_colors</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">particle_type_materials</span></code> lists the materials by type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Particle type 0 is gold, type 1 is blue (type 2 is gold again etc).</span>
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">,</span>
+                                      <span class="n">particle_coloring</span><span class="o">=</span><span class="s1">&#39;type&#39;</span><span class="p">,</span>
+                                      <span class="n">particle_type_colors</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+                                      <span class="n">particle_type_materials</span><span class="o">=</span><span class="p">[</span><span class="n">steel</span><span class="p">,</span> <span class="n">bright</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Materials are stored in <code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.visualization.openGLLive().materials</span></code>.</p>
+</div>
+<div class="section" id="visualize-vectorial-properties">
+<span id="id9"></span><h3>15.4.4. Visualize vectorial properties<a class="headerlink" href="#visualize-vectorial-properties" title="Permalink to this headline">¶</a></h3>
+<p>Most vectorial particle properties can be visualized by 3D-arrows on the
+particles:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">ext_force</span></code>: An external force. Activate with the keyword <code class="docutils literal notranslate"><span class="pre">ext_force_arrows</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">f</span></code>: The force acting on the particle. Activate with the keyword <code class="docutils literal notranslate"><span class="pre">force_arrows</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">v</span></code>: The velocity of the particle. Activate with the keyword <code class="docutils literal notranslate"><span class="pre">velocity_arrows</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">director</span></code>: A vector associated with the orientation of the particle. Activate with the keyword <code class="docutils literal notranslate"><span class="pre">director_arrows</span> <span class="pre">=</span> <span class="pre">True</span></code>.</li>
+</ul>
+</div></blockquote>
+<p>Arrow colors, scales and radii can be adjusted. Again, the lists specifying
+these quantities are indexed circularly by the numerical particle type. The
+following code snippet demonstrates the visualization of the director property
+and individual settings for two particle types (requires the <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code>
+feature):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">espressomd</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">espressomd.visualization_opengl</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">box_l</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="n">box_l</span><span class="p">,</span> <span class="n">box_l</span><span class="p">,</span> <span class="n">box_l</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.00001</span>
+
+<span class="n">visualizer</span> <span class="o">=</span> <span class="n">openGLLive</span><span class="p">(</span><span class="n">system</span><span class="p">,</span>
+                        <span class="n">director_arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">director_arrows_type_scale</span><span class="o">=</span><span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+                        <span class="n">director_arrows_type_radii</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
+                        <span class="n">director_arrows_type_colors</span><span class="o">=</span><span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">box_l</span><span class="p">,</span>
+                    <span class="n">rotation</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                    <span class="n">ext_torque</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">box_l</span><span class="p">,</span>
+                    <span class="n">rotation</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                    <span class="n">ext_torque</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="n">v</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">visualizer</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="controls">
+<span id="id10"></span><h3>15.4.5. Controls<a class="headerlink" href="#controls" title="Permalink to this headline">¶</a></h3>
+<p>The camera can be controlled via mouse and keyboard:</p>
+<blockquote>
+<div><ul class="simple">
+<li>hold left button: rotate the system</li>
+<li>hold right button: translate the system</li>
+<li>hold middle button: zoom / roll</li>
+<li>mouse wheel / key pair TG: zoom</li>
+<li>WASD-Keyboard control (WS: move forwards/backwards, AD: move sidewards)</li>
+<li>Key pairs QE, RF, ZC: rotate the system</li>
+<li>Double click on a particle: Show particle information</li>
+<li>Double click in empty space: Toggle system information</li>
+<li>Left/Right arrows: Cycle through particles</li>
+<li>Space: If started with <code class="docutils literal notranslate"><span class="pre">run(n)</span></code>, this pauses the simulation</li>
+<li>Enter: Creates a snapshot of the current window and saves it to <code class="file docutils literal notranslate"><span class="pre">&lt;scriptname&gt;_n.png</span></code> (with incrementing <code class="docutils literal notranslate"><span class="pre">n</span></code>)</li>
+</ul>
+</div></blockquote>
+<p>Additional input functionality for mouse and keyboard is possible by assigning
+callbacks to specified keyboard or mouse buttons. This may be useful for
+realtime adjustment of system parameters (temperature, interactions, particle
+properties etc) or for demonstration purposes. The callbacks can be triggered
+by a timer or keyboard input:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+    <span class="nb">print</span> <span class="s2">&quot;foo&quot;</span>
+
+<span class="c1"># Registers timed calls of foo()</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">register_callback</span><span class="p">(</span><span class="n">foo</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+
+<span class="c1"># Callbacks to control temperature</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="k">def</span> <span class="nf">increaseTemp</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">temperature</span>
+    <span class="n">temperature</span> <span class="o">+=</span> <span class="mf">0.1</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="s2">&quot;T =&quot;</span><span class="p">,</span> <span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">get_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;kT&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">decreaseTemp</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">temperature</span>
+    <span class="n">temperature</span> <span class="o">-=</span> <span class="mf">0.1</span>
+
+    <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s2">&quot;T =&quot;</span><span class="p">,</span> <span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">get_state</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;kT&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">temperature</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">turn_off</span><span class="p">()</span>
+        <span class="nb">print</span> <span class="s2">&quot;T = 0&quot;</span>
+
+<span class="c1"># Registers input-based calls</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">keyboardManager</span><span class="o">.</span><span class="n">register_button</span><span class="p">(</span><span class="n">KeyboardButtonEvent</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">KeyboardFireEvent</span><span class="o">.</span><span class="n">Hold</span><span class="p">,</span> <span class="n">increaseTemp</span><span class="p">))</span>
+<span class="n">visualizer</span><span class="o">.</span><span class="n">keyboardManager</span><span class="o">.</span><span class="n">register_button</span><span class="p">(</span><span class="n">KeyboardButtonEvent</span><span class="p">(</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">KeyboardFireEvent</span><span class="o">.</span><span class="n">Hold</span><span class="p">,</span> <span class="n">decreaseTemp</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Further examples can be found in samples/python/billard.py or samples/python/visualization_interactive.py.</p>
+</div>
+<div class="section" id="dragging-particles">
+<span id="id11"></span><h3>15.4.6. Dragging particles<a class="headerlink" href="#dragging-particles" title="Permalink to this headline">¶</a></h3>
+<p>With the keyword <code class="docutils literal notranslate"><span class="pre">drag_enabled</span></code> set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the mouse can be used to
+exert a force on particles in drag direction (scaled by <code class="docutils literal notranslate"><span class="pre">drag_force</span></code> and the
+distance of particle and mouse cursor).</p>
+</div>
+</div>
+<div class="section" id="visualization-example-scripts">
+<span id="id12"></span><h2>15.5. Visualization example scripts<a class="headerlink" href="#visualization-example-scripts" title="Permalink to this headline">¶</a></h2>
+<p>Various <a class="reference internal" href="introduction.html#sample-scripts"><span class="std std-ref">Sample scripts</span></a> can be found in <code class="file docutils literal notranslate"><span class="pre">samples/python/visualization*</span></code>
+or in the <a class="reference internal" href="introduction.html#tutorials"><span class="std std-ref">Tutorials</span></a> “Visualization” and “Charged Systems”.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">15. Online-visualization</a><ul>
+<li><a class="reference internal" href="#general-usage">15.1. General usage</a></li>
+<li><a class="reference internal" href="#common-methods-for-opengl-and-mayavi">15.2. Common methods for OpenGL and Mayavi</a></li>
+<li><a class="reference internal" href="#mayavi-visualizer">15.3. Mayavi visualizer</a></li>
+<li><a class="reference internal" href="#opengl-visualizer">15.4. OpenGL visualizer</a><ul>
+<li><a class="reference internal" href="#running-the-visualizer">15.4.1. Running the visualizer</a></li>
+<li><a class="reference internal" href="#screenshots">15.4.2. Screenshots</a></li>
+<li><a class="reference internal" href="#colors-and-materials">15.4.3. Colors and Materials</a></li>
+<li><a class="reference internal" href="#visualize-vectorial-properties">15.4.4. Visualize vectorial properties</a></li>
+<li><a class="reference internal" href="#controls">15.4.5. Controls</a></li>
+<li><a class="reference internal" href="#dragging-particles">15.4.6. Dragging particles</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#visualization-example-scripts">15.5. Visualization example scripts</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="advanced_methods.html" title="16. Advanced Methods"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="io.html" title="14. Input and Output"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, The ESPResSo project.
+      Last updated on Apr 26, 2019.
+    </div>
+  </body>
+</html>

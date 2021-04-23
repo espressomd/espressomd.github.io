@@ -1,0 +1,808 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>1. Introduction &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. Installation" href="installation.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="ug.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="2. Installation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ug.html" title="&lt;no title&gt;"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<span id="id1"></span><h1>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p><em>ESPResSo</em> is a simulation package designed to perform Molecular Dynamics (MD) and
+Monte Carlo (MC) simulations. It is meant to be a universal tool for
+simulations of a variety of soft matter systems. It <a class="reference internal" href="installation.html#features"><span class="std std-ref">features</span></a> a
+broad range of interaction potentials which opens up possibilities for
+performing simulations using models with different levels of coarse-graining.
+It also includes modern and efficient algorithms for treatment of
+<a class="reference internal" href="electrostatics.html#electrostatics"><span class="std std-ref">Electrostatics</span></a> (P3M, MMM-type algorithms, constant potential
+simulations, dielectric interfaces, …), hydrodynamic interactions
+(<a class="reference internal" href="system_setup.html#dissipative-particle-dynamics-dpd"><span class="std std-ref">DPD</span></a>, <a class="reference internal" href="lb.html#lattice-boltzmann"><span class="std std-ref">Lattice-Boltzmann</span></a>),
+and <a class="reference internal" href="magnetostatics.html#magnetostatics-dipolar-interactions"><span class="std std-ref">magnetic interactions</span></a>, only
+to name a few.  It is designed to exploit the capabilities of parallel
+computational environments.  The program is being continuously extended to keep
+the pace with current developments both in the algorithms and software.</p>
+<p>The kernel of <em>ESPResSo</em> is written in C++ with computational efficiency in mind.
+Interaction between the user and the simulation engine is provided via a
+<em>Python scripting interface</em>. This enables setup of arbitrarily complex systems
+which users might want to simulate in future, as well as modifying simulation
+parameters during runtime.</p>
+<div class="section" id="guiding-principles">
+<span id="id2"></span><h2>1.1. Guiding principles<a class="headerlink" href="#guiding-principles" title="Permalink to this headline">¶</a></h2>
+<p><em>ESPResSo</em> is a tool for performing computer simulation and this user guide describes
+how to use this tool. However, it should be borne in mind that being able to
+operate a tool is not sufficient to obtain physically meaningful results. It is
+always the responsibility of the user to understand the principles behind the
+model, simulation and analysis methods he or she is using.</p>
+<p>It is expected that the users of <em>ESPResSo</em> and readers of this user guide have a
+thorough understanding of simulation methods and algorithms they are planning
+to use. They should have passed a basic course on molecular simulations or read
+one of the renown textbooks, <a class="bibtex reference internal" href="zreferences.html#frenkel02b" id="id3">[FS02]</a>. It is not necessary to
+understand everything that is contained in <em>ESPResSo</em>, but it is inevitable to
+understand all methods that you want to use. Using the program as a black box
+without proper understanding of the background will most probably result in
+wasted user and computer time with no useful output.</p>
+<p>To enable future extensions, the functionality of the program is kept as
+general as possible. It is modularized, so that extensions to some parts of the
+program (implementing a new potential) can be done by modifying or adding only
+few files, leaving most of the code untouched.</p>
+<p>To facilitate the understanding and the extensibility, much emphasis is put on
+readability of the code. Hard-coded assembler loops are generally avoided in
+hope that the overhead in computer time will be more than compensated for by
+saving much of the user time while trying to understand what the code is
+supposed to do.</p>
+<p>Hand-in-hand with the extensibility and readability of the code comes the
+flexibility of the whole program. On the one hand, it is provided by the
+generalized functionality of its parts, avoiding highly specialized functions.
+An example can be the implementation of the Generic Lennard-Jones potential
+described in section <a class="reference internal" href="inter_non-bonded.html#generic-lennard-jones-interaction"><span class="std std-ref">Generic Lennard-Jones interaction</span></a> where the user
+can change all available parameters. Where possible, default values are
+avoided, providing the user with the possibility of choice. <em>ESPResSo</em> cannot be
+aware whether your particles are representing atoms or billiard balls, so it
+cannot check if the chosen parameters make sense and it is the user’s
+responsibility to make sure they do. In fact, <em>ESPResSo</em> can be used to play billiard
+(see the sample script in <code class="file docutils literal notranslate"><span class="pre">samples/billiard.py</span></code>)!</p>
+<p>On the other hand, flexibility of <em>ESPResSo</em> stems from the employment of a scripting
+language at the steering level. Apart from the ability to modify the simulation
+and system parameters at runtime, many simple tasks which are not
+computationally critical can be implemented at this level, without even
+touching the C++-kernel. For example, simple problem-specific analysis routines
+can be implemented in this way and made interact with the simulation core.
+Another example of the program’s flexibility is the possibility to integrate
+system setup, simulation and analysis in one single control script. <em>ESPResSo</em>
+provides commands to create particles and set up interactions between them.
+Capping of forces helps prevent system blow-up when initially some particles
+are placed on top of each other. Using the Python interface, one can simulate
+the randomly set-up system with capped forces, interactively check whether it
+is safe to remove the cap and switch on the full interactions and then perform
+the actual productive simulation.</p>
+</div>
+<div class="section" id="basic-program-structure">
+<span id="id4"></span><h2>1.2. Basic program structure<a class="headerlink" href="#basic-program-structure" title="Permalink to this headline">¶</a></h2>
+<p>As already mentioned, <em>ESPResSo</em> consists of two components. The simulation engine is
+written in C and C++ for the sake of computational efficiency. The steering or
+control level is interfaced to the kernel via an interpreter of Python
+scripting languages.</p>
+<p>The kernel performs all computationally demanding tasks. Before all,
+integration of Newton’s equations of motion, including calculation of energies
+and forces. It also takes care of internal organization of data, storing the
+data about particles, communication between different processors or cells of
+the cell-system. The kernel is modularized so that basic functions are accessed
+via a set of well-defined lean interfaces, hiding the details of the complex
+numerical algorithms.</p>
+<p>The scripting interface (Python) is used to setup the system (particles,
+boundary conditions, interactions, …), control the simulation, run analysis,
+and store and load results. The user has at hand the full readability and
+functionality of the scripting language.  For instance, it is possible to use
+the SciPy package for analysis and PyPlot for plotting. With a certain overhead
+in efficiency, it can also be used to reject/accept new configurations in
+combined MD/MC schemes.  In principle, any parameter which is accessible from
+the scripting level can be changed at any moment of runtime. In this way
+methods like thermodynamic integration become readily accessible.</p>
+<p>The focus of the user guide is documenting the scripting interface, its
+behavior and use in the simulation. It only describes certain technical details
+of implementation which are necessary for understanding how the script
+interface works. Technical documentation of the code and program structure is
+contained in the <a class="reference external" href="https://github.com/espressomd/espresso/wiki">online wiki</a>.</p>
+</div>
+<div class="section" id="basic-python-simulation-script">
+<span id="id5"></span><h2>1.3. Basic python simulation script<a class="headerlink" href="#basic-python-simulation-script" title="Permalink to this headline">¶</a></h2>
+<p>In this section, a brief overview is given over the most important components
+of the Python interface. Their usage is illustrated by short examples, which
+can be put together to a demo script.</p>
+<p class="rubric">Imports</p>
+<p>As usual, the Python script starts by importing the necessary modules.  The
+<em>ESPResSo</em> interface is contained in the <a class="reference internal" href="espressomd.html#module-espressomd" title="espressomd"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd</span></code></a> Python module, which needs to be
+imported, before anything related can be done.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+</pre></div>
+</div>
+<p>This should be followed by further necessary imports of the example at hand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="k">import</span> <span class="n">HarmonicBond</span>
+<span class="kn">from</span> <span class="nn">espressomd.electrostatics</span> <span class="k">import</span> <span class="n">P3M</span>
+</pre></div>
+</div>
+<p class="rubric">espressomd.System</p>
+<p>Access to the simulation system is provided via the <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a> class. As a
+first step, an instance of this class needs to be created.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Note that only one instance of the System class can be created due to
+limitations in the simulation core. <a class="reference internal" href="system_setup.html#setting-global-variables-in-python"><span class="std std-ref">Properties of the System
+class</span></a> are used to access the parameters
+concerning the simulation system such as box geometry, time step or <a class="reference internal" href="system_setup.html#cellsystems"><span class="std std-ref">cell-system</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The box dimensions are </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span><span class="p">))</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+</pre></div>
+</div>
+<p class="rubric">Particles</p>
+<p>The particles in the simulation are accessed via <code class="docutils literal notranslate"><span class="pre">system.part</span></code>, an instance of the <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList" title="espressomd.particle_data.ParticleList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticleList</span></code></a> class. Use
+the <code class="docutils literal notranslate"><span class="pre">add</span></code> method to <a class="reference internal" href="particles.html#adding-particles"><span class="std std-ref">create new particles</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Individual particles can be retrieved by their numerical id using angular
+brackets:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>It is also possible to <a class="reference internal" href="particles.html#iterating-over-particles-and-pairs-of-particles"><span class="std std-ref">loop</span></a> over all particles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Particle id </span><span class="si">{}</span><span class="s2">, type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>An individual particle is represented by an instance of <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle" title="espressomd.particle_data.ParticleHandle"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticleHandle</span></code></a>.
+The properties of the particle are implemented as Python
+properties.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">particle</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">particle</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Position of particle 0: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">particle</span><span class="o">.</span><span class="n">pos</span><span class="p">))</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="particles.html#interacting-with-groups-of-particles"><span class="std std-ref">Properties of several particles</span></a>
+can be accessed by using Python slices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">positions</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[:]</span><span class="o">.</span><span class="n">pos</span>
+</pre></div>
+</div>
+<p class="rubric">Interactions</p>
+<p>In <em>ESPResSo</em>, interactions between particles usually fall in three categories:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="inter_non-bonded.html#non-bonded-interactions"><span class="std std-ref">Non-bonded interactions</span></a> are short-ranged interactions between <em>all</em>
+pairs of particles of specified types. An example is the
+Lennard-Jones interaction mimicking overlap repulsion and van-der-Waals attraction.</p></li>
+<li><p><a class="reference internal" href="inter_bonded.html#bonded-interactions"><span class="std std-ref">Bonded interactions</span></a> act only between two specific particles. An
+example is the harmonic bond between adjacent particles in a polymer
+chain.</p></li>
+<li><p>Long-range interactions act between all particles with specific
+properties in the entire system. An example is the <a class="reference internal" href="electrostatics.html#electrostatics"><span class="std std-ref">Coulomb
+interaction</span></a>.</p></li>
+</ul>
+<p class="rubric">Non-bonded interaction</p>
+<p>Non-bonded interactions are represented as subclasses of
+<a class="reference internal" href="espressomd.html#espressomd.interactions.NonBondedInteraction" title="espressomd.interactions.NonBondedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonBondedInteraction</span></code></a>, e.g.
+<a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesInteraction" title="espressomd.interactions.LennardJonesInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">LennardJonesInteraction</span></code></a>.
+Instances of these classes for a given pair of particle types are accessed via
+the non_bonded_inter attribute of the System class. This sets up a Lennard-Jones
+interaction between all particles of type 0 with the given parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">non_bonded_inter</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lennard_jones</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span>
+    <span class="n">epsilon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Bonded interaction</p>
+<p>Next, we add another pair of particles with a different type to later add
+a <a class="reference internal" href="inter_bonded.html#harmonic-bond"><span class="std std-ref">harmonic bond</span></a> between them:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To set up a bonded interaction, first an instance of the appropriate
+class is created with the desired parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">harmonic</span> <span class="o">=</span> <span class="n">HarmonicBond</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">r_0</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then, the bonded interaction is registered in the simulation core
+by adding the instance to <a class="reference internal" href="espressomd.html#espressomd.system.System.bonded_inter" title="espressomd.system.System.bonded_inter"><code class="xref py py-attr docutils literal notranslate"><span class="pre">bonded_inter</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">harmonic</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, the bond can be added to particles using the <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.add_bond" title="espressomd.particle_data.ParticleHandle.add_bond"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_bond()</span></code></a> method of
+<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle" title="espressomd.particle_data.ParticleHandle"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticleHandle</span></code></a> with the instance of the bond class and the id of the bond
+partner particle:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">harmonic</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p class="rubric">Charges</p>
+<p>Now we want to setup a pair of charged particles treated by the P3M
+electrostatics solver. We start by adding the particles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">6.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">q</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Long-range interactions and other methods that might be mutually exclusive
+are treated as so-called <em>actors</em>. They are used by first creating an instance
+of the desired actor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p3m</span> <span class="o">=</span> <span class="n">P3M</span><span class="p">(</span><span class="n">accuracy</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">prefactor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and then adding it to the system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tuning p3m...&quot;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p3m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Integration</p>
+<p>So far we just <em>added</em> particles and interactions, but did not propagate the
+system. This is done by the <em>integrator</em>.  It uses by default the velocity
+Verlet algorithm and is already created by the system class. To perform an
+integration step, just execute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Usually, the system is propagated for a number of steps in a loop alongside
+with some analysis. In this last snippet, the different energy contributions
+of the system are printed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">num_configs</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">num_steps</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_configs</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">num_steps</span><span class="p">)</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">energy</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;System time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Energy of the LJ interaction: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;non_bonded&quot;</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Energy of the harmonic bond: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;bonded&quot;</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Energy of the Coulomb interaction: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">energy</span><span class="p">[</span><span class="s2">&quot;coulomb&quot;</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tutorials">
+<span id="id6"></span><h2>1.4. Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of tutorials that introduce the use of <em>ESPResSo</em> for different
+physical systems. You can also find the tutorials and related scripts in the
+directory <code class="file docutils literal notranslate"><span class="pre">/doc/tutorials</span></code> or <a class="reference external" href="https://github.com/espressomd/espresso/blob/python/doc/tutorials/">online on GitHub</a>.
+Currently, the following tutorials are available:</p>
+<ul class="simple">
+<li><p><code class="file docutils literal notranslate"><span class="pre">01-lennard_jones</span></code>: Modelling of a single-component and a two-component Lennard-Jones liquid.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">02-charged_system</span></code>: Modelling of charged systems such as ionic crystals.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">04-lattice_boltzmann</span></code>: Simulations including hydrodynamic interactions using the lattice-Boltzmann method.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">05-raspberry_electrophoresis</span></code>: Extended objects in a lattice-Boltzmann fluid, raspberry particles.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">06-active_matter</span></code>: Modelling of self-propelling particles.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">07-electrokinetics</span></code>: Modelling electrokinetics together with hydrodynamic interactions.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">08-visualization</span></code>: Using the online visualizers of <em>ESPResSo</em>.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">10-reaction_ensemble</span></code>: Modelling chemical reactions by means of the reaction ensemble.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">11-ferrofluid</span></code>: Modelling a colloidal suspension of magnetic particles.</p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">12-constant_pH</span></code>: Modelling the titration of a weak acid using the constant pH method</p></li>
+</ul>
+</div>
+<div class="section" id="sample-scripts">
+<span id="id7"></span><h2>1.5. Sample scripts<a class="headerlink" href="#sample-scripts" title="Permalink to this headline">¶</a></h2>
+<p>Several scripts that can serve as usage examples can be found in the directory <code class="file docutils literal notranslate"><span class="pre">/samples</span></code>,
+or in the <a class="reference external" href="https://github.com/espressomd/espresso/blob/python/samples/">git repository</a>.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">billiard.py</span></code></dt><dd><p>A simple billiard game, needs the Python <code class="docutils literal notranslate"><span class="pre">pypopengl</span></code> module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">chamber_game.py</span></code></dt><dd><p>Lennard-Jones gas used for demonstration purposes to showcase <em>ESPResSo</em>. The
+game is based on the Maxwell’s demon thought experiment. The snake is
+controlled by a gamepad or the keyboard to move particles between chambers
+against a pressure gradient.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">ekboundaries.py</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">electrophoresis.py</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">h5md.py</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">lbf.py</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">lj-demo.py</span></code></dt><dd><p>Lennard-Jones liquid used for demonstration purposes to showcase <em>ESPResSo</em>.
+Sliders from a MIDI controller can change system variables such as
+temperature and volume. Some thermodynamic observables are analyzed and
+plotted live.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">lj_liquid_distribution.py</span></code></dt><dd><p>Uses <a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.distribution" title="espressomd.analyze.Analysis.distribution"><code class="xref py py-meth docutils literal notranslate"><span class="pre">distribution()</span></code></a> to analyze a simple
+Lennard-Jones liquid. See <a class="reference internal" href="analysis.html#particle-distribution"><span class="std std-ref">Particle distribution</span></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">lj_liquid.py</span></code></dt><dd><p>Simple Lennard-Jones particle liquid. Shows the basic features of how to:</p>
+<ul>
+<li><p>set up system parameters, particles and interactions.</p></li>
+<li><p>warm up and integrate.</p></li>
+<li><p>write parameters, configurations and observables to files</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">lj_liquid_structurefactor.py</span></code></dt><dd><p>Uses <a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis.structure_factor" title="espressomd.analyze.Analysis.structure_factor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">structure_factor()</span></code></a> to analyze a
+simple Lennard-Jones liquid. See <a class="reference internal" href="analysis.html#structure-factor"><span class="std std-ref">Structure factor</span></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">load_checkpoint.py</span></code>,  <code class="file docutils literal notranslate"><span class="pre">save_checkpoint.py</span></code></dt><dd><p>Basic usage of the checkpointing feature. Shows how to write/load the state of:</p>
+<ul>
+<li><p>custom user variables</p></li>
+<li><p>non-bonded interactions</p></li>
+<li><p>particles</p></li>
+<li><p>P3M parameters</p></li>
+<li><p>thermostat</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">MDAnalysisIntegration.py</span></code></dt><dd><p>Shows how to expose configuration to <code class="docutils literal notranslate"><span class="pre">MDAnalysis</span></code> at run time. The
+functions of <code class="docutils literal notranslate"><span class="pre">MDAnalysis</span></code> can be used to perform some analysis or
+convert the frame to other formats (CHARMM, GROMACS, …)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">minimal-charged-particles.py</span></code></dt><dd><p>Simple Lennard-Jones particle liquid where the particles are assigned charges. The P3M method is used to calculate electrostatic interactions.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">minimal-diamond.py</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">minimal-polymer.py</span></code></dt><dd><p>Sets up a single dilute bead-spring polymer. Shows the basic usage of <a class="reference internal" href="espressomd.html#espressomd.polymer.positions" title="espressomd.polymer.positions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">positions()</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">minimal_random_number_generator.py</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">observables_correlators.py</span></code></p></li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">p3m.py</span></code></dt><dd><p>Simple Lennard-Jones particle liquid where the particles are assigned charges. The P3M method is used to calculate electrostatic interactions.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">slice_input.py</span></code></dt><dd><p>Uses python array slicing to set and extract various particle properties.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_ljliquid.py</span></code></dt><dd><p>A visualization for Mayavi/OpenGL of the LJ-liquid with interactive plotting.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_bonded.py</span></code></dt><dd><p>OpenGL visualization for bonds.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_interactive.py</span></code></dt><dd><p>Sample for an interactive OpenGL visualization with user-defined keyboard- and timed callbacks.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_npt.py</span></code></dt><dd><p>Simple test visualization for the NPT ensemble.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_poiseuille.py</span></code></dt><dd><p>Visualization for Poiseuille flow with lattice-Boltzmann.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_constraints.py</span></code></dt><dd><p>Constraint visualization with OpenGL (shape selection via the command line). See <a class="reference internal" href="constraints.html#shaped-based-constraints"><span class="std std-ref">Shaped-based constraints</span></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_mmm2d.py</span></code></dt><dd><p>A visual sample for a constant potential plate capacitor simulated with MMM2D.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_charged.py</span></code></dt><dd><p>Molten NaCl and larger, charged particles simulated with P3M.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="file docutils literal notranslate"><span class="pre">visualization_cellsystem.py</span></code></dt><dd><p>Node grid and cell grid visualization. Run in parallel for particle coloring by node.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="on-units">
+<span id="id8"></span><h2>1.6. On units<a class="headerlink" href="#on-units" title="Permalink to this headline">¶</a></h2>
+<p>What is probably one of the most confusing subjects for beginners of <em>ESPResSo</em> is,
+that <em>ESPResSo</em> does not predefine any units. While most MD programs specify a set
+of units, like, for example, that all lengths are measured in Ångström
+or nanometers, times are measured in nano- or picoseconds and energies
+are measured in <span class="math notranslate nohighlight">\(\mathrm{kJ/mol}\)</span>, <em>ESPResSo</em> does not do so.</p>
+<p>Instead, the length-, time- and energy scales can be freely chosen by
+the user. Once these three scales are fixed, all remaining units are
+derived from these three basic choices.</p>
+<p>The probably most important choice is the length scale. A length of
+<span class="math notranslate nohighlight">\(1.0\)</span> can mean a nanometer, an Ångström, or a kilometer -
+depending on the physical system, that the user has in mind when he
+writes his <em>ESPResSo</em>-script. When creating particles that are intended to
+represent a specific type of atoms, one will probably use a length scale
+of Ångström. This would mean, that the parameter <span class="math notranslate nohighlight">\(\sigma\)</span> of the
+Lennard-Jones interaction between two atoms would be set to twice the
+van-der-Waals radius of the atom in Ångström. Alternatively, one could
+set <span class="math notranslate nohighlight">\(\sigma\)</span> to <span class="math notranslate nohighlight">\(2.0\)</span> and measure all lengths in multiples
+of the van-der-Waals radius. When simulation colloidal particles, which
+are usually of micrometer size, one will choose their diameter (or
+radius) as basic length scale, which is much larger than the Ångström
+scale used in atomistic simulations.</p>
+<p>The second choice to be made is the energy scale. One can for example
+choose to set the Lennard-Jones parameter <span class="math notranslate nohighlight">\(\epsilon\)</span> to the energy
+in <span class="math notranslate nohighlight">\(\mathrm{kJ/mol}\)</span>. Then all energies will be measured in that
+unit. Alternatively, one can choose to set it to <span class="math notranslate nohighlight">\(1.0\)</span> and measure
+everything in multiples of the van-der-Waals binding energy of the
+respective particles.</p>
+<p>The final choice is the time (or mass) scale. By default, <em>ESPResSo</em> uses a reduced
+mass of 1 for all particles, so that the mass unit is simply the mass of one particle.
+Combined with the energy and length scale, this is sufficient to derive
+the resulting time scale:</p>
+<div class="math notranslate nohighlight">
+\[[\mathrm{time}] = [\mathrm{length}]\sqrt{\frac{[\mathrm{mass}]}{[\mathrm{energy}]}}\]</div>
+<p>This means, that if you measure lengths in Ångström, energies in
+<span class="math notranslate nohighlight">\(k_B T\)</span> at 300K and masses in 39.95u, then your time scale is
+<span class="math notranslate nohighlight">\(\mathring{A} \sqrt{39.95u / k_B T} = 0.40\,\mathrm{ps}\)</span>.</p>
+<p>On the other hand, if you want a particular time scale, then the mass
+scale can be derived from the time, energy and length scales as</p>
+<div class="math notranslate nohighlight">
+\[[\mathrm{mass}] = [\mathrm{energy}]\frac{[\mathrm{time}]^2}{[\mathrm{length}]^2}.\]</div>
+<p>By activating the feature <code class="docutils literal notranslate"><span class="pre">MASS</span></code>, you can specify particle masses in
+the chosen unit system.</p>
+<p>A special note is due regarding the temperature, which is coupled to the
+energy scale by Boltzmann’s constant. However, since <em>ESPResSo</em> does not enforce a
+particular unit system, we also don’t know the numerical value of the
+Boltzmann constant in the current unit system. Therefore, when
+specifying the temperature of a thermostat, you actually do not define
+the temperature, but the value of the thermal energy <span class="math notranslate nohighlight">\(k_B T\)</span> in
+the current unit system. For example, if you measure energy in units of
+<span class="math notranslate nohighlight">\(\mathrm{kJ/mol}\)</span> and your real temperature should be 300K, then
+you need to set the thermostat’s effective temperature to
+<span class="math notranslate nohighlight">\(k_B 300\, K \mathrm{mol / kJ} = 2.494\)</span>.</p>
+<p>As long as one remains within the same unit system throughout the whole
+<em>ESPResSo</em>-script, there should be no problems.</p>
+</div>
+<div class="section" id="available-simulation-methods">
+<span id="id9"></span><h2>1.7. Available simulation methods<a class="headerlink" href="#available-simulation-methods" title="Permalink to this headline">¶</a></h2>
+<p><em>ESPResSo</em> provides a number of useful methods. The following table shows the
+various methods as well as their status. The table distinguishes between
+the state of the development of a certain feature and the state of its
+use. We distinguish between five levels:</p>
+<dl class="simple">
+<dt><strong>Core</strong></dt><dd><p>means that the method is part of the core of <em>ESPResSo</em>, and that it is
+extensively developed and used by many people.</p>
+</dd>
+<dt><strong>Good</strong></dt><dd><p>means that the method is developed and used by independent people
+from different groups.</p>
+</dd>
+<dt><strong>Group</strong></dt><dd><p>means that the method is developed and used in one group.</p>
+</dd>
+<dt><strong>Single</strong></dt><dd><p>means that the method is developed and used by one person only.</p>
+</dd>
+<dt><strong>None</strong></dt><dd><p>means that the method is developed and used by nobody.</p>
+</dd>
+<dt><strong>Experimental</strong></dt><dd><p>means that the method might have side effects.</p>
+</dd>
+</dl>
+<p>In the “Tested” column, we note whether there is an integration test for the method.</p>
+<p>If you believe that the status of a certain method is wrong, please
+report so to the developers.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 28%" />
+<col style="width: 21%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>Feature</strong></p></th>
+<th class="head"><p><strong>Development Status</strong></p></th>
+<th class="head"><p><strong>Usage Status</strong></p></th>
+<th class="head"><p><strong>Tested</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td colspan="4"><p><strong>Integrators</strong>, <strong>Thermostats</strong>, <strong>Barostats</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>Velocity-Verlet Integrator</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Langevin Thermostat</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Isotropic NPT</p></td>
+<td><p>Experimental</p></td>
+<td><p>None</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Quaternion Integrator</p></td>
+<td><p>Core</p></td>
+<td><p>Good</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><p><strong>Interactions</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>Short-range Interactions</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Constraints</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Relative Virtual Sites</p></td>
+<td><p>Good</p></td>
+<td><p>Good</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>RATTLE Rigid Bonds</p></td>
+<td><p>Single</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Gay-Berne Interaction</p></td>
+<td><p>Experimental</p></td>
+<td><p>Experimental</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><p><strong>Coulomb Interaction</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>P3M</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>P3M on GPU</p></td>
+<td><p>Single</p></td>
+<td><p>Single</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Dipolar P3M</p></td>
+<td><p>Group</p></td>
+<td><p>Good</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>MMM1D</p></td>
+<td><p>Single</p></td>
+<td><p>Good</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>MMM2D</p></td>
+<td><p>Group</p></td>
+<td><p>Good</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>MMM1D on GPU</p></td>
+<td><p>Single</p></td>
+<td><p>Single</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>ELC</p></td>
+<td><p>Good</p></td>
+<td><p>Good</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>ICC*</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td colspan="4"><p><strong>Hydrodynamic Interaction</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>Lattice-Boltzmann</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Lattice-Boltzmann on GPU</p></td>
+<td><p>Group</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><p><strong>Input/Output</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>VTF output</p></td>
+<td><p>Core</p></td>
+<td><p>Core</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>VTK output</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>Checkpointing</p></td>
+<td><p>Experimental</p></td>
+<td><p>Experimental</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><p><strong>Visualization</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>Online visualisation (Mayavi)</p></td>
+<td><p>Good</p></td>
+<td><p>Good</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>Online visualisation (OpenGL)</p></td>
+<td><p>Good</p></td>
+<td><p>Good</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td colspan="4"><p><strong>Miscellaneous</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>Electrokinetics</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Collision Detection</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Swimmer Reactions</p></td>
+<td><p>Single</p></td>
+<td><p>Single</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Reaction Ensemble</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Constant pH Method</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Object-in-fluid</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Immersed boundary method</p></td>
+<td><p>Group</p></td>
+<td><p>Group</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>DPD</p></td>
+<td><p>Single</p></td>
+<td><p>Good</p></td>
+<td><p>Yes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="intended-interface-compatibility-between-espresso-versions">
+<h2>1.8. Intended interface compatibility between ESPResSo versions<a class="headerlink" href="#intended-interface-compatibility-between-espresso-versions" title="Permalink to this headline">¶</a></h2>
+<p>We use the following versioning scheme:
+major.minor.patch_level</p>
+<p>With regards to the stability of the Python interface, we plan the following guidelines:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>patch_level: The Python interface will not change, if only the patch_level number is different. Example: 4.0.0 -&gt; 4.0.1.</p></li>
+<li><p>minor: There will be no silent interface changes between two versions with different minor numbers. I.e., a simulation script will not silently produce different results with the new version. The interface can, however, be extended. In important cases, the interface can change in such a way that using the old interface produces a clear error message and the simulation is terminated. Example: 4.0.1 -&gt; 4.1.0</p></li>
+<li><p>major: No guarantees are made for a transition between major versions. Example 4.1.2 -&gt; 5.0.</p></li>
+<li><p>No guarantees are made with regards to the development branch on GitHub.</p></li>
+<li><p>No guarantees are made with respect to the C++ bindings in the simulation core.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">1. Introduction</a><ul>
+<li><a class="reference internal" href="#guiding-principles">1.1. Guiding principles</a></li>
+<li><a class="reference internal" href="#basic-program-structure">1.2. Basic program structure</a></li>
+<li><a class="reference internal" href="#basic-python-simulation-script">1.3. Basic python simulation script</a></li>
+<li><a class="reference internal" href="#tutorials">1.4. Tutorials</a></li>
+<li><a class="reference internal" href="#sample-scripts">1.5. Sample scripts</a></li>
+<li><a class="reference internal" href="#on-units">1.6. On units</a></li>
+<li><a class="reference internal" href="#available-simulation-methods">1.7. Available simulation methods</a></li>
+<li><a class="reference internal" href="#intended-interface-compatibility-between-espresso-versions">1.8. Intended interface compatibility between ESPResSo versions</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="2. Installation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ug.html" title="&lt;no title&gt;"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Nov 13, 2019.
+    </div>
+  </body>
+</html>

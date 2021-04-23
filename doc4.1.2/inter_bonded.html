@@ -1,0 +1,675 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>7. Bonded interactions &#8212; ESPResSo documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/bibtex.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="8. Electrostatics" href="electrostatics.html" />
+    <link rel="prev" title="6. Non-bonded interactions" href="inter_non-bonded.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="electrostatics.html" title="8. Electrostatics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="inter_non-bonded.html" title="6. Non-bonded interactions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" accesskey="U">&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="bonded-interactions">
+<span id="id1"></span><h1>7. Bonded interactions<a class="headerlink" href="#bonded-interactions" title="Permalink to this headline">¶</a></h1>
+<p>Bonded interactions are configured by the
+<a class="reference internal" href="espressomd.html#espressomd.interactions.BondedInteractions" title="espressomd.interactions.BondedInteractions"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.BondedInteractions</span></code></a> class, which is
+a member of <a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>. Generally, one may use
+the following syntax to activate and assign a bonded interaction:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="n">pid1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">bond</span><span class="p">,</span> <span class="n">pid2</span><span class="o">...</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In general, one instantiates an interaction object <code class="docutils literal notranslate"><span class="pre">bond</span></code> and subsequently passes it
+to <a class="reference internal" href="espressomd.html#espressomd.interactions.BondedInteractions.add" title="espressomd.interactions.BondedInteractions.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.interactions.BondedInteractions.add()</span></code></a>. This will enable the
+bonded interaction and allows the user to assign bonds between particle ids <em>pidX</em>.
+Bonded interactions are identified by either their <em>bondid</em> or their appropriate object.</p>
+<p>Defining a bond between two particles always involves three steps:
+defining the interaction, adding it to the system and applying it to the particles.
+To illustrate this, assume that three particles with ids 42, 43 and 12 already exist.
+One could for example create FENE bonds (more information about the FENE bond
+is provided in subsection <a class="reference internal" href="#fene-bond"><span class="std std-ref">FENE bond</span></a>) between them using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fene</span> <span class="o">=</span> <span class="n">FeneBond</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">d_r_max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fene</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">42</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">fene</span><span class="p">,</span> <span class="mi">43</span><span class="p">),</span> <span class="p">(</span><span class="n">fene</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">fene</span><span class="p">,</span> <span class="mi">43</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This will set up a FENE bond between particles 42 and 43, 42 and 12, and 12 and 43.
+Note that the <code class="docutils literal notranslate"><span class="pre">fene</span></code> object specifies the type of bond and its parameters,
+the specific bonds are stored within the particles. You can find more
+information regarding particle properties in <a class="reference internal" href="particles.html#setting-up-particles"><span class="std std-ref">Setting up particles</span></a>.</p>
+<p>To delete the FENE bond between particles 12 and 43:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span><span class="o">.</span><span class="n">delete_bond</span><span class="p">((</span><span class="n">fene</span><span class="p">,</span> <span class="mi">43</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="section" id="distance-dependent-bonds">
+<span id="id2"></span><h2>7.1. Distance-dependent bonds<a class="headerlink" href="#distance-dependent-bonds" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fene-bond">
+<span id="id3"></span><h3>7.1.1. FENE bond<a class="headerlink" href="#fene-bond" title="Permalink to this headline">¶</a></h3>
+<p>A FENE (finite extension nonlinear elastic) bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.FeneBond" title="espressomd.interactions.FeneBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.FeneBond</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">FeneBond</span>
+<span class="n">fene</span> <span class="o">=</span> <span class="n">FeneBond</span><span class="p">(</span><span class="n">k</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">d_r_max</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">r_0</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This command creates a bond type identifier with a FENE
+interaction. The FENE potential</p>
+<div class="math notranslate nohighlight">
+\[V(r) = -\frac{1}{2} K \Delta r_\mathrm{max}^2\ln \left[ 1 - \left(
+      \frac{r-r_0}{\Delta r_\mathrm{max}} \right)^2 \right]\]</div>
+<p>models a rubber-band-like, symmetric interaction between two particles with magnitude
+<span class="math notranslate nohighlight">\(K\)</span>, maximal stretching length <span class="math notranslate nohighlight">\(\Delta r_0\)</span> and equilibrium bond length
+<span class="math notranslate nohighlight">\(r_0\)</span>. The bond potential diverges at a particle distance
+<span class="math notranslate nohighlight">\(r=r_0-\Delta r_\mathrm{max}\)</span> and <span class="math notranslate nohighlight">\(r=r_0+\Delta r_\mathrm{max}\)</span>.</p>
+</div>
+<div class="section" id="harmonic-bond">
+<span id="id4"></span><h3>7.1.2. Harmonic bond<a class="headerlink" href="#harmonic-bond" title="Permalink to this headline">¶</a></h3>
+<p>A harmonic bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.HarmonicBond" title="espressomd.interactions.HarmonicBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.HarmonicBond</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">HarmonicBond</span>
+<span class="n">hb</span> <span class="o">=</span> <span class="n">HarmonicBond</span><span class="p">(</span><span class="n">k</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">r_0</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">r_cut</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This creates a bond type identifier with a classical harmonic
+potential. It is a symmetric interaction between two particles. With the
+equilibrium length <span class="math notranslate nohighlight">\(r_0\)</span> and the magnitude <span class="math notranslate nohighlight">\(k\)</span>. It is given by</p>
+<div class="math notranslate nohighlight">
+\[V(r) = \frac{1}{2} k \left( r - r_0 \right)^2\]</div>
+<p>The third, optional parameter defines a cutoff radius. Whenever a
+harmonic bond gets longer than <span class="math notranslate nohighlight">\(r_\mathrm{cut}\)</span>, the bond will be reported as broken,
+and a background error will be raised.</p>
+</div>
+<div class="section" id="harmonic-dumbbell-bond">
+<span id="id5"></span><h3>7.1.3. Harmonic Dumbbell Bond<a class="headerlink" href="#harmonic-dumbbell-bond" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> feature.</p>
+</div>
+<p>A harmonic Dumbbell bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.HarmonicDumbbellBond" title="espressomd.interactions.HarmonicDumbbellBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.HarmonicDumbbellBond</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">HarmonicDumbbellBond</span>
+<span class="n">hdb</span> <span class="o">=</span> <span class="n">HarmonicDumbbellBond</span><span class="p">(</span><span class="n">k1</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">k2</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">r_0</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">r_cut</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This bond is similar to the normal harmonic bond in such a way that it
+sets up a harmonic potential, i.e. a spring, between the two particles.
+Additionally the orientation of the first particle in the bond will be aligned along
+the distance vector between both particles. This alignment can be
+controlled by the second harmonic constant <span class="math notranslate nohighlight">\(k_2\)</span>. Keep in mind that orientation will
+oscillate around the distance vector and some kind of
+friction needs to be present for it to relax.</p>
+<p>The roles of the parameters <span class="math notranslate nohighlight">\(k_1, r_0, r_\mathrm{cut}\)</span> are exactly the same as for the
+harmonic bond.</p>
+</div>
+<div class="section" id="quartic-bond">
+<span id="id6"></span><h3>7.1.4. Quartic bond<a class="headerlink" href="#quartic-bond" title="Permalink to this headline">¶</a></h3>
+<p>A quartic bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.QuarticBond" title="espressomd.interactions.QuarticBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.QuarticBond</span></code></a>.</p>
+<p>The potential is minimal at particle distance <span class="math notranslate nohighlight">\(r=R\)</span>. It is given by</p>
+<div class="math notranslate nohighlight">
+\[V(r) = \frac{1}{2} K_0 \left( r - R \right)^2 + \frac{1}{4} K_1 \left( r - R \right)^4\]</div>
+<p>The fourth, optional, parameter defines a cutoff radius. Whenever a
+quartic bond gets longer than <code class="docutils literal notranslate"><span class="pre">r_cut</span></code>, the bond will be reported as broken, and
+a background error will be raised.</p>
+</div>
+<div class="section" id="bonded-coulomb">
+<span id="id7"></span><h3>7.1.5. Bonded Coulomb<a class="headerlink" href="#bonded-coulomb" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">ELECTROSTATICS</span></code> feature.</p>
+</div>
+<p>A pairwise Coulomb interaction can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.BondedCoulomb" title="espressomd.interactions.BondedCoulomb"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.BondedCoulomb</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bonded_coulomb</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">interactions</span><span class="o">.</span><span class="n">BondedCoulomb</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bonded_coulomb</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">bonded_coulomb</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This creates a bond with a Coulomb pair potential between particles <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+It is given by</p>
+<div class="math notranslate nohighlight">
+\[V(r) = \alpha \frac{q_1 q_2}{r},\]</div>
+<p>where <span class="math notranslate nohighlight">\(q_1\)</span> and <span class="math notranslate nohighlight">\(q_2\)</span> are the charges of the bound particles and <span class="math notranslate nohighlight">\(\alpha\)</span> is the
+Coulomb prefactor. This interaction has no cutoff and acts independently of other
+Coulomb interactions.</p>
+</div>
+<div class="section" id="subtract-p3m-short-range-bond">
+<span id="id8"></span><h3>7.1.6. Subtract P3M short-range bond<a class="headerlink" href="#subtract-p3m-short-range-bond" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires the <code class="docutils literal notranslate"><span class="pre">P3M</span></code> feature.</p>
+</div>
+<p>This bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.BondedCoulombSRBond" title="espressomd.interactions.BondedCoulombSRBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.BondedCoulombSRBond</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">BondedCoulombSRBond</span>
+<span class="n">subtr_p3m_sr</span> <span class="o">=</span> <span class="n">BondedCoulombSRBond</span><span class="p">(</span><span class="n">q1q2</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The parameter <code class="docutils literal notranslate"><span class="pre">q1q2</span></code> sets the charge factor of the short-range P3M interaction.
+It can differ from the actual particle charges.  This specialized bond can be
+used to cancel or add <strong>only the short-range</strong> electrostatic part
+of the P3M solver. A use case is described in <a class="reference internal" href="advanced_methods.html#particle-polarizability-with-thermalized-cold-drude-oscillators"><span class="std std-ref">Particle polarizability with thermalized cold Drude oscillators</span></a>.</p>
+</div>
+<div class="section" id="subtracted-lennard-jones-bond">
+<span id="id9"></span><h3>7.1.7. Subtracted Lennard-Jones bond<a class="headerlink" href="#subtracted-lennard-jones-bond" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.SubtLJ" title="espressomd.interactions.SubtLJ"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.SubtLJ</span></code></a> can be used to exclude certain particle
+pairs from the non-bonded <a class="reference internal" href="inter_non-bonded.html#lennard-jones-interaction"><span class="std std-ref">Lennard-Jones interaction</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subtLJ</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">interactions</span><span class="o">.</span><span class="n">SubtLJ</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtLJ</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">subt</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This bond subtracts the type-pair specific Lennard-Jones interaction between
+the involved particles. This interaction is useful when using other bond
+potentials which already include the short-ranged repulsion. This often the
+case for force fields or in general tabulated potentials.</p>
+</div>
+<div class="section" id="rigid-bonds">
+<span id="id10"></span><h3>7.1.8. Rigid bonds<a class="headerlink" href="#rigid-bonds" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">BOND_CONSTRAINT</span></code> feature.</p>
+</div>
+<p>A rigid bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.RigidBond" title="espressomd.interactions.RigidBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.RigidBond</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">RigidBond</span>
+<span class="n">rig</span> <span class="o">=</span> <span class="n">RigidBond</span><span class="p">(</span><span class="n">r</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">ptol</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">vtol</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span> <span class="p">)</span>
+</pre></div>
+</div>
+<p>To simulate rigid bonds, <em>ESPResSo</em> uses the Rattle Shake algorithm which satisfies
+internal constraints for molecular models with internal constraints,
+using Lagrange multipliers.<a class="bibtex reference internal" href="zreferences.html#andersen83a" id="id11">[And83]</a> The constrained bond distance
+is named <code class="docutils literal notranslate"><span class="pre">r</span></code>, the positional tolerance is named <code class="docutils literal notranslate"><span class="pre">ptol</span></code> and the velocity tolerance
+is named <code class="docutils literal notranslate"><span class="pre">vtol</span></code>.</p>
+</div>
+<div class="section" id="thermalized-distance-bond">
+<span id="id12"></span><h3>7.1.9. Thermalized distance bond<a class="headerlink" href="#thermalized-distance-bond" title="Permalink to this headline">¶</a></h3>
+<p>A thermalized bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.ThermalizedBond" title="espressomd.interactions.ThermalizedBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.ThermalizedBond</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">ThermalizedBond</span>
+<span class="n">thermalized_bond</span> <span class="o">=</span> <span class="n">ThermalizedBond</span><span class="p">(</span><span class="n">temp_com</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">gamma_com</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span>
+                                   <span class="n">temp_distance</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">gamma_distance</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span>
+                                   <span class="n">r_cut</span><span class="o">=&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">thermalized_bond</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This bond can be used to apply Langevin thermalization on the centre of mass
+and the distance of a particle pair.  Each thermostat can have its own
+temperature and friction coefficient.</p>
+<p>The bond is closely related to simulating <a class="reference internal" href="advanced_methods.html#particle-polarizability-with-thermalized-cold-drude-oscillators"><span class="std std-ref">Particle polarizability with thermalized cold Drude oscillators</span></a>.</p>
+</div>
+<div class="section" id="tabulated-distance">
+<span id="id13"></span><h3>7.1.10. Tabulated distance<a class="headerlink" href="#tabulated-distance" title="Permalink to this headline">¶</a></h3>
+<p>A tabulated bond length can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedDistance" title="espressomd.interactions.TabulatedDistance"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.TabulatedDistance</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">TabulatedDistance</span>
+<span class="n">tab_dist</span> <span class="o">=</span> <span class="n">TabulatedDistance</span><span class="p">(</span><span class="nb">min</span><span class="o">=&lt;</span><span class="nb">min</span><span class="o">&gt;</span><span class="p">,</span> <span class="nb">max</span><span class="o">=&lt;</span><span class="nb">max</span><span class="o">&gt;</span><span class="p">,</span>
+                             <span class="n">energy</span><span class="o">=&lt;</span><span class="n">energy</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">force</span><span class="o">=&lt;</span><span class="n">force</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tab_dist</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">tab_dist</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This creates a bond type identifier with a tabulated potential. The force acts
+in the direction of the connecting vector between the particles. The bond breaks
+above the tabulated range, but for distances smaller than the tabulated range,
+a linear extrapolation based on the first two tabulated force values is used.
+For details of the interpolation, see <a class="reference internal" href="inter_non-bonded.html#tabulated-interaction"><span class="std std-ref">Tabulated interaction</span></a>.</p>
+</div>
+<div class="section" id="virtual-bonds">
+<span id="id14"></span><h3>7.1.11. Virtual bonds<a class="headerlink" href="#virtual-bonds" title="Permalink to this headline">¶</a></h3>
+<p>A virtual bond can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.Virtual" title="espressomd.interactions.Virtual"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.Virtual</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">Virtual</span>
+<span class="n">tab</span> <span class="o">=</span> <span class="n">Virtual</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This creates a virtual bond type identifier for a pair bond
+without associated potential or force. It can be used to specify topologies
+and for some analysis that rely on bonds, or for bonds that should be
+displayed in the visualization.</p>
+</div>
+</div>
+<div class="section" id="bond-angle-interactions">
+<span id="id15"></span><h2>7.2. Bond-angle interactions<a class="headerlink" href="#bond-angle-interactions" title="Permalink to this headline">¶</a></h2>
+<p>Bond-angle interactions involve three particles forming the angle <span class="math notranslate nohighlight">\(\phi\)</span>, as shown in the schematic below.</p>
+<div class="figure align-center" id="inter-angle">
+<a class="reference internal image-reference" href="_images/inter_angle.png"><img alt="Bond-angle interactions" src="_images/inter_angle.png" style="height: 12.00cm;" /></a>
+</div>
+<p>This allows for a bond type having an angle-dependent potential. This potential
+is defined between three particles and depends on the angle <span class="math notranslate nohighlight">\(\phi\)</span>
+between the vectors from the central particle to the two other particles.</p>
+<p>Similar to other bonded interactions, these are defined for every particle triplet and must be added to a particle (see <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.bonds" title="espressomd.particle_data.ParticleHandle.bonds"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.bonds</span></code></a>), in this case the central one.
+For example, for the schematic with particles <code class="docutils literal notranslate"><span class="pre">id=0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code> (central particle) and <code class="docutils literal notranslate"><span class="pre">2</span></code> the bond was defined using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">bond_angle</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The parameter <code class="docutils literal notranslate"><span class="pre">bond_angle</span></code> is an instance of one of four possible bond-angle
+classes, described below.</p>
+<div class="section" id="harmonic-angle-potential">
+<h3>7.2.1. Harmonic angle potential<a class="headerlink" href="#harmonic-angle-potential" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.AngleHarmonic" title="espressomd.interactions.AngleHarmonic"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.AngleHarmonic</span></code></a></p>
+<p>Equation:</p>
+<div class="math notranslate nohighlight">
+\[V(\phi) = \frac{K}{2} \left(\phi - \phi_0\right)^2.\]</div>
+<p><span class="math notranslate nohighlight">\(K\)</span> is the bending constant and <span class="math notranslate nohighlight">\(\phi_0\)</span> is the equilibrium bond
+angle in radians ranging from 0 to <span class="math notranslate nohighlight">\(\pi\)</span>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle_harmonic</span> <span class="o">=</span> <span class="n">AngleHarmonic</span><span class="p">(</span><span class="n">bend</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">phi0</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">angle_harmonic</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">angle_harmonic</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cosine-angle-potential">
+<h3>7.2.2. Cosine angle potential<a class="headerlink" href="#cosine-angle-potential" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.AngleCosine" title="espressomd.interactions.AngleCosine"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.AngleCosine</span></code></a></p>
+<p>Equation:</p>
+<div class="math notranslate nohighlight">
+\[V(\phi) = K \left[1 - \cos(\phi - \phi_0)\right]\]</div>
+<p><span class="math notranslate nohighlight">\(K\)</span> is the bending constant and <span class="math notranslate nohighlight">\(\phi_0\)</span> is the equilibrium bond
+angle in radians ranging from 0 to <span class="math notranslate nohighlight">\(\pi\)</span>.</p>
+<p>Around <span class="math notranslate nohighlight">\(\phi_0\)</span>, this potential is close to a harmonic one
+(both are <span class="math notranslate nohighlight">\(1/2(\phi-\phi_0)^2\)</span> in leading order), but it is
+periodic and smooth for all angles <span class="math notranslate nohighlight">\(\phi\)</span>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle_cosine</span> <span class="o">=</span> <span class="n">AngleCosine</span><span class="p">(</span><span class="n">bend</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">phi0</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">angle_cosine</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">angle_cosine</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="harmonic-cosine-potential">
+<h3>7.2.3. Harmonic cosine potential<a class="headerlink" href="#harmonic-cosine-potential" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.interactions.AngleCossquare" title="espressomd.interactions.AngleCossquare"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.AngleCossquare</span></code></a></p>
+<p>Equation:</p>
+<div class="math notranslate nohighlight">
+\[V(\phi) = \frac{K}{2} \left[\cos(\phi) - \cos(\phi_0)\right]^2\]</div>
+<p><span class="math notranslate nohighlight">\(K\)</span> is the bending constant and <span class="math notranslate nohighlight">\(\phi_0\)</span> is the equilibrium bond
+angle in radians ranging from 0 to <span class="math notranslate nohighlight">\(\pi\)</span>.</p>
+<p>This form is used for example in the GROMOS96 force field. The
+potential is <span class="math notranslate nohighlight">\(1/8(\phi-\phi_0)^4\)</span> around <span class="math notranslate nohighlight">\(\phi_0\)</span>, and
+therefore much flatter than the two aforementioned potentials.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle_cossquare</span> <span class="o">=</span> <span class="n">AngleCossquare</span><span class="p">(</span><span class="n">bend</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">phi0</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">angle_cossquare</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">angle_cossquare</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tabulated-angle-potential">
+<h3>7.2.4. Tabulated angle potential<a class="headerlink" href="#tabulated-angle-potential" title="Permalink to this headline">¶</a></h3>
+<p>A tabulated bond angle can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedAngle" title="espressomd.interactions.TabulatedAngle"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.TabulatedAngle</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">TabulatedAngle</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">91</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">angle_tab</span> <span class="o">=</span> <span class="n">TabulatedAngle</span><span class="p">(</span><span class="n">energy</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="n">theta</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                           <span class="n">force</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="n">theta</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">angle_tab</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">angle_tab</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The energy and force tables must be sampled from <span class="math notranslate nohighlight">\(0\)</span> to <span class="math notranslate nohighlight">\(\pi\)</span>,
+where <span class="math notranslate nohighlight">\(\pi\)</span> corresponds to a flat angle. The forces are scaled with the
+inverse length of the connecting vectors. The force on the extremities acts
+perpendicular to the connecting vector between the corresponding particle and
+the center particle, in the plane defined by the three particles. The force on
+the center particle balances the other two forces.
+For details of the interpolation, see <a class="reference internal" href="inter_non-bonded.html#tabulated-interaction"><span class="std std-ref">Tabulated interaction</span></a>.</p>
+</div>
+</div>
+<div class="section" id="dihedral-interactions">
+<span id="id16"></span><h2>7.3. Dihedral interactions<a class="headerlink" href="#dihedral-interactions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dihedral-potential-with-phase-shift">
+<h3>7.3.1. Dihedral potential with phase shift<a class="headerlink" href="#dihedral-potential-with-phase-shift" title="Permalink to this headline">¶</a></h3>
+<p>Dihedral interactions are available through the <a class="reference internal" href="espressomd.html#espressomd.interactions.Dihedral" title="espressomd.interactions.Dihedral"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.Dihedral</span></code></a> class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">Dihedral</span>
+<span class="n">dihedral</span> <span class="o">=</span> <span class="n">Dihedral</span><span class="p">(</span><span class="n">bend</span><span class="o">=&lt;</span><span class="n">K</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">mult</span><span class="o">=&lt;</span><span class="n">n</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">phase</span><span class="o">=&lt;</span><span class="n">phi_0</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dihedral</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">dihedral</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This creates a bond type identifier with a dihedral potential, a
+four-body-potential. In the following, let the particle for which the
+bond is created be particle <span class="math notranslate nohighlight">\(p_2\)</span>, and the other bond partners
+<span class="math notranslate nohighlight">\(p_1\)</span>, <span class="math notranslate nohighlight">\(p_3\)</span>, <span class="math notranslate nohighlight">\(p_4\)</span>, in this order. Then, the
+dihedral potential is given by</p>
+<div class="math notranslate nohighlight">
+\[V(\phi) = K\left[1 - \cos(n\phi - \phi_0)\right],\]</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> is the multiplicity of the potential (number of minima) and can
+take any integer value (typically from 1 to 6), <span class="math notranslate nohighlight">\(\phi_0\)</span> is a phase
+parameter and <span class="math notranslate nohighlight">\(K\)</span> is the bending constant of the potential. <span class="math notranslate nohighlight">\(\phi\)</span> is
+the dihedral angle between the particles defined by the particle
+quadruple <span class="math notranslate nohighlight">\(p_1\)</span>, <span class="math notranslate nohighlight">\(p_2\)</span>, <span class="math notranslate nohighlight">\(p_3\)</span> and <span class="math notranslate nohighlight">\(p_4\)</span>, the
+angle between the planes defined by the particle triples <span class="math notranslate nohighlight">\(p_1\)</span>,
+<span class="math notranslate nohighlight">\(p_2\)</span> and <span class="math notranslate nohighlight">\(p_3\)</span> and <span class="math notranslate nohighlight">\(p_2\)</span>, <span class="math notranslate nohighlight">\(p_3\)</span> and
+<span class="math notranslate nohighlight">\(p_4\)</span>:</p>
+<div class="figure align-center" id="inter-dihedral">
+<a class="reference internal image-reference" href="_images/dihedral-angle.pdf"><img alt="Dihedral interaction" src="_images/dihedral-angle.pdf" style="height: 12.00cm;" /></a>
+</div>
+<p>Together with appropriate Lennard-Jones interactions, this potential can
+mimic a large number of atomic torsion potentials.</p>
+</div>
+<div class="section" id="tabulated-dihedral-potential">
+<h3>7.3.2. Tabulated dihedral potential<a class="headerlink" href="#tabulated-dihedral-potential" title="Permalink to this headline">¶</a></h3>
+<p>A tabulated dihedral interaction can be instantiated via
+<a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedDihedral" title="espressomd.interactions.TabulatedDihedral"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.TabulatedDihedral</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">espressomd.interactions</span> <span class="kn">import</span> <span class="n">TabulatedDihedral</span>
+<span class="n">dihedral_tab</span> <span class="o">=</span> <span class="n">TabulatedDihedral</span><span class="p">(</span><span class="n">energy</span><span class="o">=&lt;</span><span class="n">energy</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">force</span><span class="o">=&lt;</span><span class="n">force</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">bonded_inter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dihedral_tab</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">dihedral_tab</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The energy and force tables must be sampled from <span class="math notranslate nohighlight">\(0\)</span> to <span class="math notranslate nohighlight">\(2\pi\)</span>.
+For details of the interpolation, see <a class="reference internal" href="inter_non-bonded.html#tabulated-interaction"><span class="std std-ref">Tabulated interaction</span></a>.</p>
+</div>
+</div>
+<div class="section" id="object-in-fluid-interactions">
+<h2>7.4. Object-in-fluid interactions<a class="headerlink" href="#object-in-fluid-interactions" title="Permalink to this headline">¶</a></h2>
+<p>Please cite <a class="bibtex reference internal" href="zreferences.html#cimrak2014" id="id17">[CimrakGJanvcigova14]</a> when using the interactions in this section in
+order to simulate extended objects embedded in a LB fluid. For more details
+please consult the dedicated OIF documentation available at
+<a class="reference external" href="https://web.archive.org/web/20180719231829/http://cell-in-fluid.fri.uniza.sk/en/content/oif-espresso">http://cell-in-fluid.fri.uniza.sk/en/content/oif-espresso</a>.</p>
+<p>The following interactions are implemented in order to mimic the
+mechanics of elastic or rigid objects immersed in the LB fluid flow.
+Their mathematical formulations were inspired by
+<a class="bibtex reference internal" href="zreferences.html#dupin07" id="id18">[DHCA07]</a>. Details on how the bonds can be used for
+modeling objects are described in section <a class="reference internal" href="advanced_methods.html#object-in-fluid"><span class="std std-ref">Object-in-fluid</span></a>.</p>
+<div class="section" id="oif-local-forces">
+<h3>7.4.1. OIF local forces<a class="headerlink" href="#oif-local-forces" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">OIF_GLOBAL_FORCES</span></code> feature.</p>
+</div>
+<p>OIF local forces are available through the <a class="reference internal" href="espressomd.html#espressomd.interactions.OifLocalForces" title="espressomd.interactions.OifLocalForces"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.OifLocalForces</span></code></a> class.</p>
+<p>This type of interaction is available for closed 3D immersed objects flowing in the LB flow.</p>
+<p>This interaction comprises three different concepts. The local
+elasticity of biological membranes can be captured by three different
+elastic moduli. Stretching of the membrane, bending of the membrane and
+local preservation of the surface area. Parameters
+<span class="math notranslate nohighlight">\({L^0_{AB}},\ {k_s},\ {k_{slin}}\)</span> define the stretching,
+parameters <span class="math notranslate nohighlight">\(\phi,\ k_b\)</span> define the bending, and
+<span class="math notranslate nohighlight">\(A_1,\ A_2,\ k_{al}\)</span> define the preservation of local area. They
+can be used all together, or, by setting any of
+<span class="math notranslate nohighlight">\(k_s, k_{slin}, k_b, k_{al}\)</span> to zero, the corresponding modulus
+can be turned off.</p>
+<div class="section" id="stretching">
+<h4>7.4.1.1. Stretching<a class="headerlink" href="#stretching" title="Permalink to this headline">¶</a></h4>
+<p>For each edge of the mesh, <span class="math notranslate nohighlight">\(L_{AB}\)</span> is the current distance between point <span class="math notranslate nohighlight">\(A\)</span> and
+point <span class="math notranslate nohighlight">\(B\)</span>. <span class="math notranslate nohighlight">\(L^0_{AB}\)</span> is the distance between these points in the relaxed state, that
+is if the current edge has the length exactly , then no forces are
+added. <span class="math notranslate nohighlight">\(\Delta L_{AB}\)</span> is the deviation from the relaxed
+state, that is <span class="math notranslate nohighlight">\(\Delta L_{AB} = L_{AB} - L_{AB}^0\)</span>. The
+stretching force between <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> is calculated using</p>
+<div class="math notranslate nohighlight">
+\[F_s(A,B) = (k_s\kappa(\lambda_{AB}) + k_{s,\mathrm{lin}})\Delta L_{AB}n_{AB}.\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(n_{AB}\)</span> is the unit vector pointing from <span class="math notranslate nohighlight">\(A\)</span> to <span class="math notranslate nohighlight">\(B\)</span>, <span class="math notranslate nohighlight">\(k_s\)</span> is the
+constant for nonlinear stretching, <span class="math notranslate nohighlight">\(k_{s,\mathrm{lin}}\)</span> is the constant for
+linear stretching, <span class="math notranslate nohighlight">\(\lambda_{AB} = L_{AB}/L_{AB}^0\)</span>, and <span class="math notranslate nohighlight">\(\kappa\)</span>
+is a nonlinear function that resembles neo-Hookean behavior</p>
+<div class="math notranslate nohighlight">
+\[\kappa(\lambda_{AB}) = \frac{\lambda_{AB}^{0.5} + \lambda_{AB}^{-2.5}}
+{\lambda_{AB} + \lambda_{AB}^{-3}}.\]</div>
+<p>Typically, one wants either nonlinear or linear behavior and therefore
+one of <span class="math notranslate nohighlight">\(k_s, k_{s,\mathrm{lin}}\)</span> is zero. Nonetheless the interaction will work if
+both constants are non-zero.</p>
+<p><img alt="image2" src="_images/stretching.png" /></p>
+</div>
+<div class="section" id="bending">
+<h4>7.4.1.2. Bending<a class="headerlink" href="#bending" title="Permalink to this headline">¶</a></h4>
+<p>The tendency of an elastic object to maintain the resting shape is
+achieved by prescribing the preferred angles between neighboring
+triangles of the mesh.</p>
+<p>Denote the angle between two triangles in the resting shape by
+<span class="math notranslate nohighlight">\(\theta^0\)</span>. For closed immersed objects, one always has to set the
+inner angle. The deviation of this angle
+<span class="math notranslate nohighlight">\(\Delta \theta = \theta - \theta^0\)</span> defines two bending forces for
+two triangles <span class="math notranslate nohighlight">\(A_1BC\)</span> and <span class="math notranslate nohighlight">\(A_2BC\)</span></p>
+<div class="math notranslate nohighlight">
+\[F_{bi}(A_iBC) = k_b \Delta \theta  n_{A_iBC}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(n_{A_iBC}\)</span> is the unit normal vector to the triangle <span class="math notranslate nohighlight">\(A_iBC\)</span>.
+The force <span class="math notranslate nohighlight">\(F_{bi}(A_iBC)\)</span> is assigned
+to the vertex not belonging to the common edge. The opposite force
+divided by two is assigned to the two vertices lying on the common edge.
+This procedure is done twice, for <span class="math notranslate nohighlight">\(i=1\)</span> and for
+<span class="math notranslate nohighlight">\(i=2\)</span>.</p>
+<p><img alt="image3" src="_images/bending.png" /></p>
+</div>
+<div class="section" id="local-area-conservation">
+<h4>7.4.1.3. Local area conservation<a class="headerlink" href="#local-area-conservation" title="Permalink to this headline">¶</a></h4>
+<p>This interaction conserves the area of the triangles in the
+triangulation. The area constraint assigns the following shrinking/expanding force to
+vertex <span class="math notranslate nohighlight">\(A\)</span></p>
+<div class="math notranslate nohighlight">
+\[F_{AT} = k_{al} \vec{AT}\frac{\Delta S_\triangle}{t_a^2 + t_b^2 + t_c^2}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta S_\triangle\)</span> is the difference between current <span class="math notranslate nohighlight">\(S_\triangle\)</span> and area <span class="math notranslate nohighlight">\(S^0\)</span> of the triangle in relaxed state, <span class="math notranslate nohighlight">\(T\)</span> is the centroid of the triangle, and <span class="math notranslate nohighlight">\(t_a, t_b, t_c\)</span> are the lengths of segments <span class="math notranslate nohighlight">\(AT, BT, CT\)</span>, respectively. Similarly the
+analogical forces are assigned to <span class="math notranslate nohighlight">\(B\)</span> and <span class="math notranslate nohighlight">\(C\)</span>.</p>
+<p>OIF local force is asymmetric. After creating the interaction</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">local_inter</span> <span class="o">=</span> <span class="n">OifLocalForces</span><span class="p">(</span><span class="n">r0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ks</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">kslin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">phi0</span><span class="o">=</span><span class="mf">1.7</span><span class="p">,</span> <span class="n">kb</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">A01</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                             <span class="n">A02</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">kal</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span> <span class="n">kvisc</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>it is important how the bond is created. Particles need to be mentioned
+in the correct order. Command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p1</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">local_inter</span><span class="p">,</span> <span class="n">p0</span><span class="o">.</span><span class="n">part_id</span><span class="p">,</span> <span class="n">p2</span><span class="o">.</span><span class="n">part_id</span><span class="p">,</span> <span class="n">p3</span><span class="o">.</span><span class="n">part_id</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>creates a bond related to the triangles 012 and 123. The particle 0
+corresponds to point A1, particle 1 to C, particle 2 to B and particle 3
+to A2. There are two rules that need to be fulfilled:</p>
+<ul class="simple">
+<li><p>there has to be an edge between particles 1 and 2</p></li>
+<li><p>orientation of the triangle 012, that is the normal vector defined as
+a vector product <span class="math notranslate nohighlight">\(01 \times 02\)</span>, must point to the inside of
+the immersed object.</p></li>
+</ul>
+<p>Then the stretching force is applied to particles 1 and 2, with the
+relaxed length being 1.0. The bending force is applied to preserve the
+angle between triangles 012 and 123 with relaxed angle 1.7 and finally,
+local area force is applied to both triangles 012 and 123 with relaxed
+area of triangle 012 being 0.2 and relaxed area of triangle 123 being
+0.3.</p>
+<p>Notice that also concave objects can be defined. If <span class="math notranslate nohighlight">\(\theta_0\)</span> is
+larger than <span class="math notranslate nohighlight">\(\pi\)</span>, then the inner angle is concave.</p>
+<p><img alt="image4" src="_images/arealocal.png" /></p>
+</div>
+</div>
+<div class="section" id="oif-global-forces">
+<h3>7.4.2. OIF global forces<a class="headerlink" href="#oif-global-forces" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">OIF_GLOBAL_FORCES</span></code> feature.</p>
+</div>
+<p>OIF global forces are available through the
+<a class="reference internal" href="espressomd.html#espressomd.interactions.OifGlobalForces" title="espressomd.interactions.OifGlobalForces"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.OifGlobalForces</span></code></a> class.</p>
+<p>This type of interaction is available solely for closed 3D immersed
+objects.</p>
+<p>It comprises two concepts: preservation of global surface
+and of volume of the object. The parameters <span class="math notranslate nohighlight">\(S^0, k_{ag}\)</span>
+define preservation of the surface while parameters
+<span class="math notranslate nohighlight">\(V^0, k_{v}\)</span> define volume preservation. They can be
+used together, or, by setting either <span class="math notranslate nohighlight">\(k_{ag}\)</span> or <span class="math notranslate nohighlight">\(k_{v}\)</span> to
+zero, the corresponding modulus can be turned off.</p>
+<div class="section" id="global-area-conservation">
+<h4>7.4.2.1. Global area conservation<a class="headerlink" href="#global-area-conservation" title="Permalink to this headline">¶</a></h4>
+<p>The global area conservation force is defined as</p>
+<div class="math notranslate nohighlight">
+\[F_{ag}(A) = k_{ag} \frac{S^{c} - S^{c}_0}{S^{c}_0} \cdot S_{ABC} \cdot \frac{t_{a}}{|t_a|^2 + |t_b|^2 + |t_c|^2},\]</div>
+<p>where <span class="math notranslate nohighlight">\(S^c\)</span> denotes the current surface of the immersed object, <span class="math notranslate nohighlight">\(S^c_0\)</span> the surface in
+the relaxed state, <span class="math notranslate nohighlight">\(S_{ABC}\)</span> is the surface of the triangle, <span class="math notranslate nohighlight">\(T\)</span> is the centroid of the triangle, and <span class="math notranslate nohighlight">\(t_a, t_b, t_c\)</span> are the lengths of segments <span class="math notranslate nohighlight">\(AT, BT, CT\)</span>, respectively.</p>
+</div>
+<div class="section" id="volume-conservation">
+<h4>7.4.2.2. Volume conservation<a class="headerlink" href="#volume-conservation" title="Permalink to this headline">¶</a></h4>
+<p>The deviation of the objects volume <span class="math notranslate nohighlight">\(V\)</span> is computed from the volume in the
+resting shape <span class="math notranslate nohighlight">\(\Delta V = V - V^0\)</span>. For each
+triangle the following force is computed</p>
+<div class="math notranslate nohighlight">
+\[F_v(ABC) = -k_v\frac{\Delta V}{V^0} S_{ABC} n_{ABC}\]</div>
+<p>where <span class="math notranslate nohighlight">\(S_{ABC}\)</span> is the area of triangle <span class="math notranslate nohighlight">\(ABC\)</span>, <span class="math notranslate nohighlight">\(n_{ABC}\)</span> is the
+normal unit vector of the plane spanned by <span class="math notranslate nohighlight">\(ABC\)</span>, and <span class="math notranslate nohighlight">\(k_v\)</span>
+is the volume constraint coefficient. The volume of one immersed object
+is computed from</p>
+<div class="math notranslate nohighlight">
+\[V = \sum_{ABC}S_{ABC}\ n_{ABC}\cdot h_{ABC},\]</div>
+<p>where the sum is computed over all triangles of the mesh and <span class="math notranslate nohighlight">\(h_{ABC}\)</span> is the
+normal vector from the centroid of triangle <span class="math notranslate nohighlight">\(ABC\)</span> to any plane which does not
+cross the cell. The force <span class="math notranslate nohighlight">\(F_v(ABC)\)</span> is equally distributed to all three vertices
+<span class="math notranslate nohighlight">\(A, B, C.\)</span></p>
+<p>This interaction is symmetric. After the definition of the interaction
+by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">global_force_interaction</span> <span class="o">=</span> <span class="n">OifGlobalForces</span><span class="p">(</span><span class="n">A0_g</span><span class="o">=</span><span class="mf">65.3</span><span class="p">,</span> <span class="n">ka_g</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">V0</span><span class="o">=</span><span class="mf">57.0</span><span class="p">,</span> <span class="n">kv</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>the order of vertices is crucial. By the following command the bonds are
+defined</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p0</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">global_force_interaction</span><span class="p">,</span> <span class="n">p1</span><span class="o">.</span><span class="n">part_id</span><span class="p">,</span> <span class="n">p2</span><span class="o">.</span><span class="n">part_id</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Triangle 012 must have correct orientation, that is the normal vector
+defined by a vector product <span class="math notranslate nohighlight">\(01\times02\)</span>. The orientation must
+point inside the immersed object.</p>
+</div>
+</div>
+<div class="section" id="out-direction">
+<h3>7.4.3. Out direction<a class="headerlink" href="#out-direction" title="Permalink to this headline">¶</a></h3>
+<p>OIF out direction is available through the
+<a class="reference internal" href="espressomd.html#espressomd.interactions.OifOutDirection" title="espressomd.interactions.OifOutDirection"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.interactions.OifOutDirection</span></code></a> class.</p>
+<p>This type of interaction is primarily for closed 3D immersed objects to
+compute the input for membrane collision. After creating the interaction</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out_direction_interaction</span> <span class="o">=</span> <span class="n">OifOutDirection</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>it is important how the bond is created. Particles need to be mentioned
+in the correct order. Command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">p0</span><span class="o">.</span><span class="n">add_bond</span><span class="p">((</span><span class="n">out_direction_interaction</span><span class="p">,</span> <span class="n">p1</span><span class="o">.</span><span class="n">part_id</span><span class="p">,</span> <span class="n">p2</span><span class="o">.</span><span class="n">part_id</span><span class="p">,</span> <span class="n">p3</span><span class="o">.</span><span class="n">part_id</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>calculates the outward normal vector of triangle defined by particles 1,
+2, 3 (these should be selected in such a way that particle 0 lies
+approximately at its centroid). In order for the direction to be outward
+with respect to the underlying object, the triangle 123 needs to be
+properly oriented (as explained in paragraph <a class="reference internal" href="#volume-conservation">Volume conservation</a>).</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">7. Bonded interactions</a><ul>
+<li><a class="reference internal" href="#distance-dependent-bonds">7.1. Distance-dependent bonds</a><ul>
+<li><a class="reference internal" href="#fene-bond">7.1.1. FENE bond</a></li>
+<li><a class="reference internal" href="#harmonic-bond">7.1.2. Harmonic bond</a></li>
+<li><a class="reference internal" href="#harmonic-dumbbell-bond">7.1.3. Harmonic Dumbbell Bond</a></li>
+<li><a class="reference internal" href="#quartic-bond">7.1.4. Quartic bond</a></li>
+<li><a class="reference internal" href="#bonded-coulomb">7.1.5. Bonded Coulomb</a></li>
+<li><a class="reference internal" href="#subtract-p3m-short-range-bond">7.1.6. Subtract P3M short-range bond</a></li>
+<li><a class="reference internal" href="#subtracted-lennard-jones-bond">7.1.7. Subtracted Lennard-Jones bond</a></li>
+<li><a class="reference internal" href="#rigid-bonds">7.1.8. Rigid bonds</a></li>
+<li><a class="reference internal" href="#thermalized-distance-bond">7.1.9. Thermalized distance bond</a></li>
+<li><a class="reference internal" href="#tabulated-distance">7.1.10. Tabulated distance</a></li>
+<li><a class="reference internal" href="#virtual-bonds">7.1.11. Virtual bonds</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bond-angle-interactions">7.2. Bond-angle interactions</a><ul>
+<li><a class="reference internal" href="#harmonic-angle-potential">7.2.1. Harmonic angle potential</a></li>
+<li><a class="reference internal" href="#cosine-angle-potential">7.2.2. Cosine angle potential</a></li>
+<li><a class="reference internal" href="#harmonic-cosine-potential">7.2.3. Harmonic cosine potential</a></li>
+<li><a class="reference internal" href="#tabulated-angle-potential">7.2.4. Tabulated angle potential</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dihedral-interactions">7.3. Dihedral interactions</a><ul>
+<li><a class="reference internal" href="#dihedral-potential-with-phase-shift">7.3.1. Dihedral potential with phase shift</a></li>
+<li><a class="reference internal" href="#tabulated-dihedral-potential">7.3.2. Tabulated dihedral potential</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#object-in-fluid-interactions">7.4. Object-in-fluid interactions</a><ul>
+<li><a class="reference internal" href="#oif-local-forces">7.4.1. OIF local forces</a></li>
+<li><a class="reference internal" href="#oif-global-forces">7.4.2. OIF global forces</a></li>
+<li><a class="reference internal" href="#out-direction">7.4.3. Out direction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="electrostatics.html" title="8. Electrostatics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="inter_non-bonded.html" title="6. Non-bonded interactions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">ESPResSo doc</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="ug.html" >&lt;no title&gt;</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2019, The ESPResSo project.
+      Last updated on Dec 13, 2019.
+    </div>
+  </body>
+</html>
