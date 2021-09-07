@@ -11,6 +11,7 @@ $endif$
 $if(latest_release)$
 * For [ESPResSo $latest_release$](tutorials$latest_release$.html)
 $endif$
+* [Online videos](videos.html)
 
 # Development
 
