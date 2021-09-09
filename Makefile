@@ -4,3 +4,6 @@
 
 tutorials.md: tutorials.py tutorials_header.md build/doc/tutorials/Readme.md
 	python3 "$<"
+
+videos.md: videos.py videos_header.md build/doc/tutorials/Readme.md
+	python3 "$<"

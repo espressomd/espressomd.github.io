@@ -11,6 +11,7 @@ $endif$
 $if(latest_release)$
 * For [ESPResSo $latest_release$](tutorials$latest_release$.html)
 $endif$
+* [Online videos](videos.html)
 
 # Development
 
@@ -19,6 +20,7 @@ $endif$
 
 # Further documentation
 
+* [Quickstart](quickstart.html)
 * [Installation FAQ](https://github.com/espressomd/espresso/wiki/Installation-FAQ)
 * [Filing bug reports](https://github.com/espressomd/espresso/wiki/Filing-bug-reports)
 * [User's Mailing List](http://espressomd.org/wordpress/?page_id=79)
