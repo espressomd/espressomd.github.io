@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.comfixed &#8212; ESPResSo 4.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.comfixed</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="ComFixed"><a class="viewcode-back" href="../../espressomd.html#espressomd.comfixed.ComFixed">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ComFixed</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Fix the center of mass of specific types.</span>
+
+<span class="sd">    Subtracts mass-weighted fraction of the total</span>
+<span class="sd">    force action on all particles of the type from</span>
+<span class="sd">    the particles after each force calculation. This</span>
+<span class="sd">    keeps the center of mass of the type fixed iff</span>
+<span class="sd">    the total momentum of the type is zero.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    types : array_like</span>
+<span class="sd">        List of types for which the center of mass should be fixed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ComFixed&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2021, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

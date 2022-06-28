@@ -1,0 +1,840 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2. Installation &#8212; ESPResSo 4.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/toggleprompt.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="3. Running a simulation" href="running.html" />
+    <link rel="prev" title="1. Introduction" href="introduction.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<span id="id1"></span><h1><span class="section-number">2. </span>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>This chapter will describe how to get, compile and run the software.</p>
+<p><em>ESPResSo</em> releases are available as source code packages from the homepage <a class="footnote-reference brackets" href="#id30" id="id2">1</a>.
+This is where new users should get the code. The code within release packages
+is tested and known to run on a number of platforms.
+Alternatively, people that want to use the newest features of <em>ESPResSo</em> or that
+want to start contributing to the software can instead obtain the
+current development code via the version control system software  <a class="footnote-reference brackets" href="#id31" id="id3">2</a>
+from <em>ESPResSo</em>’s project page at Github  <a class="footnote-reference brackets" href="#id32" id="id4">3</a>. This code might be not as well
+tested and documented as the release code; it is recommended to use this
+code only if you have already gained some experience in using <em>ESPResSo</em>.</p>
+<p>Unlike most other software, no binary distributions of <em>ESPResSo</em> are available,
+and the software is usually not installed globally for all users.
+Instead, users of <em>ESPResSo</em> should compile the software themselves. The reason for
+this is that it is possible to activate and deactivate various features
+before compiling the code. Some of these features are not compatible
+with each other, and some of the features have a profound impact on the
+performance of the code. Therefore it is not possible to build a single
+binary that can satisfy all needs. For performance reasons a user
+should always activate only those features that are actually needed.
+This means, however, that learning how to compile is a necessary evil.
+The build system of <em>ESPResSo</em> uses CMake <a class="footnote-reference brackets" href="#id33" id="id5">4</a> to compile
+software easily on a wide range of platforms.</p>
+<div class="section" id="requirements">
+<span id="id6"></span><h2><span class="section-number">2.1. </span>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>The following tools and libraries, including their header files,
+are required to be able to compile and use <em>ESPResSo</em>:</p>
+<dl class="glossary simple">
+<dt id="term-CMake">CMake<a class="headerlink" href="#term-CMake" title="Permalink to this term">¶</a></dt><dd><p>The build system is based on CMake.</p>
+</dd>
+<dt id="term-C-compiler">C++ compiler<a class="headerlink" href="#term-C-compiler" title="Permalink to this term">¶</a></dt><dd><p>The C++ core of <em>ESPResSo</em> needs to be built by a C++14-capable compiler.</p>
+</dd>
+<dt id="term-Boost">Boost<a class="headerlink" href="#term-Boost" title="Permalink to this term">¶</a></dt><dd><p>A number of advanced C++ features used by <em>ESPResSo</em> are provided by Boost.
+We strongly recommend to use at least Boost 1.71.</p>
+</dd>
+<dt id="term-FFTW">FFTW<a class="headerlink" href="#term-FFTW" title="Permalink to this term">¶</a></dt><dd><p>For some algorithms like P<span class="math notranslate nohighlight">\(^3\)</span>M, <em>ESPResSo</em> needs the FFTW library
+version 3 or later <a class="footnote-reference brackets" href="#id34" id="id7">5</a> for Fourier transforms, including header files.</p>
+</dd>
+<dt id="term-MPI">MPI<a class="headerlink" href="#term-MPI" title="Permalink to this term">¶</a></dt><dd><p>An MPI library that implements the MPI standard version 1.2 is required
+to run simulations in parallel. <em>ESPResSo</em> is currently tested against
+<a class="reference external" href="https://www.open-mpi.org">Open MPI</a> and
+<a class="reference external" href="https://www.mpich.org">MPICH</a>, with and without
+<a class="reference external" href="https://openucx.org">UCX</a> enabled.
+Other MPI implementations like Intel MPI should also work, although
+they are not actively tested in <em>ESPResSo</em> continuous integration.</p>
+</dd>
+<dt id="term-Python">Python<a class="headerlink" href="#term-Python" title="Permalink to this term">¶</a></dt><dd><p><em>ESPResSo</em>’s main user interface relies on Python 3.</p>
+</dd>
+<dt id="term-Cython">Cython<a class="headerlink" href="#term-Cython" title="Permalink to this term">¶</a></dt><dd><p>Cython is used for connecting the C++ core to Python.</p>
+</dd>
+</dl>
+<div class="section" id="installing-requirements-on-ubuntu-linux">
+<span id="id8"></span><h3><span class="section-number">2.1.1. </span>Installing requirements on Ubuntu Linux<a class="headerlink" href="#installing-requirements-on-ubuntu-linux" title="Permalink to this headline">¶</a></h3>
+<p>To compile <em>ESPResSo</em> on Ubuntu 22.04 LTS, install the following dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install build-essential cmake cython3 python3-pip python3-numpy <span class="se">\</span>
+  libboost-all-dev openmpi-common fftw3-dev libhdf5-dev libhdf5-openmpi-dev <span class="se">\</span>
+  python3-scipy python3-opengl libgsl-dev
+</pre></div>
+</div>
+<p>Optionally the ccmake utility can be installed for easier configuration:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install cmake-curses-gui
+</pre></div>
+</div>
+<div class="section" id="nvidia-gpu-acceleration">
+<span id="id9"></span><h4><span class="section-number">2.1.1.1. </span>Nvidia GPU acceleration<a class="headerlink" href="#nvidia-gpu-acceleration" title="Permalink to this headline">¶</a></h4>
+<p>If your computer has an Nvidia graphics card, you should also download and install the
+CUDA SDK to make use of GPU computation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install nvidia-cuda-toolkit
+</pre></div>
+</div>
+<p>On Ubuntu 22.04, the default GCC compiler is too recent for nvcc and will fail
+to compile sources that rely on <code class="docutils literal notranslate"><span class="pre">std::function</span></code>. You can either use GCC 10:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">CC</span><span class="o">=</span>gcc-10 <span class="nv">CXX</span><span class="o">=</span>g++-10 cmake .. -D <span class="nv">WITH_CUDA</span><span class="o">=</span>ON
+make -j
+</pre></div>
+</div>
+<p>or alternatively install Clang 12 as a replacement for nvcc and GCC:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">CC</span><span class="o">=</span>clang-12 <span class="nv">CXX</span><span class="o">=</span>clang++-12 cmake .. -D <span class="nv">WITH_CUDA</span><span class="o">=</span>ON -D <span class="nv">WITH_CUDA_COMPILER</span><span class="o">=</span>clang
+make -j
+</pre></div>
+</div>
+<p>On Ubuntu 20.04, the default GCC compiler is also too recent for nvcc and will
+generate compiler errors. You can either install an older version of GCC and
+select it with environment variables <code class="docutils literal notranslate"><span class="pre">CC</span></code> and <code class="docutils literal notranslate"><span class="pre">CXX</span></code> when building <em>ESPResSo</em>,
+or edit the system header files as shown in the following
+<a class="reference external" href="https://github.com/espressomd/espresso/issues/3654#issuecomment-612165048">patch for Ubuntu 20.04</a>.</p>
+</div>
+<div class="section" id="requirements-for-building-the-documentation">
+<span id="id10"></span><h4><span class="section-number">2.1.1.2. </span>Requirements for building the documentation<a class="headerlink" href="#requirements-for-building-the-documentation" title="Permalink to this headline">¶</a></h4>
+<p>To generate the Sphinx documentation, install the following packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3 install --user <span class="se">\</span>
+    <span class="s1">&#39;sphinx&gt;=2.3.0,!=3.0.0&#39;</span> <span class="se">\</span>
+    <span class="s1">&#39;sphinxcontrib-bibtex&gt;=2.4.1&#39;</span> <span class="se">\</span>
+    <span class="s1">&#39;sphinx-toggleprompt==0.0.5&#39;</span>
+</pre></div>
+</div>
+<p>To generate the Doxygen documentation, install the following packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install doxygen graphviz
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-up-a-jupyter-environment">
+<span id="id11"></span><h4><span class="section-number">2.1.1.3. </span>Setting up a Jupyter environment<a class="headerlink" href="#setting-up-a-jupyter-environment" title="Permalink to this headline">¶</a></h4>
+<p>To run the samples and tutorials, start by installing the following packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install python3-matplotlib python3-pint python3-tqdm ffmpeg
+pip3 install --user <span class="s1">&#39;MDAnalysis&gt;=1.0.0,&lt;2.0.0&#39;</span>
+</pre></div>
+</div>
+<p>The tutorials are written in the
+<a class="reference external" href="https://nbformat.readthedocs.io/en/latest/">Notebook Format</a>
+version &lt;= 4.4 and can be executed by any of these tools:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://jupyter-notebook.readthedocs.io/en/stable/notebook.html">Jupyter Notebook</a></p></li>
+<li><p><a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/">JupyterLab</a></p></li>
+<li><p><a class="reference external" href="https://ipython.org/">IPython</a> (not recommended)</p></li>
+</ul>
+<p>To check whether one of them is installed, run these commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>jupyter notebook --version
+jupyter lab --version
+ipython --version
+</pre></div>
+</div>
+<p>If you don’t have any of these tools installed and aren’t sure which one
+to use, we recommend installing the historic Jupyter Notebook, since the
+<em>ESPResSo</em> tutorials have been designed with the <code class="docutils literal notranslate"><span class="pre">exercise2</span></code> plugin in mind.</p>
+<p>To use Jupyter Notebook, install the following packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3 install --user nbformat notebook <span class="s1">&#39;jupyter_contrib_nbextensions==0.5.1&#39;</span>
+jupyter contrib nbextension install --user
+jupyter nbextension <span class="nb">enable</span> rubberband/main
+jupyter nbextension <span class="nb">enable</span> exercise2/main
+</pre></div>
+</div>
+<p>Alternatively, to use JupyterLab, install the following packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3 install --user nbformat notebook jupyterlab
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="installing-requirements-on-other-linux-distributions">
+<span id="id12"></span><h3><span class="section-number">2.1.2. </span>Installing requirements on other Linux distributions<a class="headerlink" href="#installing-requirements-on-other-linux-distributions" title="Permalink to this headline">¶</a></h3>
+<p>Please refer to the following Dockerfiles to find the minimum set of packages
+required to compile <em>ESPResSo</em> on other Linux distributions:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/espressomd/docker/blob/4.2/docker/Dockerfile-fedora">Fedora</a></p></li>
+<li><p><a class="reference external" href="https://github.com/espressomd/docker/blob/4.2/docker/Dockerfile-debian">Debian</a></p></li>
+</ul>
+</div>
+<div class="section" id="installing-requirements-on-windows-via-wsl">
+<span id="id13"></span><h3><span class="section-number">2.1.3. </span>Installing requirements on Windows via WSL<a class="headerlink" href="#installing-requirements-on-windows-via-wsl" title="Permalink to this headline">¶</a></h3>
+<p>To run <em>ESPResSo</em> on Windows, use the Linux subsystem. For that you need to</p>
+<ul class="simple">
+<li><p>follow <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">these instructions</a> to install Ubuntu</p></li>
+<li><p>start Ubuntu (or open an Ubuntu tab in <a class="reference external" href="https://www.microsoft.com/en-us/p/windows-terminal/9n0dx20hk701">Windows Terminal</a>)</p></li>
+<li><p>execute <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt</span> <span class="pre">update</span></code> to prepare the installation of dependencies</p></li>
+<li><p>optional step: If you have a NVIDIA graphics card available and want to make
+use of <em>ESPResSo</em>’s GPU acceleration, follow <a class="reference external" href="https://docs.nvidia.com/cuda/wsl-user-guide/index.html#ch03a-setting-up-cuda">these instructions</a>
+to set up CUDA.</p></li>
+<li><p>follow the instructions for <a class="reference internal" href="#installing-requirements-on-ubuntu-linux"><span class="std std-ref">Installing requirements on Ubuntu Linux</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="installing-requirements-on-macos">
+<span id="id14"></span><h3><span class="section-number">2.1.4. </span>Installing requirements on macOS<a class="headerlink" href="#installing-requirements-on-macos" title="Permalink to this headline">¶</a></h3>
+<p>To build <em>ESPResSo</em> on macOS 10.15 or higher, you need to install its dependencies.
+There are two possibilities for this, MacPorts and Homebrew. We strongly
+recommend Homebrew, but if you already have MacPorts installed, you can use
+that too, although we do not provide MacPorts installation instructions.</p>
+<p>To check whether you already have one or the other installed, run the
+following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">test</span> -e /opt/local/bin/port <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="s2">&quot;MacPorts is installed&quot;</span>
+<span class="nb">test</span> -e /usr/local/bin/brew <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="s2">&quot;Homebrew is installed&quot;</span>
+</pre></div>
+</div>
+<p>If Homebrew is already installed, you should resolve any problems reported by
+the command</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew doctor
+</pre></div>
+</div>
+<p>If you want to install Homebrew, follow the installation instructions at
+<a class="reference external" href="https://docs.brew.sh/Installation">https://docs.brew.sh/Installation</a>, but bear in mind that MacPorts and Homebrew
+may conflict with one another.</p>
+<p>If Anaconda Python or the Python from www.python.org are installed, you
+will likely not be able to run <em>ESPResSo</em>. Therefore, please uninstall them
+using the following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo rm -r ~/anaconda<span class="o">[</span><span class="m">23</span><span class="o">]</span>
+sudo rm -r /Library/Python
+</pre></div>
+</div>
+<div class="section" id="installing-packages-using-homebrew">
+<h4><span class="section-number">2.1.4.1. </span>Installing packages using Homebrew<a class="headerlink" href="#installing-packages-using-homebrew" title="Permalink to this headline">¶</a></h4>
+<p>Run the following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew install cmake python cython boost boost-mpi fftw <span class="se">\</span>
+  doxygen gsl numpy scipy ipython jupyter
+brew install hdf5-mpi
+brew link --force cython
+pip install PyOpenGL matplotlib
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="quick-installation">
+<span id="id15"></span><h2><span class="section-number">2.2. </span>Quick installation<a class="headerlink" href="#quick-installation" title="Permalink to this headline">¶</a></h2>
+<p>If you have installed the requirements (see section <a class="reference internal" href="#requirements"><span class="std std-ref">Requirements</span></a>) in
+standard locations, compiling <em>ESPResSo</em> is usually only a matter of creating a build
+directory and calling <code class="docutils literal notranslate"><span class="pre">cmake</span></code> and <code class="docutils literal notranslate"><span class="pre">make</span></code> in it. See for example the command
+lines below (optional steps which modify the build process are commented out):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir build
+<span class="nb">cd</span> build
+cmake ..
+<span class="c1">#ccmake . // in order to add/remove features like ScaFaCoS or CUDA</span>
+make -j
+</pre></div>
+</div>
+<p>This will build <em>ESPResSo</em> with a default feature set, namely
+<code class="file docutils literal notranslate"><span class="pre">src/config/myconfig-default.hpp</span></code>. This file is a C++ header file,
+which defines the features that should be compiled in.
+You may want to adjust the feature set to your needs. This can be easily
+done by copying the <code class="file docutils literal notranslate"><span class="pre">myconfig-sample.hpp</span></code> which has been created in
+the <code class="file docutils literal notranslate"><span class="pre">build</span></code> directory to <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code> and only uncomment
+the features you want to use in your simulation.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cmake</span></code> command looks for libraries and tools needed by <em>ESPResSo</em>.
+So <em>ESPResSo</em> can only be built if <code class="docutils literal notranslate"><span class="pre">cmake</span></code> reports no errors.</p>
+<p>The command <code class="docutils literal notranslate"><span class="pre">make</span></code> will compile the source code. Depending on the
+options passed to the program, <code class="docutils literal notranslate"><span class="pre">make</span></code> can also be used for a number of
+other things:</p>
+<ul class="simple">
+<li><p>It can install and uninstall the program to some other directories.
+However, normally it is not necessary to actually <em>install</em> to run
+it: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code></p></li>
+<li><p>It can invoke code checks: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">check</span></code></p></li>
+<li><p>It can build this documentation: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">sphinx</span></code></p></li>
+</ul>
+<p>When these steps have successfully completed, <em>ESPResSo</em> can be started with the
+command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso script.py
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">script.py</span></code> is a Python script which has to be written by the user.
+You can find some examples in the <code class="file docutils literal notranslate"><span class="pre">samples</span></code> folder of the source code
+directory. If you want to run in parallel, you should have compiled with an
+MPI library, and need to tell MPI to run in parallel.
+The actual invocation is implementation-dependent, but in many cases, such as
+<em>Open MPI</em> and <em>MPICH</em>, you can use</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun -n <span class="m">4</span> ./pypresso script.py
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">4</span></code> is the number of processors to be used.</p>
+</div>
+<div class="section" id="features">
+<span id="id16"></span><h2><span class="section-number">2.3. </span>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>This chapter describes the features that can be activated in <em>ESPResSo</em>. Even if
+possible, it is not recommended to activate all features, because this
+will negatively affect <em>ESPResSo</em>’s performance.</p>
+<p>Features can be activated in the configuration header <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>
+(see section <a class="reference internal" href="#myconfig-hpp-activating-and-deactivating-features"><span class="std std-ref">myconfig.hpp: Activating and deactivating features</span></a>).
+To activate <code class="docutils literal notranslate"><span class="pre">FEATURE</span></code>, add the following line to the header file:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define FEATURE</span>
+</pre></div>
+</div>
+<div class="section" id="general-features">
+<span id="id17"></span><h3><span class="section-number">2.3.1. </span>General features<a class="headerlink" href="#general-features" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ELECTROSTATICS</span></code> This enables the use of the various electrostatics algorithms, such as P3M.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="electrostatics.html#electrostatics"><span class="std std-ref">Electrostatics</span></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MMM1D_GPU</span></code>: This enables MMM1D on GPU. It is faster than the CPU version
+by several orders of magnitude, but has float precision instead of double
+precision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MMM1D_MACHINE_PREC</span></code>: This enables high-precision Bessel functions
+for MMM1D on CPU. Comes with a 60% slow-down penalty. The low-precision
+functions are enabled by default and are precise enough for most applications.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DIPOLES</span></code> This activates the dipole-moment property of particles and switches
+on various magnetostatics algorithms</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="magnetostatics.html#magnetostatics"><span class="std std-ref">Magnetostatics</span></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SCAFACOS_DIPOLES</span></code> This activates magnetostatics methods of ScaFaCoS.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DIPOLAR_DIRECT_SUM</span></code> This activates the GPU implementation of the dipolar direct sum.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> Switch on rotational degrees of freedom for the particles, as well as
+the corresponding quaternion integrator.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="particles.html#setting-up-particles"><span class="std std-ref">Setting up particles</span></a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When this feature is activated, every particle has three
+additional degrees of freedom, which for example means that the
+kinetic energy changes at constant temperature is twice as large.</p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">THERMOSTAT_PER_PARTICLE</span></code> Allows setting a per-particle friction
+coefficient for the Langevin and Brownian thermostats.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ROTATIONAL_INERTIA</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EXTERNAL_FORCES</span></code> Allows to define an arbitrary constant force for each particle
+individually. Also allows to fix individual coordinates of particles,
+keep them at a fixed position or within a plane.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MASS</span></code> Allows particles to have individual masses. Note that some analysis
+procedures have not yet been adapted to take the masses into account
+correctly.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.mass" title="espressomd.particle_data.ParticleHandle.mass"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.mass</span></code></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EXCLUSIONS</span></code> Allows to exclude specific short ranged interactions within
+molecules.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.add_exclusion" title="espressomd.particle_data.ParticleHandle.add_exclusion"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleHandle.add_exclusion()</span></code></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BOND_CONSTRAINT</span></code> Turns on the RATTLE integrator which allows for fixed lengths bonds
+between particles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VIRTUAL_SITES_RELATIVE</span></code> Virtual sites are particles, the position and velocity of which is
+not obtained by integrating equations of motion. Rather, they are
+placed using the position (and orientation) of other particles. The
+feature allows for rigid arrangements of particles.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="particles.html#virtual-sites"><span class="std std-ref">Virtual sites</span></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">COLLISION_DETECTION</span></code> Allows particles to be bound on collision.</p></li>
+</ul>
+<p>In addition, there are switches that enable additional features in the
+integrator or thermostat:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">NPT</span></code> Enables an on-the-fly NpT integration scheme.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="integration.html#isotropic-npt-thermostat"><span class="std std-ref">Isotropic NpT thermostat</span></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ENGINE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PARTICLE_ANISOTROPY</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="fluid-dynamics-and-fluid-structure-interaction">
+<span id="id18"></span><h3><span class="section-number">2.3.2. </span>Fluid dynamics and fluid structure interaction<a class="headerlink" href="#fluid-dynamics-and-fluid-structure-interaction" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">DPD</span></code> Enables the dissipative particle dynamics thermostat and interaction.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a></p>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LB_BOUNDARIES_GPU</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LB_ELECTROHYDRODYNAMICS</span></code> Enables the implicit calculation of electro-hydrodynamics for charged
+particles and salt ions in an electric field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ELECTROKINETICS</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EK_BOUNDARIES</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EK_DEBUG</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="interaction-features">
+<span id="id19"></span><h3><span class="section-number">2.3.3. </span>Interaction features<a class="headerlink" href="#interaction-features" title="Permalink to this headline">¶</a></h3>
+<p>The following switches turn on various short ranged interactions (see
+section <a class="reference internal" href="inter_non-bonded.html#isotropic-non-bonded-interactions"><span class="std std-ref">Isotropic non-bonded interactions</span></a>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TABULATED</span></code> Enable support for user-defined non-bonded interaction potentials.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LENNARD_JONES</span></code> Enable the Lennard-Jones potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LENNARD_JONES_GENERIC</span></code> Enable the generic Lennard-Jones potential with configurable
+exponents and individual prefactors for the two terms.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LJCOS</span></code> Enable the Lennard-Jones potential with a cosine-tail.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LJCOS2</span></code> Same as <code class="docutils literal notranslate"><span class="pre">LJCOS</span></code>, but using a slightly different way of smoothing the
+connection to 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WCA</span></code> Enable the Weeks–Chandler–Andersen potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GAY_BERNE</span></code> Enable the Gay–Berne potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HERTZIAN</span></code> Enable the Hertzian potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MORSE</span></code> Enable the Morse potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BUCKINGHAM</span></code> Enable the Buckingham potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SOFT_SPHERE</span></code> Enable the soft sphere potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SMOOTH_STEP</span></code> Enable the smooth step potential, a step potential with
+two length scales.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BMHTF_NACL</span></code> Enable the Born–Meyer–Huggins–Tosi–Fumi potential,
+which can be used to model salt melts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GAUSSIAN</span></code> Enable the Gaussian potential.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HAT</span></code> Enable the Hat potential.</p></li>
+</ul>
+<p>Some of the short-range interactions have additional features:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LJGEN_SOFTCORE</span></code> This modifies the generic Lennard-Jones potential
+(<code class="docutils literal notranslate"><span class="pre">LENNARD_JONES_GENERIC</span></code>) with tunable parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">THOLE</span></code> See <a class="reference internal" href="inter_non-bonded.html#thole-correction"><span class="std std-ref">Thole correction</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="debug-messages">
+<span id="id20"></span><h3><span class="section-number">2.3.4. </span>Debug messages<a class="headerlink" href="#debug-messages" title="Permalink to this headline">¶</a></h3>
+<p>Finally, there is a flag for debugging:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ADDITIONAL_CHECKS</span></code> Enables numerous additional checks which can detect
+inconsistencies especially in the cell systems. These checks are however
+too slow to be enabled in production runs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because of a bug in OpenMPI versions 2.0-2.1, 3.0.0-3.0.2 and 3.1.0-3.1.2
+that causes a segmentation fault when running the <em>ESPResSo</em> OpenGL visualizer
+with feature <code class="docutils literal notranslate"><span class="pre">ADDITIONAL_CHECKS</span></code> enabled together with either
+<code class="docutils literal notranslate"><span class="pre">ELECTROSTATICS</span></code> or <code class="docutils literal notranslate"><span class="pre">DIPOLES</span></code>, the subset of additional checks for
+those two features are disabled if an unpatched version of OpenMPI is
+detected during compilation.</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="external-features">
+<span id="id21"></span><h3><span class="section-number">2.3.5. </span>External features<a class="headerlink" href="#external-features" title="Permalink to this headline">¶</a></h3>
+<p>External features cannot be added to the <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code> file by the user.
+They are added by CMake if the corresponding dependency was found on the
+system. Some of these external features are optional and must be activated
+using a CMake flag (see <a class="reference internal" href="#options-and-variables"><span class="std std-ref">Options and Variables</span></a>).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CUDA</span></code> Enables GPU-specific features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FFTW</span></code> Enables features relying on the fast Fourier transforms, e.g. P3M.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H5MD</span></code> Write data to H5MD-formatted hdf5 files (see <a class="reference internal" href="io.html#writing-h5md-files"><span class="std std-ref">Writing H5MD-files</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SCAFACOS</span></code> Enables features relying on the ScaFaCoS library (see
+<a class="reference internal" href="electrostatics.html#scafacos-electrostatics"><span class="std std-ref">ScaFaCoS electrostatics</span></a>, <a class="reference internal" href="magnetostatics.html#scafacos-magnetostatics"><span class="std std-ref">ScaFaCoS magnetostatics</span></a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GSL</span></code> Enables features relying on the GNU Scientific Library, e.g.
+<a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.Cluster.fractal_dimension" title="espressomd.cluster_analysis.Cluster.fractal_dimension"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.cluster_analysis.Cluster.fractal_dimension()</span></code></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">STOKESIAN_DYNAMICS</span></code> Enables the Stokesian Dynamics feature
+(see <a class="reference internal" href="integration.html#stokesian-dynamics"><span class="std std-ref">Stokesian Dynamics</span></a>). Requires BLAS and LAPACK.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="configuring">
+<span id="id22"></span><h2><span class="section-number">2.4. </span>Configuring<a class="headerlink" href="#configuring" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="myconfig-hpp-activating-and-deactivating-features">
+<span id="id23"></span><h3><span class="section-number">2.4.1. </span><code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>: Activating and deactivating features<a class="headerlink" href="#myconfig-hpp-activating-and-deactivating-features" title="Permalink to this headline">¶</a></h3>
+<p><em>ESPResSo</em> has a large number of features that can be compiled into the binary.
+However, it is not recommended to actually compile in all possible
+features, as this will slow down <em>ESPResSo</em> significantly. Instead, compile in only
+the features that are actually required. A strong gain in speed can be
+achieved by disabling all non-bonded interactions except for a single
+one, e.g. <code class="docutils literal notranslate"><span class="pre">LENNARD_JONES</span></code>. For developers, it is also possible to turn on or off a
+number of debugging messages. The features and debug messages can be
+controlled via a configuration header file that contains C-preprocessor
+declarations. Subsection <a class="reference internal" href="#features"><span class="std std-ref">Features</span></a> describes all available features. If a
+file named <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code> is present in the build directory when <code class="docutils literal notranslate"><span class="pre">cmake</span></code>
+is run, all features defined in it will be compiled in. If no such file exists,
+the configuration file <code class="file docutils literal notranslate"><span class="pre">src/config/myconfig-default.hpp</span></code> will be used
+instead, which turns on the default features.</p>
+<p>When you distinguish between the build and the source directory, the
+configuration header can be put in either of these. Note, however, that
+when a configuration header is found in both directories, the one in the
+build directory will be used.</p>
+<p>By default, the configuration header is called <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>.
+The configuration header can be used to compile different binary
+versions of with a different set of features from the same source
+directory. Suppose that you have a source directory <code class="file docutils literal notranslate"><span class="pre">$srcdir</span></code> and two
+build directories <code class="file docutils literal notranslate"><span class="pre">$builddir1</span></code> and <code class="file docutils literal notranslate"><span class="pre">$builddir2</span></code> that contain
+different configuration headers:</p>
+<ul>
+<li><p><code class="file docutils literal notranslate"><span class="pre">$builddir1/myconfig.hpp</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define ELECTROSTATICS</span>
+<span class="cp">#define LENNARD_JONES</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">$builddir2/myconfig.hpp</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define LJCOS</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Then you can simply compile two different versions of <em>ESPResSo</em> via:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="nv">$builddir1</span>
+cmake ..
+make
+
+<span class="nb">cd</span> <span class="nv">$builddir2</span>
+cmake ..
+make
+</pre></div>
+</div>
+<p>To see what features were activated in <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso
+</pre></div>
+</div>
+<p>and then in the Python interpreter:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">espressomd</span><span class="o">.</span><span class="n">features</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cmake">
+<span id="id24"></span><h3><span class="section-number">2.4.2. </span><code class="docutils literal notranslate"><span class="pre">cmake</span></code><a class="headerlink" href="#cmake" title="Permalink to this headline">¶</a></h3>
+<p>In order to build the first step is to create a build directory in which
+cmake can be executed. In cmake, the <em>source directory</em> (that contains
+all the source files) is completely separated from the <em>build directory</em>
+(where the files created by the build process are put). <code class="docutils literal notranslate"><span class="pre">cmake</span></code> is
+designed to <em>not</em> be executed in the source directory. <code class="docutils literal notranslate"><span class="pre">cmake</span></code> will
+determine how to use and where to find the compiler, as well as the
+different libraries and tools required by the compilation process. By
+having multiple build directories you can build several variants of <em>ESPResSo</em>,
+each variant having different activated features, and for as many
+platforms as you want.</p>
+<p>Once you’ve run <code class="docutils literal notranslate"><span class="pre">ccmake</span></code>, you can list the configured variables with
+<code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">-LAH</span> <span class="pre">-N</span> <span class="pre">.</span> <span class="pre">|</span> <span class="pre">less</span></code> (uses a pager) or with <code class="docutils literal notranslate"><span class="pre">ccmake</span> <span class="pre">..</span></code> and pressing
+key <code class="docutils literal notranslate"><span class="pre">t</span></code> to toggle the advanced mode on (uses the <code class="docutils literal notranslate"><span class="pre">curses</span></code> interface).</p>
+<p><strong>Example:</strong></p>
+<p>When the source directory is <code class="file docutils literal notranslate"><span class="pre">srcdir</span></code> (the files where unpacked to this
+directory), then the user can create a build directory <code class="file docutils literal notranslate"><span class="pre">build</span></code> below that
+path by calling <code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">srcdir/build</span></code>. In the build directory <code class="docutils literal notranslate"><span class="pre">cmake</span></code> is to be
+executed, followed by a call to <code class="docutils literal notranslate"><span class="pre">make</span></code>. None of the files in the source directory
+are ever modified by the build process.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> build
+cmake ..
+make -j
+</pre></div>
+</div>
+<p>Afterwards <em>ESPResSo</em> can be run by calling <code class="docutils literal notranslate"><span class="pre">./pypresso</span></code> from the command line.</p>
+</div>
+<div class="section" id="ccmake">
+<span id="id25"></span><h3><span class="section-number">2.4.3. </span><code class="docutils literal notranslate"><span class="pre">ccmake</span></code><a class="headerlink" href="#ccmake" title="Permalink to this headline">¶</a></h3>
+<p>Optionally and for easier use, the curses interface to cmake can be used
+to configure <em>ESPResSo</em> interactively.</p>
+<p><strong>Example:</strong></p>
+<p>Alternatively to the previous example, instead of cmake, the ccmake executable
+is called in the build directory to configure <em>ESPResSo</em>, followed by a call to make:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> build
+ccmake ..
+make
+</pre></div>
+</div>
+<p>Fig. <a class="reference internal" href="#ccmake-figure"><span class="std std-ref">ccmake interface</span></a> shows the interactive ccmake UI.</p>
+<div class="figure align-center" id="id35">
+<span id="ccmake-figure"></span><a class="reference internal image-reference" href="_images/ccmake-example.png"><img alt="ccmake interface" src="_images/ccmake-example.png" style="width: 70.0%;" /></a>
+<p class="caption"><span class="caption-text">ccmake interface</span><a class="headerlink" href="#id35" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="options-and-variables">
+<span id="id26"></span><h3><span class="section-number">2.4.4. </span>Options and Variables<a class="headerlink" href="#options-and-variables" title="Permalink to this headline">¶</a></h3>
+<p>The behavior of <em>ESPResSo</em> can be controlled by means of options and variables
+in the <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file. Also options are defined there.
+The following options are available:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_CUDA</span></code>: Build with GPU support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_HDF5</span></code>: Build with HDF5</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_TESTS</span></code>: Enable tests</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_SCAFACOS</span></code>: Build with ScaFaCoS support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_STOKESIAN_DYNAMICS</span></code> Build with Stokesian Dynamics support</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_VALGRIND_INSTRUMENTATION</span></code>: Build with valgrind instrumentation
+markers</p></li>
+</ul>
+<p>When the value in the <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file is set to ON, the
+corresponding option is created; if the value of the option is set to OFF,
+the corresponding option is not created. These options can also be modified
+by calling <code class="docutils literal notranslate"><span class="pre">cmake</span></code> with the command line argument <code class="docutils literal notranslate"><span class="pre">-D</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake -D <span class="nv">WITH_HDF5</span><span class="o">=</span>OFF ..
+</pre></div>
+</div>
+<p>When an option is activated, additional options may become available.
+For example with <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">WITH_CUDA=ON</span></code>, one can choose the CUDA compiler with
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">WITH_CUDA_COMPILER=&lt;compiler_id&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;compiler_id&gt;</span></code> can be
+<code class="docutils literal notranslate"><span class="pre">nvcc</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">clang</span></code>.</p>
+<p>Environment variables can be passed to CMake. For example, to select Clang, use
+<code class="docutils literal notranslate"><span class="pre">CC=clang</span> <span class="pre">CXX=clang++</span> <span class="pre">cmake</span> <span class="pre">..</span> <span class="pre">-DWITH_CUDA=ON</span> <span class="pre">-DWITH_CUDA_COMPILER=clang</span></code>.
+If you have multiple versions of the CUDA library installed, you can select the
+correct one with <code class="docutils literal notranslate"><span class="pre">CUDA_BIN_PATH=/usr/local/cuda-10.0</span> <span class="pre">cmake</span> <span class="pre">..</span> <span class="pre">-DWITH_CUDA=ON</span></code>
+(with Clang as the CUDA compiler, you also need to override its default CUDA
+path with <code class="docutils literal notranslate"><span class="pre">-DCMAKE_CXX_FLAGS=--cuda-path=/usr/local/cuda-10.0</span></code>).</p>
+<div class="section" id="build-types-and-compiler-flags">
+<span id="id27"></span><h4><span class="section-number">2.4.4.1. </span>Build types and compiler flags<a class="headerlink" href="#build-types-and-compiler-flags" title="Permalink to this headline">¶</a></h4>
+<p>The build type is controlled by <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=&lt;type&gt;</span></code> where
+<code class="docutils literal notranslate"><span class="pre">&lt;type&gt;</span></code> can take one of the following values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Release</span></code>: for production use: disables assertions and debug information,
+enables <code class="docutils literal notranslate"><span class="pre">-O3</span></code> optimization (this is the default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RelWithAssert</span></code>: for debugging purposes: enables assertions and
+<code class="docutils literal notranslate"><span class="pre">-O3</span></code> optimization (use this to track the source of a fatal error)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Debug</span></code>: for debugging in GDB</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Coverage</span></code>: for code coverage</p></li>
+</ul>
+<p>Cluster users and HPC developers may be interested in manually editing the
+<code class="docutils literal notranslate"><span class="pre">Espresso_cpp_flags</span></code> target in the top-level <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file for
+finer control over compiler flags. The variable declaration is followed
+by a series of conditionals to enable or disable compiler-specific flags.
+Compiler flags passed to CMake via the <code class="docutils literal notranslate"><span class="pre">-DCMAKE_CXX_FLAGS</span></code> option
+(such as <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">.</span> <span class="pre">-DCMAKE_CXX_FLAGS=&quot;-ffast-math</span> <span class="pre">-fno-finite-math-only&quot;</span></code>)
+will appear in the compiler command before the flags in <code class="docutils literal notranslate"><span class="pre">Espresso_cpp_flags</span></code>,
+and will therefore have lower precedence.</p>
+<p>Be aware that fast-math mode can break <em>ESPResSo</em>. It is incompatible with the
+<code class="docutils literal notranslate"><span class="pre">ADDITIONAL_CHECKS</span></code> feature due to the loss of precision in the LB code
+on CPU. The Clang 10 compiler breaks field couplings with <code class="docutils literal notranslate"><span class="pre">-ffast-math</span></code>.
+The Intel compiler enables the <code class="docutils literal notranslate"><span class="pre">-fp-model</span> <span class="pre">fast=1</span></code> flag by default;
+it can be disabled by adding the <code class="docutils literal notranslate"><span class="pre">-fp-model=strict</span></code> flag.</p>
+<p><em>ESPResSo</em> currently doesn’t fully support link-time optimization (LTO).</p>
+</div>
+</div>
+<div class="section" id="configuring-without-a-network-connection">
+<span id="id28"></span><h3><span class="section-number">2.4.5. </span>Configuring without a network connection<a class="headerlink" href="#configuring-without-a-network-connection" title="Permalink to this headline">¶</a></h3>
+<p>Several <a class="reference internal" href="#external-features"><span class="std std-ref">external features</span></a> in <em>ESPResSo</em> rely on
+external libraries that are downloaded automatically by CMake. When a
+network connection cannot be established due to firewall restrictions,
+the CMake logic needs editing:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_HDF5</span></code>: when cloning <em>ESPResSo</em>, the <code class="file docutils literal notranslate"><span class="pre">libs/h5xx</span></code> folder will be
+a git submodule containing a <code class="file docutils literal notranslate"><span class="pre">.git</span></code> subfolder. To prevent CMake from
+updating this submodule with git, delete the corresponding command with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sed -i <span class="s1">&#39;/execute_process(COMMAND ${GIT_EXECUTABLE} submodule update -- libs\/h5xx/,+1 d&#39;</span> CMakeLists.txt
+</pre></div>
+</div>
+<p>When installing a release version of <em>ESPResSo</em>, no network communication
+is needed for HDF5.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WITH_STOKESIAN_DYNAMICS</span></code>: this library is installed using <a class="reference external" href="https://cmake.org/cmake/help/latest/module/FetchContent.html">FetchContent</a>.
+The repository URL can be found in the <code class="docutils literal notranslate"><span class="pre">GIT_REPOSITORY</span></code> field of the
+corresponding <code class="docutils literal notranslate"><span class="pre">FetchContent_Declare()</span></code> command. The <code class="docutils literal notranslate"><span class="pre">GIT_TAG</span></code> field
+provides the commit. Clone this repository locally next to the <em>ESPResSo</em>
+folder and edit the <em>ESPResSo</em> build system such that <code class="docutils literal notranslate"><span class="pre">GIT_REPOSITORY</span></code> points
+to the absolute path of the Stokesian Dynamics clone, for example with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sed -ri <span class="s1">&#39;s|GIT_REPOSITORY +.+stokesian-dynamics.git|GIT_REPOSITORY /work/username/stokesian_dynamics|&#39;</span> CMakeLists.txt
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="compiling-testing-and-installing">
+<h2><span class="section-number">2.5. </span>Compiling, testing and installing<a class="headerlink" href="#compiling-testing-and-installing" title="Permalink to this headline">¶</a></h2>
+<p>The command <code class="docutils literal notranslate"><span class="pre">make</span></code> is mainly used to compile the source code, but it
+can do a number of other things. The generic syntax of the <code class="docutils literal notranslate"><span class="pre">make</span></code>
+command is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="o">[</span>options<span class="o">]</span> <span class="o">[</span>target<span class="o">]</span> <span class="o">[</span><span class="nv">variable</span><span class="o">=</span>value<span class="o">]</span>
+</pre></div>
+</div>
+<p>When no target is given, the target <code class="docutils literal notranslate"><span class="pre">all</span></code> is used. The following
+targets are available:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">all</span></code></dt><dd><p>Compiles the complete source code. The variable can be used to
+specify the name of the configuration header to be used.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">check</span></code></dt><dd><p>Runs the testsuite. By default, all available tests will be run on
+1, 2, 3, 4, 6, or 8 processors.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">test</span></code></dt><dd><p>Do not use this target, it is a broken feature
+(see <a class="reference external" href="https://github.com/espressomd/espresso/issues/4370">issue #4370</a>).
+Use <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">check</span></code> instead.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">clean</span></code></dt><dd><p>Deletes all files that were created during the compilation.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">install</span></code></dt><dd><p>Install <em>ESPResSo</em> in the path specified by the CMake variable
+<code class="docutils literal notranslate"><span class="pre">CMAKE_INSTALL_PREFIX</span></code>. The path can be changed by calling CMake
+with <code class="docutils literal notranslate"><span class="pre">cmake</span> <span class="pre">..</span> <span class="pre">-DCMAKE_INSTALL_PREFIX=/path/to/espresso</span></code>. Do not use
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">DESTDIR=/path/to/espresso</span> <span class="pre">install</span></code> to install to a specific path,
+this will cause issues with the runtime path (RPATH) and will conflict
+with the CMake variable <code class="docutils literal notranslate"><span class="pre">CMAKE_INSTALL_PREFIX</span></code> if it has been set.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">doxygen</span></code></dt><dd><p>Creates the Doxygen code documentation in the <code class="file docutils literal notranslate"><span class="pre">doc/doxygen</span></code>
+subdirectory.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">sphinx</span></code></dt><dd><p>Creates the <code class="docutils literal notranslate"><span class="pre">sphinx</span></code> code documentation in the <code class="file docutils literal notranslate"><span class="pre">doc/sphinx</span></code>
+subdirectory.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tutorials</span></code></dt><dd><p>Creates the tutorials in the <code class="file docutils literal notranslate"><span class="pre">doc/tutorials</span></code> subdirectory.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">doc</span></code></dt><dd><p>Creates all documentation in the <code class="file docutils literal notranslate"><span class="pre">doc</span></code> subdirectory (only when
+using the development sources).</p>
+</dd>
+</dl>
+<p>A number of options are available when calling <code class="docutils literal notranslate"><span class="pre">make</span></code>. The most
+interesting option is probably <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">num_jobs</span></code>, which can be used for
+parallel compilation. <code class="docutils literal notranslate"><span class="pre">num_jobs</span></code> specifies the maximal number of
+concurrent jobs that will be run. Setting <code class="docutils literal notranslate"><span class="pre">num_jobs</span></code> to the number
+of available processors speeds up the compilation process significantly.</p>
+</div>
+<div class="section" id="troubleshooting">
+<span id="id29"></span><h2><span class="section-number">2.6. </span>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<p>If you encounter issues when building <em>ESPResSo</em> or running it for the first time,
+please have a look at the <a class="reference external" href="https://github.com/espressomd/espresso/wiki/Installation-FAQ">Installation FAQ</a>
+on the wiki. If you still didn’t find an answer, see <a class="reference internal" href="community.html#community-support"><span class="std std-ref">Community support</span></a>.</p>
+<p>Many algorithms require parameters that must be provided within valid ranges.
+Range checks are implemented to catch invalid input values and generate
+meaningful error messages, however these checks cannot always catch errors
+arising from an invalid combination of two or more features. If you encounter
+issues with a script, you can activate extra runtime checks by enabling C++
+assertions. This is achieved by updating the CMake project and rebuilding
+<em>ESPResSo</em> with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake . -DCMAKE_BUILD_TYPE<span class="o">=</span>RelWithAssert
+make -j
+</pre></div>
+</div>
+<p>The resulting build will run slightly slower, but will produce an error
+message for common issues, such as divisions by zero, array access out
+of bounds, or square roots of negative numbers.</p>
+<p>If this still doesn’t help, you can activate debug symbols to help with
+instrumentation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake . -DCMAKE_BUILD_TYPE<span class="o">=</span>Debug
+make -j
+</pre></div>
+</div>
+<p>The resulting build will be quite slow but will allow many debugging tools
+to be used. For details, please refer to chapter <a class="reference internal" href="running.html#debugging-es"><span class="std std-ref">Debugging ESPResSo</span></a>.</p>
+<p>If you are dealing with a segmentation fault or undefined behavior, and GDB
+doesn’t help or is too cumbersome to use (e.g. in MPI-parallel simulations),
+you can as a last resort activate sanitizers:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake . -DWITH_ASAN<span class="o">=</span>ON -DWITH_UBSAN<span class="o">=</span>ON -DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+make -j
+</pre></div>
+</div>
+<p>The resulting build will be around 5 times slower that a debug build,
+but it will generate valuable reports when detecting fatal exceptions.
+For more details, please consult the online documentation of
+<a class="reference external" href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UBSAN</a> and
+<a class="reference external" href="https://github.com/google/sanitizers/wiki/AddressSanitizer">ASAN</a>.</p>
+<hr class="docutils" />
+<dl class="footnote brackets">
+<dt class="label" id="id30"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p><a class="reference external" href="https://espressomd.org">https://espressomd.org</a></p>
+</dd>
+<dt class="label" id="id31"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p><a class="reference external" href="https://git-scm.com/">https://git-scm.com/</a></p>
+</dd>
+<dt class="label" id="id32"><span class="brackets"><a class="fn-backref" href="#id4">3</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/espressomd/espresso">https://github.com/espressomd/espresso</a></p>
+</dd>
+<dt class="label" id="id33"><span class="brackets"><a class="fn-backref" href="#id5">4</a></span></dt>
+<dd><p><a class="reference external" href="https://cmake.org/">https://cmake.org/</a></p>
+</dd>
+<dt class="label" id="id34"><span class="brackets"><a class="fn-backref" href="#id7">5</a></span></dt>
+<dd><p><a class="reference external" href="https://www.fftw.org/">https://www.fftw.org/</a></p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">2. Installation</a><ul>
+<li><a class="reference internal" href="#requirements">2.1. Requirements</a><ul>
+<li><a class="reference internal" href="#installing-requirements-on-ubuntu-linux">2.1.1. Installing requirements on Ubuntu Linux</a></li>
+<li><a class="reference internal" href="#installing-requirements-on-other-linux-distributions">2.1.2. Installing requirements on other Linux distributions</a></li>
+<li><a class="reference internal" href="#installing-requirements-on-windows-via-wsl">2.1.3. Installing requirements on Windows via WSL</a></li>
+<li><a class="reference internal" href="#installing-requirements-on-macos">2.1.4. Installing requirements on macOS</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quick-installation">2.2. Quick installation</a></li>
+<li><a class="reference internal" href="#features">2.3. Features</a><ul>
+<li><a class="reference internal" href="#general-features">2.3.1. General features</a></li>
+<li><a class="reference internal" href="#fluid-dynamics-and-fluid-structure-interaction">2.3.2. Fluid dynamics and fluid structure interaction</a></li>
+<li><a class="reference internal" href="#interaction-features">2.3.3. Interaction features</a></li>
+<li><a class="reference internal" href="#debug-messages">2.3.4. Debug messages</a></li>
+<li><a class="reference internal" href="#external-features">2.3.5. External features</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuring">2.4. Configuring</a><ul>
+<li><a class="reference internal" href="#myconfig-hpp-activating-and-deactivating-features">2.4.1. <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>: Activating and deactivating features</a></li>
+<li><a class="reference internal" href="#cmake">2.4.2. <code class="docutils literal notranslate"><span class="pre">cmake</span></code></a></li>
+<li><a class="reference internal" href="#ccmake">2.4.3. <code class="docutils literal notranslate"><span class="pre">ccmake</span></code></a></li>
+<li><a class="reference internal" href="#options-and-variables">2.4.4. Options and Variables</a></li>
+<li><a class="reference internal" href="#configuring-without-a-network-connection">2.4.5. Configuring without a network connection</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#compiling-testing-and-installing">2.5. Compiling, testing and installing</a></li>
+<li><a class="reference internal" href="#troubleshooting">2.6. Troubleshooting</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2021, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.lbboundaries &#8212; ESPResSo 4.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.lbboundaries</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptObjectList</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">from</span> <span class="nn">.__init__</span> <span class="kn">import</span> <span class="n">has_features</span>
+
+
+<span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">has_features</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;LB_BOUNDARIES&quot;</span><span class="p">,</span> <span class="s2">&quot;LB_BOUNDARIES_GPU&quot;</span><span class="p">]):</span>
+<div class="viewcode-block" id="LBBoundaries"><a class="viewcode-back" href="../../espressomd.html#espressomd.lbboundaries.LBBoundaries">[docs]</a>    <span class="nd">@script_interface_register</span>
+    <span class="k">class</span> <span class="nc">LBBoundaries</span><span class="p">(</span><span class="n">ScriptObjectList</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a set of lattice-Boltzmann boundaries.</span>
+
+<span class="sd">        Methods</span>
+<span class="sd">        -------</span>
+<span class="sd">        size()</span>
+<span class="sd">            Get the number of active boundaries.</span>
+<span class="sd">        empty()</span>
+<span class="sd">            Return ``True`` if there are not active boundaries.</span>
+<span class="sd">        clear()</span>
+<span class="sd">            Clear the list of boundaries.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LBBoundaries::LBBoundaries&quot;</span>
+        <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="s2">&quot;empty&quot;</span><span class="p">,</span> <span class="s2">&quot;clear&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LBBoundaries.add"><a class="viewcode-back" href="../../espressomd.html#espressomd.lbboundaries.LBBoundaries.add">[docs]</a>        <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Adds a boundary to the set of boundaries.</span>
+<span class="sd">            Either pass a valid boundary as argument,</span>
+<span class="sd">            or a valid set of parameters to create a boundary.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">LBBoundary</span><span class="p">):</span>
+                    <span class="n">lbboundary</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Either a LBBoundary object or key-value pairs for the parameters of a LBBoundary object need to be passed.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lbboundary</span> <span class="o">=</span> <span class="n">LBBoundary</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">lbboundary</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">lbboundary</span></div>
+
+<div class="viewcode-block" id="LBBoundaries.remove"><a class="viewcode-back" href="../../espressomd.html#espressomd.lbboundaries.LBBoundaries.remove">[docs]</a>        <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lbboundary</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Removes a boundary from the set.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            lbboundary : :obj:`LBBoundary`</span>
+<span class="sd">                The boundary to be removed from the set.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">lbboundary</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="LBBoundary"><a class="viewcode-back" href="../../espressomd.html#espressomd.lbboundaries.LBBoundary">[docs]</a>    <span class="nd">@script_interface_register</span>
+    <span class="k">class</span> <span class="nc">LBBoundary</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a LB boundary from a shape.</span>
+
+<span class="sd">        The fluid velocity is limited to :math:`v_{\\mathrm{max}} = 0.20`</span>
+<span class="sd">        (see *quasi-incompressible limit* in :cite:`kruger17a`,</span>
+<span class="sd">        chapter 7, page 272), which corresponds to Mach 0.35.</span>
+
+<span class="sd">        The relative error in the fluid density between a compressible fluid</span>
+<span class="sd">        and an incompressible fluid at Mach 0.30 is less than 5% (see</span>
+<span class="sd">        *constant density assumption* in :cite:`kundu01a` chapter 16, page</span>
+<span class="sd">        663). Since the speed of sound is :math:`c_s = 1 / \\sqrt{3}` in LB</span>
+<span class="sd">        velocity units in a D3Q19 lattice, the velocity limit at Mach 0.30</span>
+<span class="sd">        is :math:`v_{\\mathrm{max}} = 0.30 / \\sqrt{3} \\approx 0.17`.</span>
+<span class="sd">        At Mach 0.35 the relative error is around 6% and</span>
+<span class="sd">        :math:`v_{\\mathrm{max}} = 0.35 / \\sqrt{3} \\approx 0.20`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : :obj:`espressomd.shapes.Shape`</span>
+<span class="sd">            The shape from which to build the boundary.</span>
+<span class="sd">        velocity : (3,) array_like of :obj:`float`, optional</span>
+<span class="sd">            The boundary slip velocity. By default, a velocity of zero is used</span>
+<span class="sd">            (no-slip boundary condition).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LBBoundaries::LBBoundary&quot;</span>
+        <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;get_force&quot;</span><span class="p">,)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2021, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

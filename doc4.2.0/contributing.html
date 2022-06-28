@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>22. Contributing &#8212; ESPResSo 4.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="23. Appendix" href="appendix.html" />
+    <link rel="prev" title="21. Community" href="community.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="contributing">
+<span id="id1"></span><h1><span class="section-number">22. </span>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>Up to date information about the development of <em>ESPResSo</em> can be found in the
+<a class="reference external" href="https://github.com/espressomd/espresso/wiki">ESPResSo wiki</a>:</p>
+<ul class="simple">
+<li><p>proceedings of the ESPResSo meetings</p></li>
+<li><p>list of planned releases</p></li>
+<li><p>developer’s guide</p></li>
+</ul>
+<p>The official website at <a class="reference external" href="https://espressomd.org">https://espressomd.org</a> provides additional information:</p>
+<ul class="simple">
+<li><p>Latest stable release of <em>ESPResSo</em> and older releases</p></li>
+<li><p>Obtaining development version of <em>ESPResSo</em></p></li>
+<li><p>Archives of both developers’ and users’ mailing lists</p></li>
+<li><p>Registering to mailing lists</p></li>
+</ul>
+<div class="section" id="contributing-your-own-code">
+<span id="id2"></span><h2><span class="section-number">22.1. </span>Contributing your own code<a class="headerlink" href="#contributing-your-own-code" title="Permalink to this headline">¶</a></h2>
+<p>If you are planning to make an extension to or already have a piece of
+your own code which could be useful to others, you are very welcome to
+contribute it to the community. Before you start making any changes to
+the code, you should fork the <a class="reference external" href="https://github.com/espressomd/espresso">espressomd/espresso</a> repository and work in a new branch.</p>
+<p>It is also generally a good idea to contact the developers on the mailing lists
+before you start major coding projects. It might be that someone else is already
+working on the problem or has a solution at hand.</p>
+<p>You will find more detailed information on our development processes in
+<a class="reference external" href="https://github.com/espressomd/espresso/blob/python/CONTRIBUTING.md">Contributing to ESPResSo</a>.
+Please also refer to our developer’s guide in the
+<a class="reference external" href="https://github.com/espressomd/espresso/wiki">ESPResSo wiki</a>.</p>
+<div class="section" id="required-development-tools">
+<span id="id3"></span><h3><span class="section-number">22.1.1. </span>Required Development Tools<a class="headerlink" href="#required-development-tools" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>First of all, please install the dependencies for compiling <em>ESPResSo</em>.
+See the section <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a>.</p></li>
+<li><p>To be able to access the development version of <em>ESPResSo</em>, you will need the
+distributed versioning control system <a class="reference external" href="https://git-scm.com/">git</a> and a GitHub account to fork the
+<a class="reference external" href="https://github.com/espressomd/espresso">espressomd/espresso</a> repository</p></li>
+<li><p>To build the user documentation, you will need <a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a>.</p></li>
+<li><p>To build the tutorials, you will need <a class="reference external" href="https://jupyter.org">Jupyter</a>.</p></li>
+<li><p>To build the core documentation, you will need <a class="reference external" href="https://www.doxygen.nl/manual/index.html">Doxygen</a>.</p></li>
+</ul>
+<p>All of these tools should be easy to install on most Unix operating systems.</p>
+<p>You can find all Python dependencies of <em>ESPResSo</em> in <code class="file docutils literal notranslate"><span class="pre">requirements.txt</span></code> in the
+top-level source directory. Several optional packages for graphics, external
+devices and continuous integration (CI) are not strictly essential and can be
+safely removed if you’re planning on installing dependencies via <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3 install --upgrade --user -r requirements.txt
+</pre></div>
+</div>
+<p>Note that some distributions now use <code class="docutils literal notranslate"><span class="pre">pip3</span></code> for Python3 and <code class="docutils literal notranslate"><span class="pre">pip2</span></code> for
+Python2.</p>
+</div>
+</div>
+<div class="section" id="building-the-user-s-guide">
+<span id="id4"></span><h2><span class="section-number">22.2. </span>Building the User’s guide<a class="headerlink" href="#building-the-user-s-guide" title="Permalink to this headline">¶</a></h2>
+<p>If, while reading this documentation, you notice any mistakes or
+undocumented features, you are very welcome to
+contribute to the guide and have others benefit from your knowledge.</p>
+<p>For this, you should clone the development version at <a class="reference external" href="https://github.com/espressomd/espresso">espressomd/espresso</a>. Next build the software as shown
+in <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> and then the documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">sphinx</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">22. Contributing</a><ul>
+<li><a class="reference internal" href="#contributing-your-own-code">22.1. Contributing your own code</a><ul>
+<li><a class="reference internal" href="#required-development-tools">22.1.1. Required Development Tools</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#building-the-user-s-guide">22.2. Building the User’s guide</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2021, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

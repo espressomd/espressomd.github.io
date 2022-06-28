@@ -1,0 +1,1004 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.observables &#8212; ESPResSo 4.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.observables</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">from</span> <span class="nn">.math</span> <span class="kn">import</span> <span class="n">CylindricalTransformationParameters</span>
+
+
+<div class="viewcode-block" id="Observable"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.Observable">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Observable</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for all observables.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    shape()</span>
+<span class="sd">        Return the shape of the observable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::Observable&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;shape&quot;</span><span class="p">,)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+<div class="viewcode-block" id="Observable.calculate"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.Observable.calculate">[docs]</a>    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;calculate&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="ProfileObservable"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ProfileObservable">[docs]</a><span class="k">class</span> <span class="nc">ProfileObservable</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for histogram-based observables.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ProfileObservable.bin_edges"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ProfileObservable.bin_edges">[docs]</a>    <span class="k">def</span> <span class="nf">bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">            Positions between the bins. If the histogram has dimensions</span>
+<span class="sd">            ``(M,N,O)``, the bin edges have dimensions ``(M+1,N+1,O+1,3)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">edges</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">edges</span><span class="p">)))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProfileObservable.bin_centers"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ProfileObservable.bin_centers">[docs]</a>    <span class="k">def</span> <span class="nf">bin_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">            Positions of the bins centers. If the histogram has dimensions</span>
+<span class="sd">            ``(M,N,O)``, the bin centers have dimensions ``(M,N,O,3)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edges</span><span class="p">):</span>
+            <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">edge</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">edges</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">edges</span><span class="p">)))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CylindricalProfileObservable"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalProfileObservable">[docs]</a><span class="k">class</span> <span class="nc">CylindricalProfileObservable</span><span class="p">(</span><span class="n">ProfileObservable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for observables that work with cylinder coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">transform_params</span><span class="o">=</span><span class="n">CylindricalTransformationParameters</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Provide default transformation parameters if not user-provided</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;transform_params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">transform_params</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComPosition"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ComPosition">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ComPosition</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the center of mass for particles with given ids.</span>
+
+<span class="sd">    Note that virtual sites are not included since they do not have a meaningful mass.</span>
+
+<span class="sd">    Output format: :math:`\\frac{1}{\\sum_i m_i} \\left( \\sum_i m_i r^x_i, \\sum_i m_i r^y_i, \\sum_i m_i r^z_i\\right)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ComPosition&quot;</span></div>
+
+
+<div class="viewcode-block" id="ComVelocity"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ComVelocity">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ComVelocity</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the center of mass velocity for particles with given ids.</span>
+
+<span class="sd">    Note that virtual sites are not included since they do not have a meaningful mass.</span>
+
+<span class="sd">    Output format: :math:`\\frac{1}{\\sum_i m_i} \\left( \\sum_i m_i v^x_i, \\sum_i m_i v^y_i, \\sum_i m_i v^z_i\\right)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ComVelocity&quot;</span></div>
+
+
+<div class="viewcode-block" id="DensityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.DensityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">DensityProfile</span><span class="p">(</span><span class="n">ProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle density profile for particles with given ids.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    n_x_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``x`` direction.</span>
+<span class="sd">    n_y_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``y`` direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_x : :obj:`float`</span>
+<span class="sd">        Minimum ``x`` to consider.</span>
+<span class="sd">    min_y : :obj:`float`</span>
+<span class="sd">        Minimum ``y`` to consider.</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_x : :obj:`float`</span>
+<span class="sd">        Maximum ``x`` to consider.</span>
+<span class="sd">    max_y : :obj:`float`</span>
+<span class="sd">        Maximum ``y`` to consider.</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::DensityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="DipoleMoment"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.DipoleMoment">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">DipoleMoment</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the dipole moment for particles with given ids.</span>
+
+<span class="sd">    Output format: :math:`\\left(\\sum_i q_i r^x_i, \\sum_i q_i r^y_i, \\sum_i q_i r^z_i\\right)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::DipoleMoment&quot;</span></div>
+
+
+<div class="viewcode-block" id="FluxDensityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.FluxDensityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">FluxDensityProfile</span><span class="p">(</span><span class="n">ProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle flux density for particles with given ids.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    n_x_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``x`` direction.</span>
+<span class="sd">    n_y_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``y`` direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_x : :obj:`float`</span>
+<span class="sd">        Minimum ``x`` to consider.</span>
+<span class="sd">    min_y : :obj:`float`</span>
+<span class="sd">        Minimum ``y`` to consider.</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_x : :obj:`float`</span>
+<span class="sd">        Maximum ``x`` to consider.</span>
+<span class="sd">    max_y : :obj:`float`</span>
+<span class="sd">        Maximum ``y`` to consider.</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_x_bins``, ``n_y_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the x, y and z</span>
+<span class="sd">        components of the flux density.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::FluxDensityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="ForceDensityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ForceDensityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ForceDensityProfile</span><span class="p">(</span><span class="n">ProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the force density profile for particles with given ids.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    n_x_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``x`` direction.</span>
+<span class="sd">    n_y_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``y`` direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_x : :obj:`float`</span>
+<span class="sd">        Minimum ``x`` to consider.</span>
+<span class="sd">    min_y : :obj:`float`</span>
+<span class="sd">        Minimum ``y`` to consider.</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_x : :obj:`float`</span>
+<span class="sd">        Maximum ``x`` to consider.</span>
+<span class="sd">    max_y : :obj:`float`</span>
+<span class="sd">        Maximum ``y`` to consider.</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_x_bins``, ``n_y_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the x, y and z</span>
+<span class="sd">        components of the force.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ForceDensityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="LBVelocityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.LBVelocityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LBVelocityProfile</span><span class="p">(</span><span class="n">ProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the LB fluid velocity profile.</span>
+
+<span class="sd">    This observable samples the fluid in on a regular grid defined by the variables</span>
+<span class="sd">    ``sampling_*``. Note that a small delta leads to a large number of sample</span>
+<span class="sd">    points and carries a performance cost.</span>
+
+<span class="sd">    .. WARNING::</span>
+<span class="sd">        In case of the CPU version of the LB fluid implementation, this observable</span>
+<span class="sd">        currently only works for a single core.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_x_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``x`` direction.</span>
+<span class="sd">    n_y_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``y`` direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_x : :obj:`float`</span>
+<span class="sd">        Minimum ``x`` to consider.</span>
+<span class="sd">    min_y : :obj:`float`</span>
+<span class="sd">        Minimum ``y`` to consider.</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_x : :obj:`float`</span>
+<span class="sd">        Maximum ``x`` to consider.</span>
+<span class="sd">    max_y : :obj:`float`</span>
+<span class="sd">        Maximum ``y`` to consider.</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+<span class="sd">    sampling_delta_x : :obj:`float`, default=1.0</span>
+<span class="sd">        Spacing for the sampling grid in ``x``-direction.</span>
+<span class="sd">    sampling_delta_y : :obj:`float`, default=1.0</span>
+<span class="sd">        Spacing for the sampling grid in ``y``-direction.</span>
+<span class="sd">    sampling_delta_z : :obj:`float`, default=1.0</span>
+<span class="sd">        Spacing for the sampling grid in ``z``-direction.</span>
+<span class="sd">    sampling_offset_x : :obj:`float`, default=0.0</span>
+<span class="sd">        Offset for the sampling grid in ``x``-direction.</span>
+<span class="sd">    sampling_offset_y : :obj:`float`, default=0.0</span>
+<span class="sd">        Offset for the sampling grid in ``y``-direction.</span>
+<span class="sd">    sampling_offset_z : :obj:`float`, default=0.0</span>
+<span class="sd">        Offset for the sampling grid in ``z``-direction.</span>
+<span class="sd">    allow_empty_bins : :obj:`bool`, default=False</span>
+<span class="sd">        Whether or not to allow bins that will not be sampled at all.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_x_bins``, ``n_y_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the x, y and z</span>
+<span class="sd">        components of the LB velocity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::LBVelocityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="LBFluidPressureTensor"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.LBFluidPressureTensor">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LBFluidPressureTensor</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the average pressure tensor of the LB fluid for all nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::LBFluidPressureTensor&quot;</span></div>
+
+
+<div class="viewcode-block" id="MagneticDipoleMoment"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.MagneticDipoleMoment">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">MagneticDipoleMoment</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the magnetic dipole moment for particles with given ids.</span>
+
+<span class="sd">    Output format: :math:`\\left(\\sum_i \\mu^x_i, \\sum_i \\mu^y_i, \\sum_i \\mu^z_i\\right)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::MagneticDipoleMoment&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticleAngularVelocities"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticleAngularVelocities">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleAngularVelocities</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the angular velocity (omega) in the spaced-fixed frame of reference</span>
+
+<span class="sd">    Output format: :math:`(\\omega^x_1,\\ \\omega^y_1,\\ \\omega^z_1),\\ (\\omega^x_2,\\ \\omega^y_2,\\ \\omega^z_2), \\dots,\\ (\\omega^x_n,\\ \\omega^y_n,\\ \\omega^z_n)`.</span>
+
+<span class="sd">    The particles are ordered according to the list of ids passed to the observable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticleAngularVelocities&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticleBodyAngularVelocities"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticleBodyAngularVelocities">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleBodyAngularVelocities</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the angular velocity (omega) in the particles&#39;  body-fixed frame of reference.</span>
+
+<span class="sd">    For each particle, the body-fixed frame of reference is obtained from the particle&#39;s</span>
+<span class="sd">    orientation stored in the quaternions.</span>
+
+<span class="sd">    Output format: :math:`(\\omega^x_1,\\ \\omega^y_1,\\ \\omega^z_1),\\ (\\omega^x_2,\\ \\omega^y_2,\\ \\omega^z_2), \\dots,\\ (\\omega^x_n,\\ \\omega^y_n,\\ \\omega^z_n)`.</span>
+
+<span class="sd">    The particles are ordered according to the list of ids passed to the observable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticleBodyAngularVelocities&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticleBodyVelocities"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticleBodyVelocities">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleBodyVelocities</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle velocity in the particles&#39;  body-fixed frame of reference.</span>
+
+<span class="sd">    For each particle, the body-fixed frame of reference is obtained from the particle&#39;s</span>
+<span class="sd">    orientation stored in the quaternions.</span>
+
+<span class="sd">    Output format: :math:`(v^x_1,\\ v^y_1,\\ v^z_1),\\ (v^x_2,\\ v^y_2,\\ v^z_2),\\ \\dots,\\ (v^x_n,\\ v^y_n,\\ v^z_n)`.</span>
+
+<span class="sd">    The particles are ordered according to the list of ids passed to the observable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticleBodyVelocities&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticleForces"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticleForces">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleForces</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle forces for particles with given ids.</span>
+
+<span class="sd">    Output format: :math:`(f^x_1,\\ f^y_1,\\ f^z_1),\\ (f^x_2,\\ f^y_2,\\ f^z_2),\\ \\dots,\\ (f^x_n,\\ f^y_n,\\ f^z_n)`.</span>
+
+<span class="sd">    The particles are ordered according to the list of ids passed to the observable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticleForces&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticlePositions"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticlePositions">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticlePositions</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle positions for particles with given ids.</span>
+
+<span class="sd">    Output format: :math:`(x_1,\\ y_1,\\ z_1),\\ (x_2,\\ y_2,\\ z_2),\\ \\dots,\\ (x_n,\\ y_n,\\ z_n)`.</span>
+
+<span class="sd">    The particles are ordered according to the list of ids passed to the observable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticlePositions&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticleVelocities"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticleVelocities">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleVelocities</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle velocities for particles with given ids.</span>
+
+<span class="sd">    Output format: :math:`(v^x_1,\\ v^y_1,\\ v^z_1),\\ (v^x_2,\\ v^y_2,\\ v^z_2),\\ \\dots,\\ (v^x_n,\\ v^y_n,\\ v^z_n)`.</span>
+
+<span class="sd">    The particles are ordered according to the list of ids passed to the observable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticleVelocities&quot;</span></div>
+
+
+<div class="viewcode-block" id="ParticleDistances"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.ParticleDistances">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleDistances</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the distances between particles with given ids along a</span>
+<span class="sd">    polymer chain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N - 1,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::ParticleDistances&quot;</span></div>
+
+
+<div class="viewcode-block" id="TotalForce"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.TotalForce">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TotalForce</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the total force on particles with given ids.</span>
+
+<span class="sd">    Note that virtual sites are not included since forces on them do not enter the equation of motion directly.</span>
+
+<span class="sd">    Output format: :math:`\\left(\\sum_i f^x_i, \\sum_i f^y_i, \\sum_i f^z_i\\right)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::TotalForce&quot;</span></div>
+
+
+<div class="viewcode-block" id="BondAngles"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.BondAngles">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BondAngles</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the angles between bonds of particles with given ids along a</span>
+<span class="sd">    polymer chain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N - 2,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::BondAngles&quot;</span></div>
+
+
+<div class="viewcode-block" id="CosPersistenceAngles"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CosPersistenceAngles">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CosPersistenceAngles</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the cosine of mutual bond angles for chained particles with given ids.</span>
+
+<span class="sd">    The *i*-th  value of the result contains the cosine of the angle between bonds that</span>
+<span class="sd">    are separated by *i* bonds. The values are averaged over the chain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N - 2,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CosPersistenceAngles&quot;</span></div>
+
+
+<div class="viewcode-block" id="BondDihedrals"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.BondDihedrals">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BondDihedrals</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the dihedrals between particles with given ids along a</span>
+<span class="sd">    polymer chain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N - 3,) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::BondDihedrals&quot;</span></div>
+
+
+<div class="viewcode-block" id="Energy"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.Energy">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Energy</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the total energy.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::Energy&quot;</span></div>
+
+
+<div class="viewcode-block" id="Pressure"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.Pressure">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Pressure</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the total scalar pressure.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::Pressure&quot;</span></div>
+
+
+<div class="viewcode-block" id="PressureTensor"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.PressureTensor">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">PressureTensor</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the total pressure tensor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::PressureTensor&quot;</span></div>
+
+
+<div class="viewcode-block" id="DPDStress"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.DPDStress">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">DPDStress</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the non-equilibrium contribution of the DPD interaction</span>
+<span class="sd">    to the stress tensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (3, 3) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::DPDStress&quot;</span></div>
+
+
+<div class="viewcode-block" id="CylindricalDensityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalDensityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalDensityProfile</span><span class="p">(</span><span class="n">CylindricalProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle density in cylindrical coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    transform_params : :class:`espressomd.math.CylindricalTransformationParameters`, optional</span>
+<span class="sd">        Parameters of the cylinder transformation. Defaults to the default of :class:`espressomd.math.CylindricalTransformationParameters`</span>
+<span class="sd">    n_r_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    n_phi_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins for the azimuthal direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_r : :obj:`float`, default = 0</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    min_phi : :obj:`float`, default = -pi</span>
+<span class="sd">        Minimum ``phi`` to consider. Must be in [-pi,pi).</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+<span class="sd">    max_phi : :obj:`float`, default = pi</span>
+<span class="sd">        Maximum ``phi`` to consider. Must be in (-pi,pi].</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``, ``n_phi_bins``, ``n_z_bins``) :obj:`ndarray` of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CylindricalDensityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="CylindricalFluxDensityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalFluxDensityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalFluxDensityProfile</span><span class="p">(</span><span class="n">CylindricalProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle flux density in cylindrical coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    transform_params : :class:`espressomd.math.CylindricalTransformationParameters`, optional</span>
+<span class="sd">        Parameters of the cylinder transformation. Defaults to the default of :class:`espressomd.math.CylindricalTransformationParameters`</span>
+<span class="sd">    n_r_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    n_phi_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins for the azimuthal direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_r : :obj:`float`, default = 0</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    min_phi : :obj:`float`, default = -pi</span>
+<span class="sd">        Minimum ``phi`` to consider. Must be in [-pi,pi).</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+<span class="sd">    max_phi : :obj:`float`, default = pi</span>
+<span class="sd">        Maximum ``phi`` to consider. Must be in (-pi,pi].</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``, ``n_phi_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the radial distance,</span>
+<span class="sd">        azimuth and axial coordinate of the particle flux density field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CylindricalFluxDensityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="CylindricalLBFluxDensityProfileAtParticlePositions"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalLBFluxDensityProfileAtParticlePositions">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalLBFluxDensityProfileAtParticlePositions</span><span class="p">(</span>
+        <span class="n">CylindricalProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the LB fluid flux density at the particle positions in</span>
+<span class="sd">    cylindrical coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    transform_params : :class:`espressomd.math.CylindricalTransformationParameters`, optional</span>
+<span class="sd">        Parameters of the cylinder transformation. Defaults to the default of :class:`espressomd.math.CylindricalTransformationParameters`</span>
+<span class="sd">    n_r_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    n_phi_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins for the azimuthal direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_r : :obj:`float`, default = 0</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    min_phi : :obj:`float`, default = -pi</span>
+<span class="sd">        Minimum ``phi`` to consider. Must be in [-pi,pi).</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+<span class="sd">    max_phi : :obj:`float`, default = pi</span>
+<span class="sd">        Maximum ``phi`` to consider. Must be in (-pi,pi].</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``, ``n_phi_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the radial distance,</span>
+<span class="sd">        azimuth and axial coordinate of the LB flux density field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CylindricalLBFluxDensityProfileAtParticlePositions&quot;</span></div>
+
+
+<div class="viewcode-block" id="CylindricalLBVelocityProfileAtParticlePositions"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalLBVelocityProfileAtParticlePositions">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalLBVelocityProfileAtParticlePositions</span><span class="p">(</span>
+        <span class="n">CylindricalProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the LB fluid velocity at the particle positions in</span>
+<span class="sd">    cylindrical coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    transform_params : :class:`espressomd.math.CylindricalTransformationParameters`, optional</span>
+<span class="sd">        Parameters of the cylinder transformation. Defaults to the default of :class:`espressomd.math.CylindricalTransformationParameters`</span>
+<span class="sd">    n_r_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    n_phi_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins for the azimuthal direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_r : :obj:`float`, default = 0</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    min_phi : :obj:`float`, default = -pi</span>
+<span class="sd">        Minimum ``phi`` to consider. Must be in [-pi,pi).</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+<span class="sd">    max_phi : :obj:`float`, default = pi</span>
+<span class="sd">        Maximum ``phi`` to consider. Must be in (-pi,pi].</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``, ``n_phi_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the radial distance,</span>
+<span class="sd">        azimuth and axial coordinate of the LB velocity field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CylindricalLBVelocityProfileAtParticlePositions&quot;</span></div>
+
+
+<div class="viewcode-block" id="CylindricalVelocityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalVelocityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalVelocityProfile</span><span class="p">(</span><span class="n">CylindricalProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the particle velocity profile in cylindrical coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to take into account.</span>
+<span class="sd">    transform_params : :class:`espressomd.math.CylindricalTransformationParameters`, optional</span>
+<span class="sd">        Parameters of the cylinder transformation. Defaults to the default of :class:`espressomd.math.CylindricalTransformationParameters`</span>
+<span class="sd">    n_r_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    n_phi_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins for the azimuthal direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_r : :obj:`float`, default = 0</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    min_phi : :obj:`float`, default = -pi</span>
+<span class="sd">        Minimum ``phi`` to consider. Must be in [-pi,pi).</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+<span class="sd">    max_phi : :obj:`float`, default = pi</span>
+<span class="sd">        Maximum ``phi`` to consider. Must be in (-pi,pi].</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``, ``n_phi_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the radial distance,</span>
+<span class="sd">        azimuth and axial coordinate of the particle velocity field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CylindricalVelocityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="CylindricalLBVelocityProfile"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.CylindricalLBVelocityProfile">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalLBVelocityProfile</span><span class="p">(</span><span class="n">CylindricalProfileObservable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates the LB fluid velocity profile in cylindrical coordinates.</span>
+
+<span class="sd">    This observable samples the fluid in on a regular grid defined by variable</span>
+<span class="sd">    ``sampling_density``. Note that a small delta leads to a large number of</span>
+<span class="sd">    sample points and carries a performance cost.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    transform_params : :class:`espressomd.math.CylindricalTransformationParameters`, optional</span>
+<span class="sd">        Parameters of the cylinder transformation. Defaults to the default of :class:`espressomd.math.CylindricalTransformationParameters`</span>
+<span class="sd">    n_r_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    n_phi_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins for the azimuthal direction.</span>
+<span class="sd">    n_z_bins : :obj:`int`, default = 1</span>
+<span class="sd">        Number of bins in ``z`` direction.</span>
+<span class="sd">    min_r : :obj:`float`, default = 0</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    min_phi : :obj:`float`, default = -pi</span>
+<span class="sd">        Minimum ``phi`` to consider. Must be in [-pi,pi).</span>
+<span class="sd">    min_z : :obj:`float`</span>
+<span class="sd">        Minimum ``z`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+<span class="sd">    max_phi : :obj:`float`, default = pi</span>
+<span class="sd">        Maximum ``phi`` to consider. Must be in (-pi,pi].</span>
+<span class="sd">    max_z : :obj:`float`</span>
+<span class="sd">        Maximum ``z`` to consider.</span>
+<span class="sd">    sampling_density : :obj:`float`</span>
+<span class="sd">        Samples per unit volume for the LB velocity interpolation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``, ``n_phi_bins``, ``n_z_bins``, 3) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The fourth component contains the histogram for the radial distance,</span>
+<span class="sd">        azimuth and axial coordinate of the LB velocity field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::CylindricalLBVelocityProfile&quot;</span></div>
+
+
+<div class="viewcode-block" id="RDF"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.RDF">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">RDF</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Calculates a radial distribution function.</span>
+<span class="sd">    The result is normalized by the bulk concentration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ids1 : array_like of :obj:`int`</span>
+<span class="sd">        The ids of (existing) particles to calculate the distance from.</span>
+<span class="sd">    ids2 : array_like of :obj:`int`, optional</span>
+<span class="sd">        The ids of (existing) particles to calculate the distance to.</span>
+<span class="sd">        If not provided, use ``ids1``.</span>
+<span class="sd">    n_r_bins : :obj:`int`</span>
+<span class="sd">        Number of bins in radial direction.</span>
+<span class="sd">    min_r : :obj:`float`</span>
+<span class="sd">        Minimum ``r`` to consider.</span>
+<span class="sd">    max_r : :obj:`float`</span>
+<span class="sd">        Maximum ``r`` to consider.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (``n_r_bins``,) :obj:`ndarray` of :obj:`float`</span>
+<span class="sd">        The RDF.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Observables::RDF&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;ids2&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;ids2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RDF.bin_centers"><a class="viewcode-back" href="../../espressomd.html#espressomd.observables.RDF.bin_centers">[docs]</a>    <span class="k">def</span> <span class="nf">bin_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">bin_width</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_r</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_r</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_r_bins</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_r</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_r_bins</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">bin_width</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2021, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
