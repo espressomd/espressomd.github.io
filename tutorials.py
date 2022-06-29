@@ -31,12 +31,6 @@ assert marker_end in content, f'Readme.md is missing "{marker_end}"'
 tutorial_descriptions = content.split(marker_begin)[1].split(marker_end)[0]
 tutorial_descriptions = tutorial_descriptions.replace('.ipynb', '.html')
 tutorial_descriptions = tutorial_descriptions.replace('](', '](tutorials/')
-tutorial_descriptions = tutorial_descriptions.replace(
-    'tutorials/active_matter/exercises',
-    'https://github.com/espressomd/espresso/tree/python/doc/tutorials/active_matter/exercises')
-tutorial_descriptions = tutorial_descriptions.replace(
-    'tutorials/active_matter/solutions',
-    'https://github.com/espressomd/espresso/tree/python/doc/tutorials/active_matter/solutions')
 
 with open('tutorials_header.md', 'r') as f:
     tutorial_header = f.read()

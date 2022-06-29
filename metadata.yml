@@ -1,6 +1,6 @@
 title: "ESPResSo"
-title-prefix: "User guide"
+title-prefix: "ESPResSo documentation"
 lang: "en_US"
 subtitle: "Extensible Simulation Package for Research on Soft Matter Systems"
-latest_release: 4.1.4
+latest_release: 4.2.0
 layout: default
