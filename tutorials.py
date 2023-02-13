@@ -20,6 +20,8 @@
 This script generates the landing page for tutorials.
 """
 
+import re
+
 marker_begin = '[comment]: # (Begin of tutorials landing page)'
 marker_end = '[comment]: # (End of tutorials landing page)'
 
@@ -30,7 +32,7 @@ assert marker_begin in content, f'Readme.md is missing "{marker_begin}"'
 assert marker_end in content, f'Readme.md is missing "{marker_end}"'
 tutorial_descriptions = content.split(marker_begin)[1].split(marker_end)[0]
 tutorial_descriptions = tutorial_descriptions.replace('.ipynb', '.html')
-tutorial_descriptions = tutorial_descriptions.replace('](', '](tutorials/')
+tutorial_descriptions = re.sub(r"\]\((?!https?://)", '](tutorials/', tutorial_descriptions)
 
 with open('tutorials_header.md', 'r') as f:
     tutorial_header = f.read()
