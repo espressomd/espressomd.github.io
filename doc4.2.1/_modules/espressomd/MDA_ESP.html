@@ -1,0 +1,331 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.MDA_ESP &#8212; ESPResSo 4.2.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.MDA_ESP</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This modules exposes ESPResSo&#39;s coordinates and particle attributes</span>
+<span class="sd">to MDAnalysis without the need to save any information to files.</span>
+
+<span class="sd">The main class is :class:`Stream`, which is used to initialize the stream of</span>
+<span class="sd">data to MDAnalysis&#39; readers. These are the topology reader :class:`ESPParser`</span>
+<span class="sd">and the coordinates reader :class:`ESPReader`.</span>
+
+<span class="sd">A minimal working example is the following:</span>
+
+<span class="sd">&gt;&gt;&gt; import espressomd</span>
+<span class="sd">&gt;&gt;&gt; import espressomd.MDA_ESP</span>
+<span class="sd">&gt;&gt;&gt; import MDAnalysis as mda</span>
+<span class="sd">&gt;&gt;&gt; # system setup</span>
+<span class="sd">&gt;&gt;&gt; system = espressomd.System(box_l=[10., 10., 10.])</span>
+<span class="sd">&gt;&gt;&gt; system.time_step = 1.</span>
+<span class="sd">&gt;&gt;&gt; system.cell_system.skin = 1.</span>
+<span class="sd">&gt;&gt;&gt; system.part.add(pos=[1., 2., 3.])</span>
+<span class="sd">&gt;&gt;&gt; # set up the stream</span>
+<span class="sd">&gt;&gt;&gt; eos = espressomd.MDA_ESP.Stream(system)</span>
+<span class="sd">&gt;&gt;&gt; # feed Universe with a topology and coordinates</span>
+<span class="sd">&gt;&gt;&gt; u = mda.Universe(eos.topology, eos.trajectory)</span>
+<span class="sd">&gt;&gt;&gt; print(u)</span>
+<span class="sd">&lt;Universe with 1 atoms&gt;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cStringIO</span> <span class="k">as</span> <span class="nn">StringIO</span>
+    <span class="n">StringIO</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">MDAnalysis</span>
+
+<span class="kn">import</span> <span class="nn">setuptools</span>
+<span class="k">assert</span> <span class="n">setuptools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">pkg_resources</span><span class="o">.</span><span class="n">packaging</span><span class="o">.</span><span class="n">specifiers</span><span class="o">.</span><span class="n">SpecifierSet</span><span class="p">(</span><span class="s1">&#39;&gt;=1.0.0,&lt;2.0.0&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">MDAnalysis</span><span class="o">.</span><span class="n">__version__</span><span class="p">),</span> \
+    <span class="n">f</span><span class="s1">&#39;MDAnalysis version </span><span class="si">{MDAnalysis.__version__}</span><span class="s1"> is not supported&#39;</span>
+
+<span class="kn">from</span> <span class="nn">MDAnalysis.lib</span> <span class="k">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.coordinates.core</span> <span class="k">import</span> <span class="n">triclinic_box</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.coordinates.core</span> <span class="k">import</span> <span class="n">triclinic_vectors</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.lib.util</span> <span class="k">import</span> <span class="n">NamedStream</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.topology.base</span> <span class="k">import</span> <span class="n">TopologyReaderBase</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.coordinates</span> <span class="k">import</span> <span class="n">base</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.coordinates.base</span> <span class="k">import</span> <span class="n">SingleFrameReaderBase</span>
+<span class="kn">from</span> <span class="nn">MDAnalysis.core.topology</span> <span class="k">import</span> <span class="n">Topology</span>
+
+<span class="kn">from</span> <span class="nn">MDAnalysis.core.topologyattrs</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Atomnames</span><span class="p">,</span> <span class="n">Atomids</span><span class="p">,</span> <span class="n">Atomtypes</span><span class="p">,</span> <span class="n">Masses</span><span class="p">,</span>
+    <span class="n">Resids</span><span class="p">,</span> <span class="n">Resnums</span><span class="p">,</span> <span class="n">Segids</span><span class="p">,</span> <span class="n">Resnames</span><span class="p">,</span> <span class="n">AltLocs</span><span class="p">,</span>
+    <span class="n">ICodes</span><span class="p">,</span> <span class="n">Occupancies</span><span class="p">,</span> <span class="n">Tempfactors</span><span class="p">,</span> <span class="n">Charges</span><span class="p">,</span> <span class="n">Bonds</span><span class="p">,</span> <span class="n">Angles</span><span class="p">,</span> <span class="n">Dihedrals</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="Stream"><a class="viewcode-back" href="../../espressomd.MDA_ESP.html#espressomd.MDA_ESP.Stream">[docs]</a><span class="k">class</span> <span class="nc">Stream</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an object that provides a MDAnalysis topology and a coordinate reader</span>
+
+<span class="sd">    &gt;&gt;&gt; eos = espressomd.MDA_ESP.Stream(system)</span>
+<span class="sd">    &gt;&gt;&gt; u = mda.Universe(eos.topology, eos.trajectory)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    system : :obj:`espressomd.system.System`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topology</span> <span class="o">=</span> <span class="n">ESPParser</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">espresso</span><span class="o">=</span><span class="n">system</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Particles&#39; coordinates at the current time</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        stream : :class:`MDAnalysis.lib.util.NamedStream`</span>
+<span class="sd">            A stream in the format that can be parsed by :class:`ESPReader`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># time</span>
+        <span class="n">_xyz</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="c1"># number of particles</span>
+        <span class="n">_xyz</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="c1"># box edges</span>
+        <span class="n">_xyz</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">box_l</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="c1"># configuration</span>
+        <span class="k">for</span> <span class="n">_p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+            <span class="n">_xyz</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_p</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">for</span> <span class="n">_p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+            <span class="n">_xyz</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_p</span><span class="o">.</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">for</span> <span class="n">_p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+            <span class="n">_xyz</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_p</span><span class="o">.</span><span class="n">f</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">NamedStream</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">_xyz</span><span class="p">),</span> <span class="s2">&quot;__.ESP&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ESPParser"><a class="viewcode-back" href="../../espressomd.MDA_ESP.html#espressomd.MDA_ESP.ESPParser">[docs]</a><span class="k">class</span> <span class="nc">ESPParser</span><span class="p">(</span><span class="n">TopologyReaderBase</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An MDAnalysis reader of ESPResSo&#39;s topology.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;ESP&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=unused-argument</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+<div class="viewcode-block" id="ESPParser.parse"><a class="viewcode-back" href="../../espressomd.MDA_ESP.html#espressomd.MDA_ESP.ESPParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Access ESPResSo data and return the topology object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        top : :class:`MDAnalysis.core.topology.Topology`</span>
+<span class="sd">            a topology object</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">espresso</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;espresso&#39;</span><span class="p">]</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">atomtypes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">masses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">charges</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bonds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">angles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dihedrals</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">espresso</span><span class="o">.</span><span class="n">part</span><span class="p">:</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;A&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+            <span class="n">atomtypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;T&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+            <span class="n">masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span>
+            <span class="n">charges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">bonds</span><span class="p">:</span>
+                <span class="n">partner_ids</span> <span class="o">=</span> <span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">n_partner</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">partner_ids</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">n_partner</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">bonds</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">partner_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="n">n_partner</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">angles</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">partner_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">partner_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="n">n_partner</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="n">dihedrals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">partner_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">partner_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">partner_ids</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">continue</span>
+        <span class="n">natoms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">espresso</span><span class="o">.</span><span class="n">part</span><span class="p">)</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Atomnames</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)),</span>
+                 <span class="n">Atomids</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">natoms</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                 <span class="n">Atomtypes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">atomtypes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)),</span>
+                 <span class="n">Masses</span><span class="p">(</span><span class="n">masses</span><span class="p">),</span>
+                 <span class="n">Resids</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">])),</span>
+                 <span class="n">Resnums</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">])),</span>
+                 <span class="n">Segids</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;System&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)),</span>
+                 <span class="n">AltLocs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39; &#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">natoms</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)),</span>
+                 <span class="n">Resnames</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;R&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)),</span>
+                 <span class="n">Occupancies</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">natoms</span><span class="p">)),</span>
+                 <span class="n">Tempfactors</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">natoms</span><span class="p">)),</span>
+                 <span class="n">ICodes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39; &#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)),</span>
+                 <span class="n">Charges</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">charges</span><span class="p">)),</span>
+                 <span class="n">Bonds</span><span class="p">(</span><span class="n">bonds</span><span class="p">),</span>
+                 <span class="n">Angles</span><span class="p">(</span><span class="n">angles</span><span class="p">),</span>
+                 <span class="n">Dihedrals</span><span class="p">(</span><span class="n">dihedrals</span><span class="p">)</span>
+                 <span class="p">]</span>
+
+        <span class="n">top</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="n">natoms</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">top</span></div></div>
+
+
+<div class="viewcode-block" id="Timestep"><a class="viewcode-back" href="../../espressomd.MDA_ESP.html#espressomd.MDA_ESP.Timestep">[docs]</a><span class="k">class</span> <span class="nc">Timestep</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">Timestep</span><span class="p">):</span>
+    <span class="n">_ts_order_x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+    <span class="n">_ts_order_y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+    <span class="n">_ts_order_z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_init_unitcell</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This information now stored as _ts_order_x/y/z to keep DRY</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ts_order_x</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ts_order_y</span><span class="p">]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ts_order_z</span><span class="p">]</span>
+        <span class="c1"># this ordering is correct! (checked it, OB)</span>
+        <span class="k">return</span> <span class="n">triclinic_box</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="nd">@dimensions</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">triclinic_vectors</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ts_order_x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ts_order_y</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ESPReader"><a class="viewcode-back" href="../../espressomd.MDA_ESP.html#espressomd.MDA_ESP.ESPReader">[docs]</a><span class="k">class</span> <span class="nc">ESPReader</span><span class="p">(</span><span class="n">SingleFrameReaderBase</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An MDAnalysis single frame reader for the stream provided by :class:`Stream`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;ESP&#39;</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;length&#39;</span><span class="p">:</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="s1">&#39;velocity&#39;</span><span class="p">:</span> <span class="s1">&#39;nm/ps&#39;</span><span class="p">}</span>
+    <span class="n">_Timestep</span> <span class="o">=</span> <span class="n">Timestep</span>
+
+    <span class="k">def</span> <span class="nf">_read_first_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">util</span><span class="o">.</span><span class="n">openany</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">espfile</span><span class="p">:</span>
+            <span class="n">n_atoms</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">espfile</span><span class="p">,</span> <span class="n">start</span><span class="o">=-</span><span class="mi">3</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+                    <span class="n">time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span>
+                    <span class="n">n_atoms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">=</span> <span class="n">n_atoms</span>
+                    <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="n">velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="n">forces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ts</span> <span class="o">=</span> <span class="n">ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Timestep</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_ts_kwargs</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
+                <span class="k">elif</span> <span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ts</span><span class="o">.</span><span class="n">_unitcell</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())))</span>
+                <span class="k">elif</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">n_atoms</span><span class="p">:</span>
+                    <span class="n">positions</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())))</span>
+                <span class="k">elif</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_atoms</span><span class="p">:</span>
+                    <span class="n">velocities</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="n">n_atoms</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">forces</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_atoms</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())))</span>
+
+            <span class="n">ts</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+            <span class="n">ts</span><span class="o">.</span><span class="n">velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">velocities</span><span class="p">)</span>
+            <span class="n">ts</span><span class="o">.</span><span class="n">forces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">forces</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,643 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.reaction_methods &#8212; ESPResSo 4.2.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.reaction_methods</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="SingleReaction"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.SingleReaction">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SingleReaction</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ReactionMethods::SingleReaction&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;sip&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">check_valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">(),</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<div class="viewcode-block" id="SingleReaction.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.SingleReaction.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;reactant_types&quot;</span><span class="p">,</span> <span class="s2">&quot;reactant_coefficients&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;product_types&quot;</span><span class="p">,</span> <span class="s2">&quot;product_coefficients&quot;</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SingleReaction.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.SingleReaction.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;reactant_types&quot;</span><span class="p">,</span> <span class="s2">&quot;reactant_coefficients&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;product_types&quot;</span><span class="p">,</span> <span class="s2">&quot;product_coefficients&quot;</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SingleReaction.make_backward_reaction"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.SingleReaction.make_backward_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">make_backward_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SingleReaction</span><span class="p">(</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="n">reactant_types</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product_types</span><span class="p">,</span>
+            <span class="n">reactant_coefficients</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product_coefficients</span><span class="p">,</span>
+            <span class="n">product_types</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reactant_types</span><span class="p">,</span>
+            <span class="n">product_coefficients</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reactant_coefficients</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ReactionAlgorithm"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ReactionAlgorithm">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ReactionAlgorithm</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    This class provides the base class for Reaction Algorithms like</span>
+<span class="sd">    the Reaction Ensemble algorithm and the constant pH method.</span>
+<span class="sd">    Initialize the reaction algorithm by setting the</span>
+<span class="sd">    standard pressure, temperature, and the exclusion range.</span>
+
+<span class="sd">    Note: When creating particles the velocities of the new particles are set</span>
+<span class="sd">    according the Maxwell-Boltzmann distribution. In this step the mass of the</span>
+<span class="sd">    new particle is assumed to equal 1.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kT : :obj:`float`</span>
+<span class="sd">        Thermal energy of the system in simulation units</span>
+<span class="sd">    exclusion_range : :obj:`float`</span>
+<span class="sd">        Minimal distance from any particle, within which new particles will not</span>
+<span class="sd">        be inserted. </span>
+<span class="sd">    seed : :obj:`int`</span>
+<span class="sd">        Initial counter value (or seed) of the Mersenne Twister RNG.</span>
+<span class="sd">    exclusion_radius_per_type : :obj:`dict`, optional</span>
+<span class="sd">         Mapping of particle types to exclusion radii.</span>
+<span class="sd">    search_algorithm : :obj:`str`</span>
+<span class="sd">        Pair search algorithm. Default is ``&quot;order_n&quot;``, which evaluates the</span>
+<span class="sd">        distance between the inserted particle and all other particles in the</span>
+<span class="sd">        system, which scales with O(N). For MPI-parallel simulations, the</span>
+<span class="sd">        ``&quot;parallel&quot;`` method is faster. The ``&quot;parallel&quot;`` method is not</span>
+<span class="sd">        recommended for simulations on 1 MPI rank, since it comes with the</span>
+<span class="sd">        overhead of a ghost particle update.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    remove_constraint()</span>
+<span class="sd">        Remove any previously defined constraint.</span>
+<span class="sd">        Requires setting the volume using :meth:`set_volume`.</span>
+
+<span class="sd">    set_cylindrical_constraint_in_z_direction()</span>
+<span class="sd">        Constrain the reaction moves within a cylinder aligned on the z-axis.</span>
+<span class="sd">        Requires setting the volume using :meth:`set_volume`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        center_x : :obj:`float`</span>
+<span class="sd">            x coordinate of center of the cylinder.</span>
+<span class="sd">        center_y : :obj:`float`</span>
+<span class="sd">            y coordinate of center of the cylinder.</span>
+<span class="sd">        radius_of_cylinder : :obj:`float`</span>
+<span class="sd">            radius of the cylinder</span>
+
+<span class="sd">    set_wall_constraints_in_z_direction()</span>
+<span class="sd">        Restrict the sampling area to a slab in z-direction. Requires setting</span>
+<span class="sd">        the volume using :meth:`set_volume`. This constraint is necessary when</span>
+<span class="sd">        working with :ref:`Electrostatic Layer Correction (ELC)`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        slab_start_z : :obj:`float`</span>
+<span class="sd">            z coordinate of the bottom wall.</span>
+<span class="sd">        slab_end_z : :obj:`float`</span>
+<span class="sd">            z coordinate of the top wall.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; import espressomd</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd.shapes</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd.electrostatics</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd.reaction_methods</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; # setup a charged system</span>
+<span class="sd">        &gt;&gt;&gt; box_l = 20</span>
+<span class="sd">        &gt;&gt;&gt; elc_gap = 10</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=[box_l, box_l, box_l + elc_gap])</span>
+<span class="sd">        &gt;&gt;&gt; system.time_step = 0.001</span>
+<span class="sd">        &gt;&gt;&gt; system.cell_system.skin = 0.4</span>
+<span class="sd">        &gt;&gt;&gt; types = {&quot;HA&quot;: 0, &quot;A-&quot;: 1, &quot;H+&quot;: 2, &quot;wall&quot;: 3}</span>
+<span class="sd">        &gt;&gt;&gt; charges = {types[&quot;HA&quot;]: 0, types[&quot;A-&quot;]: -1, types[&quot;H+&quot;]: +1}</span>
+<span class="sd">        &gt;&gt;&gt; for i in range(10):</span>
+<span class="sd">        ...     system.part.add(pos=np.random.random(3) * box_l, type=types[&quot;A-&quot;], q=charges[types[&quot;A-&quot;]])</span>
+<span class="sd">        ...     system.part.add(pos=np.random.random(3) * box_l, type=types[&quot;H+&quot;], q=charges[types[&quot;H+&quot;]])</span>
+<span class="sd">        &gt;&gt;&gt; for particle_type in charges.keys():</span>
+<span class="sd">        ...     system.non_bonded_inter[particle_type, types[&quot;wall&quot;]].wca.set_params(epsilon=1.0, sigma=1.0)</span>
+<span class="sd">        &gt;&gt;&gt; # add ELC actor</span>
+<span class="sd">        &gt;&gt;&gt; p3m = espressomd.electrostatics.P3M(prefactor=1.0, accuracy=1e-2)</span>
+<span class="sd">        &gt;&gt;&gt; elc = espressomd.electrostatics.ELC(actor=p3m, maxPWerror=1.0, gap_size=elc_gap)</span>
+<span class="sd">        &gt;&gt;&gt; system.actors.add(elc)</span>
+<span class="sd">        &gt;&gt;&gt; # add constant pH method</span>
+<span class="sd">        &gt;&gt;&gt; RE = espressomd.reaction_methods.ConstantpHEnsemble(kT=1, exclusion_range=1, seed=77)</span>
+<span class="sd">        &gt;&gt;&gt; RE.constant_pH = 2</span>
+<span class="sd">        &gt;&gt;&gt; RE.add_reaction(gamma=0.0088, reactant_types=[types[&quot;HA&quot;]],</span>
+<span class="sd">        ...                 product_types=[types[&quot;A-&quot;], types[&quot;H+&quot;]],</span>
+<span class="sd">        ...                 default_charges=charges)</span>
+<span class="sd">        &gt;&gt;&gt; # add walls for the ELC gap</span>
+<span class="sd">        &gt;&gt;&gt; RE.set_wall_constraints_in_z_direction(0, box_l)</span>
+<span class="sd">        &gt;&gt;&gt; RE.set_volume(box_l**3)</span>
+<span class="sd">        &gt;&gt;&gt; system.constraints.add(shape=espressomd.shapes.Wall(dist=0, normal=[0, 0, 1]),</span>
+<span class="sd">        ...                        particle_type=types[&quot;wall&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; system.constraints.add(shape=espressomd.shapes.Wall(dist=-box_l, normal=[0, 0, -1]),</span>
+<span class="sd">        ...                        particle_type=types[&quot;wall&quot;])</span>
+
+<span class="sd">    get_wall_constraints_in_z_direction()</span>
+<span class="sd">        Returns the restrictions of the sampling area in z-direction.</span>
+
+<span class="sd">    set_volume()</span>
+<span class="sd">        Set the volume to be used in the acceptance probability of the reaction</span>
+<span class="sd">        ensemble. This can be useful when using constraints, if the relevant</span>
+<span class="sd">        volume is different from the box volume. If not used the default volume</span>
+<span class="sd">        which is used, is the box volume.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        volume : :obj:`float`</span>
+<span class="sd">            Volume of the system in simulation units</span>
+
+<span class="sd">    get_volume()</span>
+<span class="sd">        Get the volume to be used in the acceptance probability of the reaction</span>
+<span class="sd">        ensemble.</span>
+
+<span class="sd">    get_acceptance_rate_configurational_moves():</span>
+<span class="sd">        Returns the acceptance rate for the configuration moves.</span>
+
+<span class="sd">    get_acceptance_rate_reaction()</span>
+<span class="sd">        Returns the acceptance rate for the given reaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction_id : :obj:`int`</span>
+<span class="sd">            Reaction id</span>
+
+<span class="sd">    set_non_interacting_type()</span>
+<span class="sd">        Sets the particle type for non-interacting particles.</span>
+<span class="sd">        Default value: 100.</span>
+<span class="sd">        This is used to temporarily hide particles during a reaction trial</span>
+<span class="sd">        move, if they are to be deleted after the move is accepted. Please</span>
+<span class="sd">        change this value if you intend to use the type 100 for some other</span>
+<span class="sd">        particle types with interactions, or if you need improved performance,</span>
+<span class="sd">        as the default value of 100 causes some overhead.</span>
+<span class="sd">        Please also note that particles</span>
+<span class="sd">        in the current implementation of the Reaction Ensemble are only</span>
+<span class="sd">        hidden with respect to Lennard-Jones and Coulomb interactions. Hiding</span>
+<span class="sd">        of other interactions, for example a magnetic, needs to be implemented</span>
+<span class="sd">        in the code.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type : :obj:`int`</span>
+<span class="sd">            Particle type for the hidden particles</span>
+
+<span class="sd">    get_non_interacting_type()</span>
+<span class="sd">        Returns the type which is used for hiding particle</span>
+
+<span class="sd">    reaction()</span>
+<span class="sd">        Performs randomly selected reactions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction_steps : :obj:`int`, optional</span>
+<span class="sd">            The number of reactions to be performed at once, defaults to 1.</span>
+
+<span class="sd">    displacement_mc_move_for_particles_of_type()</span>
+<span class="sd">        Performs displacement Monte Carlo moves for particles of a given type.</span>
+<span class="sd">        New positions of the displaced particles are chosen from the whole box</span>
+<span class="sd">        with a uniform probability distribution and new velocities are</span>
+<span class="sd">        sampled from the Maxwell-Boltzmann distribution.</span>
+
+<span class="sd">        The sequence of moves is only accepted if each individual move in</span>
+<span class="sd">        the sequence was accepted. Particles are sampled without replacement.</span>
+<span class="sd">        Therefore, calling this method once for 10 particles is not equivalent</span>
+<span class="sd">        to calling this method 10 times for 1 particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type_mc : :obj:`int`</span>
+<span class="sd">            Particle type which should be moved</span>
+<span class="sd">        particle_number_to_be_changed : :obj:`int`</span>
+<span class="sd">            Number of particles to move, defaults to 1.</span>
+<span class="sd">            Particles are selected without replacement.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`bool`</span>
+<span class="sd">            Whether all moves were accepted.</span>
+
+<span class="sd">    delete_particle()</span>
+<span class="sd">        Deletes the particle of the given p_id and makes sure that the particle</span>
+<span class="sd">        range has no holes. This function has some restrictions, as e.g. bonds</span>
+<span class="sd">        are not deleted. Therefore only apply this function to simple ions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p_id : :obj:`int`</span>
+<span class="sd">            Id of the particle to be deleted.</span>
+
+<span class="sd">    change_reaction_constant()</span>
+<span class="sd">        Changes the reaction constant of a given reaction</span>
+<span class="sd">        (for both the forward and backward reactions).</span>
+<span class="sd">        The ``reaction_id`` which is assigned to a reaction</span>
+<span class="sd">        depends on the order in which :meth:`add_reaction` was called.</span>
+<span class="sd">        The 0th reaction has ``reaction_id=0``, the next added</span>
+<span class="sd">        reaction needs to be addressed with ``reaction_id=1``, etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction_id : :obj:`int`</span>
+<span class="sd">            Reaction id</span>
+<span class="sd">        gamma : :obj:`float`</span>
+<span class="sd">            New reaction constant</span>
+
+<span class="sd">    delete_reaction()</span>
+<span class="sd">        Delete a reaction from the set of used reactions</span>
+<span class="sd">        (the forward and backward reaction).</span>
+<span class="sd">        The ``reaction_id`` which is assigned to a reaction</span>
+<span class="sd">        depends on the order in which :meth:`add_reaction` was called.</span>
+<span class="sd">        The 0th reaction has ``reaction_id=0``, the next added</span>
+<span class="sd">        reaction needs to be addressed with ``reaction_id=1``, etc.</span>
+<span class="sd">        After the deletion of a reaction subsequent reactions</span>
+<span class="sd">        take the ``reaction_id`` of the deleted reaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction_id : :obj:`int`</span>
+<span class="sd">            Reaction id</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ReactionMethods::ReactionAlgorithm&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;remove_constraint&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;get_wall_constraints_in_z_direction&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;set_wall_constraints_in_z_direction&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;set_cylindrical_constraint_in_z_direction&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;set_volume&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;get_volume&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;get_acceptance_rate_reaction&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;set_non_interacting_type&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;get_non_interacting_type&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;reaction&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;displacement_mc_move_for_particles_of_type&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;check_reaction_method&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;change_reaction_constant&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;delete_reaction&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;delete_particle&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;exclusion_radius&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="s1">&#39;the keyword `exclusion_radius` is obsolete. Currently, the equivalent keyword is `exclusion_range`&#39;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;sip&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">check_valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">(),</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<div class="viewcode-block" id="ReactionAlgorithm.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ReactionAlgorithm.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;exclusion_range&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;exclusion_radius_per_type&quot;</span><span class="p">,</span> <span class="s2">&quot;search_algorithm&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ReactionAlgorithm.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ReactionAlgorithm.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;exclusion_range&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ReactionAlgorithm.add_reaction"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ReactionAlgorithm.add_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">add_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up a reaction in the forward and backward direction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gamma : :obj:`float`</span>
+<span class="sd">            Equilibrium constant :math:`\\Gamma` of the reaction in simulation</span>
+<span class="sd">            units (see section :ref:`Reaction Ensemble` for its definition).</span>
+<span class="sd">        reactant_types : list of :obj:`int`</span>
+<span class="sd">            List of particle types of reactants in the reaction.</span>
+<span class="sd">        reactant_coefficients : list of :obj:`int`</span>
+<span class="sd">            List of stoichiometric coefficients of the reactants in the same</span>
+<span class="sd">            order as the list of their types.</span>
+<span class="sd">        product_types : list of :obj:`int`</span>
+<span class="sd">            List of particle types of products in the reaction.</span>
+<span class="sd">        product_coefficients : list of :obj:`int`</span>
+<span class="sd">            List of stoichiometric coefficients of products of the reaction in</span>
+<span class="sd">            the same order as the list of their types</span>
+<span class="sd">        default_charges : :obj:`dict`</span>
+<span class="sd">            A dictionary of default charges for types that occur</span>
+<span class="sd">            in the provided reaction.</span>
+<span class="sd">        check_for_electroneutrality : :obj:`bool`</span>
+<span class="sd">            Check for electroneutrality of the given reaction.</span>
+<span class="sd">            Default is ``True``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_charges</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;default_charges&quot;</span><span class="p">)</span>
+        <span class="n">neutrality_check</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;check_for_electroneutrality&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">forward_reaction</span> <span class="o">=</span> <span class="n">SingleReaction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">backward_reaction</span> <span class="o">=</span> <span class="n">forward_reaction</span><span class="o">.</span><span class="n">make_backward_reaction</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">neutrality_check</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_charge_neutrality</span><span class="p">(</span>
+                <span class="n">type2charge</span><span class="o">=</span><span class="n">default_charges</span><span class="p">,</span>
+                <span class="n">reaction</span><span class="o">=</span><span class="n">forward_reaction</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add_reaction&quot;</span><span class="p">,</span> <span class="n">reaction</span><span class="o">=</span><span class="n">forward_reaction</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add_reaction&quot;</span><span class="p">,</span> <span class="n">reaction</span><span class="o">=</span><span class="n">backward_reaction</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ptype</span><span class="p">,</span> <span class="n">charge</span> <span class="ow">in</span> <span class="n">default_charges</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_charge_of_type&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">ptype</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="n">charge</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;check_reaction_method&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_charge_neutrality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type2charge</span><span class="p">,</span> <span class="n">reaction</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type2charge</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;No dictionary for relation between types and default charges provided.&quot;</span><span class="p">)</span>
+        <span class="n">charges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">type2charge</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">charges</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># all particles have zero charge</span>
+            <span class="c1"># no need to check electroneutrality</span>
+            <span class="k">return</span>
+        <span class="c1"># calculate net change of electrical charge for the reaction</span>
+        <span class="n">net_charge_change</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">coef</span><span class="p">,</span> <span class="n">ptype</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">reaction</span><span class="o">.</span><span class="n">reactant_coefficients</span><span class="p">,</span> <span class="n">reaction</span><span class="o">.</span><span class="n">reactant_types</span><span class="p">):</span>
+            <span class="n">net_charge_change</span> <span class="o">-=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">type2charge</span><span class="p">[</span><span class="n">ptype</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">coef</span><span class="p">,</span> <span class="n">ptype</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">reaction</span><span class="o">.</span><span class="n">product_coefficients</span><span class="p">,</span> <span class="n">reaction</span><span class="o">.</span><span class="n">product_types</span><span class="p">):</span>
+            <span class="n">net_charge_change</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">type2charge</span><span class="p">[</span><span class="n">ptype</span><span class="p">]</span>
+        <span class="n">min_abs_nonzero_charge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">charges</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">charges</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]))</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">net_charge_change</span><span class="p">)</span> <span class="o">/</span> <span class="n">min_abs_nonzero_charge</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Reaction system is not charge neutral&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReactionAlgorithm.get_status"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ReactionAlgorithm.get_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the status of the reaction ensemble in a dictionary containing</span>
+<span class="sd">        the used reactions, the used kT and the used exclusion radius.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;check_reaction_method&quot;</span><span class="p">)</span>
+        <span class="n">reactions_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">core_reaction</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reactions</span><span class="p">:</span>
+            <span class="n">reaction</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;reactant_coefficients&quot;</span><span class="p">:</span> <span class="n">core_reaction</span><span class="o">.</span><span class="n">reactant_coefficients</span><span class="p">,</span>
+                        <span class="s2">&quot;reactant_types&quot;</span><span class="p">:</span> <span class="n">core_reaction</span><span class="o">.</span><span class="n">reactant_types</span><span class="p">,</span>
+                        <span class="s2">&quot;product_types&quot;</span><span class="p">:</span> <span class="n">core_reaction</span><span class="o">.</span><span class="n">product_types</span><span class="p">,</span>
+                        <span class="s2">&quot;product_coefficients&quot;</span><span class="p">:</span> <span class="n">core_reaction</span><span class="o">.</span><span class="n">product_coefficients</span><span class="p">,</span>
+                        <span class="s2">&quot;reactant_types&quot;</span><span class="p">:</span> <span class="n">core_reaction</span><span class="o">.</span><span class="n">reactant_types</span><span class="p">,</span>
+                        <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="n">core_reaction</span><span class="o">.</span><span class="n">gamma</span><span class="p">}</span>
+            <span class="n">reactions_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reaction</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;reactions&quot;</span><span class="p">:</span> <span class="n">reactions_list</span><span class="p">,</span> <span class="s2">&quot;kT&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kT</span><span class="p">,</span> 
+                <span class="s2">&quot;exclusion_range&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclusion_range</span><span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="ReactionEnsemble"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ReactionEnsemble">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ReactionEnsemble</span><span class="p">(</span><span class="n">ReactionAlgorithm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements the Reaction Ensemble.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ReactionMethods::ReactionEnsemble&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span></div>
+
+
+<div class="viewcode-block" id="ConstantpHEnsemble"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ConstantpHEnsemble">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ConstantpHEnsemble</span><span class="p">(</span><span class="n">ReactionAlgorithm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements the constant pH Ensemble.</span>
+
+<span class="sd">    When adding an acid-base reaction, the acid and base particle types</span>
+<span class="sd">    are always assumed to be at index 0 of the lists passed to arguments</span>
+<span class="sd">    ``reactant_types`` and ``product_types``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    constant_pH : :obj:`float`</span>
+<span class="sd">        Constant pH value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ReactionMethods::ConstantpHEnsemble&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+<div class="viewcode-block" id="ConstantpHEnsemble.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ConstantpHEnsemble.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;exclusion_range&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;constant_pH&quot;</span><span class="p">,</span> <span class="s2">&quot;exclusion_radius_per_type&quot;</span><span class="p">,</span> <span class="s2">&quot;search_algorithm&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ConstantpHEnsemble.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ConstantpHEnsemble.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;exclusion_range&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_pH&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ConstantpHEnsemble.add_reaction"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.ConstantpHEnsemble.add_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">add_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">warn_msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;arguments &#39;reactant_coefficients&#39; and &#39;product_coefficients&#39; &quot;</span>
+            <span class="s2">&quot;are deprecated and are no longer necessary for the constant pH &quot;</span>
+            <span class="s2">&quot;ensemble. They are kept for backward compatibility but might &quot;</span>
+            <span class="s2">&quot;be deleted in future versions.&quot;</span><span class="p">)</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;All product and reactant coefficients must equal one in &quot;</span>
+                   <span class="s2">&quot;the constant pH method as implemented in ESPResSo.&quot;</span><span class="p">)</span>
+        <span class="n">warn_user</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="s2">&quot;reactant_coefficients&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;reactant_coefficients&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warn_user</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;reactant_coefficients&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;product_coefficients&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;product_coefficients&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;product_coefficients&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warn_user</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;product_coefficients&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">warn_user</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">warn_msg</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;product_types&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;reactant_types&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The constant pH method is only implemented for reactions &quot;</span>
+                <span class="s2">&quot;with two product types and one adduct type.&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_reaction</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="WidomInsertion"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.WidomInsertion">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">WidomInsertion</span><span class="p">(</span><span class="n">ReactionAlgorithm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements the Widom insertion method in the canonical ensemble</span>
+<span class="sd">    for homogeneous systems, where the excess chemical potential is not</span>
+<span class="sd">    depending on the location.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ReactionMethods::WidomInsertion&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+<div class="viewcode-block" id="WidomInsertion.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.WidomInsertion.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="WidomInsertion.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.WidomInsertion.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="WidomInsertion.add_reaction"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.WidomInsertion.add_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">add_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_reaction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WidomInsertion.calculate_particle_insertion_potential_energy"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.WidomInsertion.calculate_particle_insertion_potential_energy">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_particle_insertion_potential_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Measures the potential energy when particles are inserted in the</span>
+<span class="sd">        system following the reaction provided in ``reaction_id``. Please</span>
+<span class="sd">        define the insertion moves first by calling the method</span>
+<span class="sd">        :meth:`~ReactionAlgorithm.add_reaction` (with only product types</span>
+<span class="sd">        specified).</span>
+
+<span class="sd">        Note that although this function does not provide directly</span>
+<span class="sd">        the chemical potential, it can be used to calculate it.</span>
+<span class="sd">        For an example of such an application please check</span>
+<span class="sd">        :file:`/samples/widom_insertion.py`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction_id : :obj:`int`</span>
+<span class="sd">            Reaction identifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># make inverse widom scheme (deletion of particles) inaccessible.</span>
+        <span class="c1"># The deletion reactions are the odd reaction_ids</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;calculate_particle_insertion_potential_energy&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WidomInsertion.calculate_excess_chemical_potential"><a class="viewcode-back" href="../../espressomd.html#espressomd.reaction_methods.WidomInsertion.calculate_excess_chemical_potential">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_excess_chemical_potential</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a set of samples of the particle insertion potential energy,</span>
+<span class="sd">        calculates the excess chemical potential and its statistical error.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle_insertion_potential_energy_samples : array_like of :obj:`float`</span>
+<span class="sd">            Samples of the particle insertion potential energy.</span>
+<span class="sd">        N_blocks : :obj:`int`, optional</span>
+<span class="sd">            Number of bins for binning analysis.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean : :obj:`float`</span>
+<span class="sd">            Mean excess chemical potential.</span>
+<span class="sd">        error : :obj:`float`</span>
+<span class="sd">            Standard error of the mean.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">do_block_analysis</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">N_blocks</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Performs a binning analysis of samples.</span>
+<span class="sd">            Divides the samples in ``N_blocks`` equispaced blocks</span>
+<span class="sd">            and returns the mean and its uncertainty</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">size_block</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">/</span> <span class="n">N_blocks</span><span class="p">)</span>
+            <span class="n">block_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_blocks</span><span class="p">):</span>
+                <span class="n">block_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">block</span> <span class="o">*</span> <span class="n">size_block</span><span class="p">:(</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">size_block</span><span class="p">]))</span>
+
+            <span class="n">sample_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">block_list</span><span class="p">)</span>
+            <span class="n">sample_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">block_list</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">sample_uncertainty</span> <span class="o">=</span> <span class="n">sample_std</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">N_blocks</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">sample_mean</span><span class="p">,</span> <span class="n">sample_uncertainty</span>
+
+        <span class="n">kT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kT</span>
+
+        <span class="n">gamma_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;particle_insertion_potential_energy_samples&quot;</span><span class="p">])</span> <span class="o">/</span> <span class="n">kT</span><span class="p">)</span>
+
+        <span class="n">gamma_mean</span><span class="p">,</span> <span class="n">gamma_std</span> <span class="o">=</span> <span class="n">do_block_analysis</span><span class="p">(</span>
+            <span class="n">samples</span><span class="o">=</span><span class="n">gamma_samples</span><span class="p">,</span> <span class="n">N_blocks</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;N_blocks&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+
+        <span class="n">mu_ex_mean</span> <span class="o">=</span> <span class="o">-</span><span class="n">kT</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">gamma_mean</span><span class="p">)</span>
+
+        <span class="c1"># full propagation of error</span>
+        <span class="n">mu_ex_Delta</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">kT</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">gamma_mean</span> <span class="o">+</span> <span class="n">gamma_std</span><span class="p">)</span> <span class="o">-</span>
+                                     <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">gamma_mean</span> <span class="o">-</span> <span class="n">gamma_std</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">mu_ex_mean</span><span class="p">,</span> <span class="n">mu_ex_Delta</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
