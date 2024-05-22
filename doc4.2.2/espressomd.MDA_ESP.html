@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>espressomd.MDA_ESP package &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="espressomd.io package" href="espressomd.io.html" />
+    <link rel="prev" title="espressomd package" href="espressomd.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="espressomd-mda-esp-package">
+<h1>espressomd.MDA_ESP package<a class="headerlink" href="#espressomd-mda-esp-package" title="Permalink to this headline">¶</a></h1>
+<section id="module-espressomd.MDA_ESP">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-espressomd.MDA_ESP" title="Permalink to this headline">¶</a></h2>
+<p>This modules exposes ESPResSo’s coordinates and particle attributes
+to MDAnalysis without the need to save any information to files.</p>
+<p>The main class is <a class="reference internal" href="#espressomd.MDA_ESP.Stream" title="espressomd.MDA_ESP.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>, which is used to initialize the stream of
+data to MDAnalysis’ readers. These are the topology reader <a class="reference internal" href="#espressomd.MDA_ESP.ESPParser" title="espressomd.MDA_ESP.ESPParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">ESPParser</span></code></a>
+and the coordinates reader <a class="reference internal" href="#espressomd.MDA_ESP.ESPReader" title="espressomd.MDA_ESP.ESPReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ESPReader</span></code></a>.</p>
+<p>A minimal working example is the following:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd.MDA_ESP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MDAnalysis</span> <span class="k">as</span> <span class="nn">mda</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># system setup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># set up the stream</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eos</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">MDA_ESP</span><span class="o">.</span><span class="n">Stream</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># feed Universe with a topology and coordinates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">mda</span><span class="o">.</span><span class="n">Universe</span><span class="p">(</span><span class="n">eos</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span> <span class="n">eos</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+<span class="go">&lt;Universe with 1 atoms&gt;</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.ESPParser">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">espressomd.MDA_ESP.</span></span><span class="sig-name descname"><span class="pre">ESPParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#ESPParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.MDA_ESP.ESPParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.topology.base.TopologyReaderBase</span></code></p>
+<p>An MDAnalysis reader of ESPResSo’s topology.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.ESPParser.format">
+<span class="sig-name descname"><span class="pre">format</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'ESP'</span></em><a class="headerlink" href="#espressomd.MDA_ESP.ESPParser.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.ESPParser.parse">
+<span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#ESPParser.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.MDA_ESP.ESPParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access ESPResSo data and return the topology object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>top</strong> – a topology object</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.core.topology.Topology</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.ESPReader">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">espressomd.MDA_ESP.</span></span><span class="sig-name descname"><span class="pre">ESPReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_atoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#ESPReader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.MDA_ESP.ESPReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.coordinates.base.SingleFrameReaderBase</span></code></p>
+<p>An MDAnalysis single frame reader for the stream provided by <a class="reference internal" href="#espressomd.MDA_ESP.Stream" title="espressomd.MDA_ESP.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.ESPReader.format">
+<span class="sig-name descname"><span class="pre">format</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'ESP'</span></em><a class="headerlink" href="#espressomd.MDA_ESP.ESPReader.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.ESPReader.units">
+<span class="sig-name descname"><span class="pre">units</span></span><em class="property"> <span class="pre">=</span> <span class="pre">{'length':</span> <span class="pre">'nm',</span> <span class="pre">'time':</span> <span class="pre">None,</span> <span class="pre">'velocity':</span> <span class="pre">'nm/ps'}</span></em><a class="headerlink" href="#espressomd.MDA_ESP.ESPReader.units" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict with units of of <em>time</em> and <em>length</em> (and <em>velocity</em>, <em>force</em>,
+… for formats that support it)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.Stream">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">espressomd.MDA_ESP.</span></span><span class="sig-name descname"><span class="pre">Stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#Stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.MDA_ESP.Stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Create an object that provides a MDAnalysis topology and a coordinate reader</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">eos</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">MDA_ESP</span><span class="o">.</span><span class="n">Stream</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">mda</span><span class="o">.</span><span class="n">Universe</span><span class="p">(</span><span class="n">eos</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span> <span class="n">eos</span><span class="o">.</span><span class="n">trajectory</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-obj docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>)</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.Stream.trajectory">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">trajectory</span></span><a class="headerlink" href="#espressomd.MDA_ESP.Stream.trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Particles’ coordinates at the current time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>stream</strong> – A stream in the format that can be parsed by <a class="reference internal" href="#espressomd.MDA_ESP.ESPReader" title="espressomd.MDA_ESP.ESPReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">ESPReader</span></code></a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.lib.util.NamedStream</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.Timestep">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">espressomd.MDA_ESP.</span></span><span class="sig-name descname"><span class="pre">Timestep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_atoms</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/MDA_ESP.html#Timestep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.MDA_ESP.Timestep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MDAnalysis.coordinates.base.Timestep</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="espressomd.MDA_ESP.Timestep.dimensions">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">dimensions</span></span><a class="headerlink" href="#espressomd.MDA_ESP.Timestep.dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>unitcell dimensions (<em>A</em>, <em>B</em>, <em>C</em>, <em>alpha</em>, <em>beta</em>, <em>gamma</em>)</p>
+<p>lengths <em>a</em>, <em>b</em>, <em>c</em> are in the MDAnalysis length unit (Å), and
+angles are in degrees.</p>
+<p>Setting dimensions will populate the underlying native format
+description of box dimensions</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">espressomd.MDA_ESP package</a><ul>
+<li><a class="reference internal" href="#module-espressomd.MDA_ESP">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

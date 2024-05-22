@@ -1,0 +1,375 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>14. Electrokinetics &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/toggleprompt.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="15. Analysis" href="analysis.html" />
+    <link rel="prev" title="13. Lattice-Boltzmann" href="lb.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="electrokinetics">
+<span id="id1"></span><h1><span class="section-number">14. </span>Electrokinetics<a class="headerlink" href="#electrokinetics" title="Permalink to this headline">¶</a></h1>
+<p>The electrokinetics setup in <em>ESPResSo</em> allows for the description of
+electro-hydrodynamic systems on the level of ion density distributions
+coupled to a lattice-Boltzmann (LB) fluid. The ion density distributions
+may also interact with explicit charged particles, which are
+interpolated on the LB grid. In the following paragraph we briefly
+explain the electrokinetic model implemented in <em>ESPResSo</em>, before we come to the
+description of the interface.</p>
+<section id="electrokinetic-equations">
+<span id="id2"></span><h2><span class="section-number">14.1. </span>Electrokinetic equations<a class="headerlink" href="#electrokinetic-equations" title="Permalink to this headline">¶</a></h2>
+<p>In the electrokinetics code we solve the following system of coupled
+continuity, diffusion-advection, Poisson, and Navier-Stokes equations:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\label{eq:ek-model-continuity} \frac{\partial n_k}{\partial t} &amp; = &amp; -\, \nabla \cdot \vec{j}_k \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+\label{eq:ek-model-fluxes} \vec{j}_{k} &amp; = &amp; -D_k \nabla n_k - \nu_k \, q_k n_k\, \nabla \Phi + n_k \vec{v}_{\mathrm{fl}} \vphantom{\left(\frac{\partial}{\partial}\right)} + \sqrt{n_k}\vec{\mathcal{W}}_k; \\
+\label{eq:ek-model-poisson} \Delta \Phi &amp; = &amp; -4 \pi \, {l_\mathrm{B}}\, {k_\mathrm{B}T}\sum_k q_k n_k \vphantom{\left(\frac{\partial}{\partial}\right)}; \\
+\nonumber \left(\frac{\partial \vec{v}_{\mathrm{fl}}}{\partial t} + \vec{v}_{\mathrm{fl}} \cdot \nabla \vec{v}_{\mathrm{fl}} \right) \rho_\mathrm{fl} &amp; = &amp; -{k_\mathrm{B}T}\, \nabla \rho_\mathrm{fl} - q_k n_k \nabla \Phi \\
+\label{eq:ek-model-velocity} &amp; &amp; +\, \eta \Delta \vec{v}_{\mathrm{fl}} + (\eta / 3 + \eta_{\text{b}}) \nabla (\nabla \cdot \vec{v}_{\mathrm{fl}}) \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+\label{eq:ek-model-continuity-fl} \frac{\partial \rho_\mathrm{fl}}{\partial t} &amp; = &amp; -\,\nabla\cdot\left( \rho_\mathrm{fl} \vec{v}_{\mathrm{fl}} \right) \vphantom{\left(\frac{\partial}{\partial}\right)} , \end{aligned}\end{split}\]</div>
+<p>which define relations between the following observables</p>
+<dl class="simple">
+<dt><span class="math notranslate nohighlight">\(n_k\)</span></dt><dd><p>the number density of the particles of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{j}_k\)</span></dt><dd><p>the number density flux of the particles of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\Phi\)</span></dt><dd><p>the electrostatic potential,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\rho_{\mathrm{fl}}\)</span></dt><dd><p>the mass density of the fluid,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{v}_{\mathrm{fl}}\)</span></dt><dd><p>the advective velocity of the fluid,</p>
+</dd>
+</dl>
+<p>and input parameters</p>
+<dl>
+<dt><span class="math notranslate nohighlight">\(D_k\)</span></dt><dd><p>the diffusion constant of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\nu_k\)</span></dt><dd><p>the mobility of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{\mathcal{W}}_k\)</span></dt><dd><p>the white-noise term for the fluctuations of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(q_k\)</span></dt><dd><p>the charge of a single particle of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\({l_\mathrm{B}}\)</span></dt><dd><p>the Bjerrum length,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\({k_\mathrm{B}T}\)</span></dt><dd><div class="line-block">
+<div class="line">the thermal energy given by the product of Boltzmann’s constant
+<span class="math notranslate nohighlight">\(k_\text{B}\)</span></div>
+<div class="line">and the temperature <span class="math notranslate nohighlight">\(T\)</span>,</div>
+</div>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\eta\)</span></dt><dd><p>the dynamic viscosity of the fluid,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\eta_{\text{b}}\)</span></dt><dd><p>the bulk viscosity of the fluid.</p>
+</dd>
+</dl>
+<p>The temperature <span class="math notranslate nohighlight">\(T\)</span>, and diffusion constants <span class="math notranslate nohighlight">\(D_k\)</span> and
+mobilities <span class="math notranslate nohighlight">\(\nu_k\)</span> of individual species are linked through the
+Einstein-Smoluchowski relation <span class="math notranslate nohighlight">\(D_k /
+\nu_k = {k_\mathrm{B}T}\)</span>. This system of equations
+combining diffusion-advection, electrostatics, and hydrodynamics is
+conventionally referred to as the <em>Electrokinetic Equations</em>.</p>
+<p>The electrokinetic equations have the following properties:</p>
+<ul>
+<li><p>On the coarse time and length scale of the model, the dynamics of the
+particle species can be described in terms of smooth density
+distributions and potentials as opposed to the microscale where
+highly localized densities cause singularities in the potential.</p>
+<p>In most situations, this restricts the application of the model to
+species of monovalent ions, since ions of higher valency typically
+show strong condensation and correlation effects – the localization
+of individual ions in local potential minima and the subsequent
+correlated motion with the charges causing this minima.</p>
+</li>
+<li><p>Only the entropy of an ideal gas and electrostatic interactions are
+accounted for. In particular, there is no excluded volume.</p>
+<p>This restricts the application of the model to monovalent ions and
+moderate charge densities. At higher valencies or densities,
+overcharging and layering effects can occur, which lead to
+non-monotonic charge densities and potentials, that can not be
+covered by a mean-field model such as Poisson–Boltzmann or this one.</p>
+<p>Even in salt free systems containing only counter ions, the
+counter-ion densities close to highly charged objects can be
+overestimated when neglecting excluded volume effects. Decades of the
+application of Poisson–Boltzmann theory to systems of electrolytic
+solutions, however, show that those conditions are fulfilled for
+monovalent salt ions (such as sodium chloride or potassium chloride)
+at experimentally realizable concentrations.</p>
+</li>
+<li><p>Electrodynamic and magnetic effects play no role. Electrolytic
+solutions fulfill those conditions as long as they don’t contain
+magnetic particles.</p></li>
+<li><p>The diffusion coefficient is a scalar, which means there can not be
+any cross-diffusion. Additionally, the diffusive behavior has been
+deduced using a formalism relying on the notion of a local
+equilibrium. The resulting diffusion equation, however, is known to
+be valid also far from equilibrium.</p></li>
+<li><p>The temperature is constant throughout the system.</p></li>
+<li><p>The density fluxes instantaneously relax to their local equilibrium
+values. Obviously one can not extract information about processes on
+length and time scales not covered by the model, such as dielectric
+spectra at frequencies, high enough that they correspond to times
+faster than the diffusive time scales of the charged species.</p></li>
+</ul>
+</section>
+<section id="setup">
+<span id="id3"></span><h2><span class="section-number">14.2. </span>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<section id="initialization">
+<span id="id4"></span><h3><span class="section-number">14.2.1. </span>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Electrokinetics" title="espressomd.electrokinetics.Electrokinetics"><code class="xref py py-class docutils literal notranslate"><span class="pre">Electrokinetics</span></code></a> is used to initialize
+the LB fluid of the EK method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.electrokinetics</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">ek</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Electrokinetics</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">lb_density</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">viscosity</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ext_force_density</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">friction</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">prefactor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">stencil</span><span class="o">=</span><span class="s1">&#39;linkcentered&#39;</span><span class="p">,</span> <span class="n">advection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fluid_coupling</span><span class="o">=</span><span class="s1">&#39;friction&#39;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Features <code class="docutils literal notranslate"><span class="pre">ELECTROKINETICS</span></code> and <code class="docutils literal notranslate"><span class="pre">CUDA</span></code> required</p>
+</div>
+<p>It is very similar to the lattice-Boltzmann command in set-up.
+We therefore refer the reader to chapter <a class="reference internal" href="lb.html#lattice-boltzmann"><span class="std std-ref">Lattice-Boltzmann</span></a>
+for details on the implementation of LB in <em>ESPResSo</em> and describe only
+the major differences here.</p>
+<p>The first major difference with the LB implementation is that the
+electrokinetics set-up is a GPU-only implementation. A CPU version
+will become available in the 4.3 line of <em>ESPResSo</em>. To use the electrokinetics
+features it is therefore imperative that your computer contains
+a CUDA-capable GPU.</p>
+<p>To set up a proper LB fluid using this command, one has to specify at
+least the following options: <code class="docutils literal notranslate"><span class="pre">agrid</span></code>, <code class="docutils literal notranslate"><span class="pre">lb_density</span></code>, <code class="docutils literal notranslate"><span class="pre">viscosity</span></code>,
+<code class="docutils literal notranslate"><span class="pre">friction</span></code>, <code class="docutils literal notranslate"><span class="pre">T</span></code>, and <code class="docutils literal notranslate"><span class="pre">prefactor</span></code>. The other options can be
+used to modify the behavior of the LB fluid. Note that the command does
+not allow the user to set the time step parameter as is the case for the
+lattice-Boltzmann command, this parameter is instead taken directly from
+the value set for <a class="reference internal" href="espressomd.html#espressomd.system.System.time_step" title="espressomd.system.System.time_step"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_step</span></code></a>.
+The LB <em>mass density</em> is set independently from the
+electrokinetic <em>number densities</em>, since the LB fluid serves only as a
+medium through which hydrodynamic interactions are propagated, as will
+be explained further in the next paragraph. If no <code class="docutils literal notranslate"><span class="pre">lb_density</span></code> is specified, then our
+algorithm assumes <code class="docutils literal notranslate"><span class="pre">lb_density=</span> <span class="pre">1.0</span></code>. The two ‘new’ parameters are the temperature <code class="docutils literal notranslate"><span class="pre">T</span></code> at
+which the diffusive species are simulated and the <code class="docutils literal notranslate"><span class="pre">prefactor</span></code>
+associated with the electrostatic properties of the medium. See the
+above description of the electrokinetic equations for an explanation of
+the introduction of a temperature, which does not come in directly via a
+thermostat that produces thermal fluctuations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">advection</span></code> can be set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code>. It controls whether there should be an
+advective contribution to the diffusive species’ fluxes. Default is
+<code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fluid_coupling</span></code> can be set to <code class="docutils literal notranslate"><span class="pre">&quot;friction&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;estatics&quot;</span></code>.
+This option determines the force term acting on the fluid.
+The former specifies the force term to be the
+sum of the species fluxes divided by their respective mobilities while
+the latter simply uses the electrostatic force density acting on all
+species. Note that this switching is only possible for the <code class="docutils literal notranslate"><span class="pre">&quot;linkcentered&quot;</span></code>
+stencil. For all other stencils, this choice is hardcoded. The default
+is <code class="docutils literal notranslate"><span class="pre">&quot;friction&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">es_coupling</span></code> enables the action of the electrostatic potential due to the
+electrokinetics species and charged boundaries on the MD particles. The
+forces on the particles are calculated by interpolation from the
+electric field which is in turn calculated from the potential via finite
+differences. This only includes interactions between the species and
+boundaries and MD particles, not between MD particles and MD particles.
+To get complete electrostatic interactions a particles Coulomb method
+like Ewald or P3M has to be activated too.</p>
+<p>The fluctuation of the EK species can be turned on by the flag <code class="docutils literal notranslate"><span class="pre">fluctuations</span></code>.
+This adds a white-noise term to the fluxes. The amplitude of this noise term
+can be controlled by <code class="docutils literal notranslate"><span class="pre">fluctuation_amplitude</span></code>. To circumvent that these fluctuations
+lead to negative densities, they are modified by a smoothed Heaviside function,
+which decreases the magnitude of the fluctuation for densities close to 0.
+By default the fluctuations are turned off.</p>
+<p>Another difference with LB is that EK parameters are immutables,
+and the EK object cannot be checkpointed.</p>
+</section>
+<section id="diffusive-species">
+<span id="id5"></span><h3><span class="section-number">14.2.2. </span>Diffusive species<a class="headerlink" href="#diffusive-species" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">species</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Species</span><span class="p">(</span><span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">valency</span><span class="o">=</span><span class="n">valency</span><span class="p">,</span>
+    <span class="n">ext_force_density</span><span class="o">=</span><span class="n">ext_force</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Species" title="espressomd.electrokinetics.Species"><code class="xref py py-class docutils literal notranslate"><span class="pre">Species</span></code></a> is used to initialize a diffusive species. Here the
+options specify: the number density <code class="docutils literal notranslate"><span class="pre">density</span></code>, the diffusion coefficient <code class="docutils literal notranslate"><span class="pre">D</span></code>, the
+valency of the particles of that species <code class="docutils literal notranslate"><span class="pre">valency</span></code>, and an optional external
+(electric) force which is applied to the diffusive species. As mentioned
+before, the LB density is completely decoupled from the electrokinetic
+densities. This has the advantage that greater freedom can be achieved
+in matching the internal parameters to an experimental system. Moreover,
+it is possible to choose parameters for which the LB is more stable.
+The species can be added to a LB fluid:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="o">.</span><span class="n">add_species</span><span class="p">(</span><span class="n">species</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One can also add the species during the initialization step of the
+<a class="reference internal" href="espressomd.html#espressomd.electrokinetics.Electrokinetics" title="espressomd.electrokinetics.Electrokinetics"><code class="xref py py-class docutils literal notranslate"><span class="pre">Electrokinetics</span></code></a> class by defining
+the list variable <code class="docutils literal notranslate"><span class="pre">species</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Electrokinetics</span><span class="p">(</span><span class="n">species</span><span class="o">=</span><span class="p">[</span><span class="n">species</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The variables <code class="docutils literal notranslate"><span class="pre">density</span></code>, <code class="docutils literal notranslate"><span class="pre">D</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">valency</span></code> must be set to properly initialize the diffusive species; the
+<code class="docutils literal notranslate"><span class="pre">ext_force_density</span></code> is optional.</p>
+</section>
+<section id="ek-boundaries">
+<span id="id6"></span><h3><span class="section-number">14.2.3. </span>EK boundaries<a class="headerlink" href="#ek-boundaries" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.ekboundaries.EKBoundary" title="espressomd.ekboundaries.EKBoundary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EKBoundary</span></code></a> is used to set up
+internal (or external) boundaries for the electrokinetics algorithm in much
+the same way as the <a class="reference internal" href="espressomd.html#espressomd.lbboundaries.LBBoundary" title="espressomd.lbboundaries.LBBoundary"><code class="xref py py-class docutils literal notranslate"><span class="pre">LBBoundary</span></code></a> class is
+used for the LB fluid:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek_boundary</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">ekboundaries</span><span class="o">.</span><span class="n">EKBoundary</span><span class="p">(</span><span class="n">charge_density</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">my_shape</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekboundaries</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek_boundary</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Feature <code class="docutils literal notranslate"><span class="pre">EK_BOUNDARIES</span></code> required</p>
+</div>
+<p>The major difference with the LB class is the option <code class="docutils literal notranslate"><span class="pre">charge_density</span></code>,
+with which a boundary can be endowed with a volume charge density.
+To create a surface charge density, a combination of two
+oppositely charged boundaries, one inside the other, can be used. However,
+care should be taken to maintain the surface charge density when the value of <code class="docutils literal notranslate"><span class="pre">agrid</span></code>
+is changed. Examples for possible shapes are wall, sphere, ellipsoid, cylinder,
+rhomboid and hollow conical frustum. We refer to the documentation of the
+<a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a> module for more possible shapes and information on
+the options associated to these shapes. In order to properly set up the
+boundaries, the <code class="docutils literal notranslate"><span class="pre">charge_density</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code> must be specified.</p>
+</section>
+<section id="output">
+<span id="id7"></span><h3><span class="section-number">14.2.4. </span>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<section id="fields">
+<span id="id8"></span><h4><span class="section-number">14.2.4.1. </span>Fields<a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="o">.</span><span class="n">write_vtk_boundary</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">write_vtk_density</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">write_vtk_velocity</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">ek</span><span class="o">.</span><span class="n">write_vtk_potential</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A property of the fluid field can be exported into a file in one go.
+Currently supported fields are: density, velocity, potential and boundary,
+which give the LB fluid density, the LB fluid velocity,
+the electrostatic potential, and the location and type of the
+boundaries, respectively. The boundaries can only be printed when the
+<code class="docutils literal notranslate"><span class="pre">EK_BOUNDARIES</span></code> is compiled in. The output is a vtk-file, which is readable by
+visualization software such as ParaView <a class="footnote-reference brackets" href="#id12" id="id9">5</a> and Mayavi2 <a class="footnote-reference brackets" href="#id13" id="id10">6</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">species</span><span class="o">.</span><span class="n">write_vtk_flux</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">species</span><span class="o">.</span><span class="n">write_vtk_density</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These commands are similar to the above. They enable the
+export of diffusive species properties, namely: <code class="docutils literal notranslate"><span class="pre">density</span></code> and <code class="docutils literal notranslate"><span class="pre">flux</span></code>, which specify the
+number density and flux of species <code class="docutils literal notranslate"><span class="pre">species</span></code>, respectively.</p>
+</section>
+<section id="local-quantities">
+<span id="id11"></span><h4><span class="section-number">14.2.4.2. </span>Local quantities<a class="headerlink" href="#local-quantities" title="Permalink to this headline">¶</a></h4>
+<p>Local quantities like velocity or fluid density for single nodes can be accessed in the same way
+as for an LB fluid, see <a class="reference internal" href="lb.html#lattice-boltzmann"><span class="std std-ref">Lattice-Boltzmann</span></a>. The only EK-specific quantity is the potential.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">potential</span>
+<span class="n">ek</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">velocity</span>
+<span class="n">ek</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">boundary</span>
+</pre></div>
+</div>
+<p>The local <code class="docutils literal notranslate"><span class="pre">density</span></code> and <code class="docutils literal notranslate"><span class="pre">flux</span></code> of a species can be obtained in the same fashion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">density</span>
+<span class="n">species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span>
+</pre></div>
+</div>
+<dl class="footnote brackets">
+<dt class="label" id="id12"><span class="brackets"><a class="fn-backref" href="#id9">5</a></span></dt>
+<dd><p><a class="reference external" href="https://www.paraview.org/">https://www.paraview.org/</a></p>
+</dd>
+<dt class="label" id="id13"><span class="brackets"><a class="fn-backref" href="#id10">6</a></span></dt>
+<dd><p><a class="reference external" href="http://code.enthought.com/projects/mayavi/">http://code.enthought.com/projects/mayavi/</a></p>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">14. Electrokinetics</a><ul>
+<li><a class="reference internal" href="#electrokinetic-equations">14.1. Electrokinetic equations</a></li>
+<li><a class="reference internal" href="#setup">14.2. Setup</a><ul>
+<li><a class="reference internal" href="#initialization">14.2.1. Initialization</a></li>
+<li><a class="reference internal" href="#diffusive-species">14.2.2. Diffusive species</a></li>
+<li><a class="reference internal" href="#ek-boundaries">14.2.3. EK boundaries</a></li>
+<li><a class="reference internal" href="#output">14.2.4. Output</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.cluster_analysis &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.cluster_analysis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">from</span> <span class="nn">.particle_data</span> <span class="k">import</span> <span class="n">ParticleHandle</span><span class="p">,</span> <span class="n">ParticleSlice</span>
+
+
+<div class="viewcode-block" id="Cluster"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.Cluster">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Cluster</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Class representing a cluster of particles.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    particle_ids()</span>
+<span class="sd">        Returns list of particle ids in the cluster</span>
+
+<span class="sd">    size()</span>
+<span class="sd">        Returns the number of particles in the cluster</span>
+
+<span class="sd">    center_of_mass()</span>
+<span class="sd">        Center of mass of the cluster (folded coordinates)</span>
+
+<span class="sd">    longest_distance()</span>
+<span class="sd">        Longest distance between any combination of two particles in the cluster</span>
+
+<span class="sd">    fractal_dimension(dr=None)</span>
+<span class="sd">        Estimates the cluster&#39;s fractal dimension by fitting the number of</span>
+<span class="sd">        particles :math:`n` in spheres of growing radius around the center of mass</span>
+<span class="sd">        to :math:`c*r_g^d`, where :math:`r_g` is the radius of gyration of the</span>
+<span class="sd">        particles within the sphere, and :math:`d` is the fractal dimension.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Requires ``GSL`` external feature, enabled with ``-DWITH_GSL=ON``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dr: :obj:`float`</span>
+<span class="sd">            Minimum increment for the radius of the spheres.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`tuple`:</span>
+<span class="sd">            Fractal dimension and mean square residual.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ClusterAnalysis::Cluster&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;particle_ids&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="s2">&quot;longest_distance&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;radius_of_gyration&quot;</span><span class="p">,</span> <span class="s2">&quot;fractal_dimension&quot;</span><span class="p">,</span> <span class="s2">&quot;center_of_mass&quot;</span><span class="p">)</span>
+
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+<div class="viewcode-block" id="Cluster.particles"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.Cluster.particles">[docs]</a>    <span class="k">def</span> <span class="nf">particles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get particles in the cluster.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`espressomd.particle_data.ParticleSlice`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ParticleSlice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particle_ids</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="ClusterStructure"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.ClusterStructure">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ClusterStructure</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Cluster structure of a simulation system, and access to cluster analysis</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pair_criterion: :class:`espressomd.pair_criteria._PairCriterion`</span>
+<span class="sd">        Criterion to decide whether two particles are neighbors.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ClusterAnalysis::ClusterStructure&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;LOCAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clusters</span> <span class="o">=</span> <span class="n">Clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ClusterStructure.run_for_all_pairs"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.ClusterStructure.run_for_all_pairs">[docs]</a>    <span class="k">def</span> <span class="nf">run_for_all_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the cluster analysis, considering all pairs of particles in the system</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;run_for_all_pairs&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ClusterStructure.run_for_bonded_particles"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.ClusterStructure.run_for_bonded_particles">[docs]</a>    <span class="k">def</span> <span class="nf">run_for_bonded_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the cluster analysis, considering only pairs of particles connected by a pair-bond.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;run_for_bonded_particles&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ClusterStructure.clear"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.ClusterStructure.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clears the cluster structure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;clear&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ClusterStructure.cluster_ids"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.ClusterStructure.cluster_ids">[docs]</a>    <span class="k">def</span> <span class="nf">cluster_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of all cluster ids of the clusters in the structure.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;cluster_ids&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ClusterStructure.cid_for_particle"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.ClusterStructure.cid_for_particle">[docs]</a>    <span class="k">def</span> <span class="nf">cid_for_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns cluster id for the particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p : :obj:`espressomd.particle_data.ParticleHandle` or :obj:`int` containing the particle id</span>
+<span class="sd">            Particle.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;cid_for_particle&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;cid_for_particle&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;The particle has to be passed as instance of ParticleHandle or as an integer particle id&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gives access to the clusters in the cluster structure via an</span>
+<span class="sd">        instance of :class:`Clusters`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clusters</span></div>
+
+
+<div class="viewcode-block" id="Clusters"><a class="viewcode-back" href="../../espressomd.html#espressomd.cluster_analysis.Clusters">[docs]</a><span class="k">class</span> <span class="nc">Clusters</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;Access to the clusters in the cluster structure.</span>
+
+<span class="sd">    Access is as follows:</span>
+
+<span class="sd">    * number of clusters: ``len(clusters)``</span>
+<span class="sd">    * access a cluster via its id: ``clusters[id]``</span>
+<span class="sd">    * iterate over clusters (yields ``(id, cluster)`` tuples)</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; for cluster_id, cluster in clusters:</span>
+<span class="sd">        ...     print(f&quot;{cluster_id=} CoM={cluster.center_of_mass()}&quot;)</span>
+<span class="sd">        cluster_id=1 CoM=[1.71834061 1.54988961 1.54734631]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_structure</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cluster_structure</span> <span class="o">=</span> <span class="n">cluster_structure</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_structure</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_cluster&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">cluster_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_structure</span><span class="o">.</span><span class="n">cluster_ids</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_structure</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_cluster&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">cid</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_structure</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

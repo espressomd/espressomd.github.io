@@ -1,0 +1,706 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>6. Integrators and thermostats &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/toggleprompt.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="7. Non-bonded interactions" href="inter_non-bonded.html" />
+    <link rel="prev" title="5. Setting up particles" href="particles.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="integrators-and-thermostats">
+<span id="id1"></span><h1><span class="section-number">6. </span>Integrators and thermostats<a class="headerlink" href="#integrators-and-thermostats" title="Permalink to this headline">¶</a></h1>
+<section id="particle-integration-and-propagation">
+<span id="id2"></span><h2><span class="section-number">6.1. </span>Particle integration and propagation<a class="headerlink" href="#particle-integration-and-propagation" title="Permalink to this headline">¶</a></h2>
+<p>The main integration scheme of <em>ESPResSo</em> is the velocity Verlet algorithm.
+A steepest descent algorithm is used to minimize the system.</p>
+<p>Additional integration schemes are available, which can be coupled to
+thermostats to enable Langevin dynamics, Brownian dynamics, Stokesian dynamics,
+dissipative particle dynamics, and simulations in the NpT ensemble.</p>
+</section>
+<section id="integrators">
+<span id="id3"></span><h2><span class="section-number">6.2. </span>Integrators<a class="headerlink" href="#integrators" title="Permalink to this headline">¶</a></h2>
+<p>To run the integrator call the method
+<a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.run" title="espressomd.integrate.Integrator.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">system.integrate.run()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">,</span> <span class="n">recalc_forces</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reuse_forces</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">number_of_steps</span></code> is the number of time steps the integrator should perform.</p>
+<section id="velocity-verlet-algorithm">
+<span id="id4"></span><h3><span class="section-number">6.2.1. </span>Velocity Verlet algorithm<a class="headerlink" href="#velocity-verlet-algorithm" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_vv" title="espressomd.integrate.IntegratorHandle.set_vv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.IntegratorHandle.set_vv()</span></code></a></p>
+<p>The equations of motion for the trajectory of point-like particles read</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\dot v_i(t) = F_i(\{x_j\},v_i,t)/m_i \\ \dot x_i(t) = v_i(t),\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(x_i\)</span>, <span class="math notranslate nohighlight">\(v_i\)</span>, <span class="math notranslate nohighlight">\(m_i\)</span> are position, velocity and mass of
+particle <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(F_i(\{x_j\},v_i,t)\)</span> the forces acting on it.
+These forces comprise all interactions with other particles and external fields
+as well as non-deterministic contributions described in <a class="reference internal" href="#thermostats"><span class="std std-ref">Thermostats</span></a>.</p>
+<p>For numerical integration, this equation is discretized to the following steps (<span id="id5">[<a class="reference internal" href="bibliography.html#id75" title="D. C. Rapaport. The Art of Molecular Dynamics Simulation. Cambridge University Press, New York, NY, USA, 2nd edition, 2004. ISBN 9780511816581. doi:10.1017/CBO9780511816581.">Rapaport, 2004</a>]</span> eqs. 3.5.8 - 3.5.10):</p>
+<ol class="arabic">
+<li><p>Calculate the velocity at the half step</p>
+<div class="math notranslate nohighlight">
+\[v(t+dt/2) = v(t) + \frac{F(x(t),v(t-dt/2),t)}{m} dt/2\]</div>
+</li>
+<li><p>Calculate the new position</p>
+<div class="math notranslate nohighlight">
+\[x(t+dt) = x(t) + v(t+dt/2) dt\]</div>
+</li>
+<li><p>Calculate the force based on the new position</p>
+<div class="math notranslate nohighlight">
+\[F = F(x(t+dt), v(t+dt/2), t+dt)\]</div>
+</li>
+<li><p>Calculate the new velocity</p>
+<div class="math notranslate nohighlight">
+\[v(t+dt) = v(t+dt/2) + \frac{F(x(t+dt),t+dt)}{m} dt/2\]</div>
+</li>
+</ol>
+<p>Note that this implementation of the velocity Verlet algorithm reuses
+forces in step 1. That is, they are computed once in step 3,
+but used twice, in step 4 and in step 1 of the next iteration. In the first time
+step after setting up, there are no forces present yet. Therefore, <em>ESPResSo</em> has
+to compute them before the first time step. That has two consequences:
+first, random forces are redrawn, resulting in a narrower distribution
+of the random forces, which we compensate by stretching. Second,
+coupling forces of e.g. the lattice-Boltzmann fluid cannot be computed
+and are therefore lacking in the first half time step. In order to
+minimize these effects, <em>ESPResSo</em> has a quite conservative heuristics to decide
+whether a change makes it necessary to recompute forces before the first
+time step. Therefore, calling 100 times
+<a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator.run" title="espressomd.integrate.Integrator.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.Integrator.run()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">steps=1</span></code> does the
+same as with <code class="docutils literal notranslate"><span class="pre">steps=100</span></code>, apart from some small calling overhead.</p>
+<p>However, for checkpointing, there is no way for <em>ESPResSo</em> to tell that the forces
+that you read back in actually match the parameters that are set.
+Therefore, <em>ESPResSo</em> would recompute the forces before the first time step, which
+makes it essentially impossible to checkpoint LB simulations, where it
+is vital to keep the coupling forces. To work around this, there is
+an additional parameter <code class="docutils literal notranslate"><span class="pre">reuse_forces</span></code>, which tells integrate to not recalculate
+the forces for the first time step, but use that the values still stored
+with the particles. Use this only if you are absolutely sure that the
+forces stored match your current setup!</p>
+<p>The opposite problem occurs when timing interactions: In this case, one
+would like to recompute the forces, despite the fact that they are
+already correctly calculated. To this aim, the option <code class="docutils literal notranslate"><span class="pre">recalc_forces</span></code> can be used to
+enforce force recalculation.</p>
+</section>
+<section id="isotropic-npt-integrator">
+<span id="id6"></span><h3><span class="section-number">6.2.2. </span>Isotropic NpT integrator<a class="headerlink" href="#isotropic-npt-integrator" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_isotropic_npt" title="espressomd.integrate.IntegratorHandle.set_isotropic_npt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.IntegratorHandle.set_isotropic_npt()</span></code></a></p>
+<p>As the NpT thermostat alters the way the equations of motion are integrated, it is
+discussed here and only a brief summary is given in <a class="reference internal" href="#thermostats"><span class="std std-ref">Thermostats</span></a>.</p>
+<p>To activate the NpT integrator, use <a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_isotropic_npt" title="espressomd.integrate.IntegratorHandle.set_isotropic_npt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_isotropic_npt()</span></code></a>
+with parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ext_pressure</span></code>: The external pressure</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">piston</span></code>: The mass of the applied piston</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">direction</span></code>: Flags to enable/disable box dimensions to be subject to fluctuations. By default, all directions are enabled.</p></li>
+</ul>
+<p>Additionally, a NpT thermostat has to be set by <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_npt" title="espressomd.thermostat.Thermostat.set_npt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_npt()</span></code></a>
+with parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kT</span></code>: Thermal energy of the heat bath</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gamma0</span></code>: Friction coefficient of the bath</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gammav</span></code>: Artificial friction coefficient for the volume fluctuations.</p></li>
+</ul>
+<p>A code snippet would look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_npt</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gammav</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_isotropic_npt</span><span class="p">(</span><span class="n">ext_pressure</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">piston</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The physical meaning of these parameters is described below:</p>
+<p>The relaxation towards a desired pressure <span class="math notranslate nohighlight">\(P\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">ext_pressure</span></code>)
+is enabled by treating the box
+volume <span class="math notranslate nohighlight">\(V\)</span> as a degree of freedom with corresponding momentum <span class="math notranslate nohighlight">\(\Pi = Q\dot{V}\)</span>,
+where <span class="math notranslate nohighlight">\(Q\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">piston</span></code>) is an artificial piston mass.
+Which box dimensions are affected to change the volume can be controlled by a list of
+boolean flags for parameter <code class="docutils literal notranslate"><span class="pre">direction</span></code>.
+An additional energy <span class="math notranslate nohighlight">\(H_V = 1/(2Q)\Pi + PV\)</span>
+associated with the volume is postulated. This results in a “force” on the box such that</p>
+<div class="math notranslate nohighlight">
+\[\dot{\Pi} = \mathcal{P} - P\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{P} = \frac{1}{Vd} \sum_{i,j} f_{ij}x_{ij} + \frac{1}{Vd} \sum_i m_i v_i^2\]</div>
+<p>Here <span class="math notranslate nohighlight">\(\mathcal{P}\)</span> is the instantaneous pressure, <span class="math notranslate nohighlight">\(d\)</span> the dimension
+of the system (number of flags set by <code class="docutils literal notranslate"><span class="pre">direction</span></code>), <span class="math notranslate nohighlight">\(f_{ij}\)</span> the
+short range interaction force between particles <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span> and
+<span class="math notranslate nohighlight">\(x_{ij}= x_j - x_i\)</span>.</p>
+<p>In addition to this deterministic force, a friction <span class="math notranslate nohighlight">\(-\frac{\gamma^V}{Q}\Pi(t)\)</span>
+and noise <span class="math notranslate nohighlight">\(\sqrt{k_B T \gamma^V} \eta(t)\)</span> are added for the box
+volume dynamics and the particle dynamics. This introduces three new parameters:
+The friction coefficient for the box <span class="math notranslate nohighlight">\(\gamma^V\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">gammav</span></code>),
+the friction coefficient of the particles <span class="math notranslate nohighlight">\(\gamma^0\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">gamma0</span></code>)
+and the thermal energy <span class="math notranslate nohighlight">\(k_BT\)</span> (parameter <code class="docutils literal notranslate"><span class="pre">kT</span></code>).
+For a discussion of these terms and their discretisation, see <a class="reference internal" href="#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>,
+which uses the same approach, but only for particles.
+As a result of box geometry changes, the particle positions and velocities have to be rescaled
+during integration.</p>
+<p>The discretisation consists of the following steps (see <span id="id7">[<a class="reference internal" href="bibliography.html#id53" title="A. Kolb and B. Dünweg. Optimized constant pressure stochastic dynamics. The Journal of Chemical Physics, 111(10):4453–59, 1999. doi:10.1063/1.479208.">Kolb and Dünweg, 1999</a>]</span> for a full derivation of the algorithm):</p>
+<ol class="arabic">
+<li><p>Calculate the particle velocities at the half step</p>
+<div class="math notranslate nohighlight">
+\[v'(t+dt/2) = v(t) + \frac{F(x(t),v(t-dt/2),t)}{m} dt/2\]</div>
+</li>
+<li><p>Calculate the instantaneous pressure and “volume momentum”</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{P} = \mathcal{P}(x(t),V(t),f(x(t)), v'(t+dt/2))\]</div>
+<div class="math notranslate nohighlight">
+\[\Pi(t+dt/2) = \Pi(t) + (\mathcal{P}-P) dt/2 -\frac{\gamma^V}{Q}\Pi(t) dt/2  +  \sqrt{k_B T \gamma^V dt} \overline{\eta}\]</div>
+</li>
+<li><p>Calculate box volume and scaling parameter <span class="math notranslate nohighlight">\(L\)</span> at half step and full step, scale the simulation box accordingly</p>
+<div class="math notranslate nohighlight">
+\[V(t+dt/2) = V(t) + \frac{\Pi(t+dt/2)}{Q} dt/2\]</div>
+<div class="math notranslate nohighlight">
+\[L(t+dt/2) = V(t+dt/2)^{1/d}\]</div>
+<div class="math notranslate nohighlight">
+\[V(t+dt) = V(t+dt/2) + \frac{\Pi(t+dt/2)}{Q} dt/2\]</div>
+<div class="math notranslate nohighlight">
+\[L(t+dt) = V(t+dt)^{1/d}\]</div>
+</li>
+<li><p>Update particle positions and scale velocities</p>
+<div class="math notranslate nohighlight">
+\[x(t+dt) = \frac{L(t+dt)}{L(t)} \left[ x(t) + \frac{L^2(t)}{L^2(t+dt/2)} v(t+dt/2) dt \right]\]</div>
+<div class="math notranslate nohighlight">
+\[v(t+dt/2) = \frac{L(t)}{L(t+dt)} v'(t+dt/2)\]</div>
+</li>
+<li><p>Calculate forces, instantaneous pressure and “volume momentum”</p>
+<div class="math notranslate nohighlight">
+\[F = F(x(t+dt),v(t+dt/2),t)\]</div>
+<div class="math notranslate nohighlight">
+\[\mathcal{P} = \mathcal{P}(x(t+dt),V(t+dt),f(x(t+dt)), v(t+dt/2))\]</div>
+<div class="math notranslate nohighlight">
+\[\Pi(t+dt) = \Pi(t+dt/2) + (\mathcal{P}-P) dt/2 -\frac{\gamma^V}{Q}\Pi(t+dt/2) dt/2  +  \sqrt{k_B T \gamma^V dt} \overline{\eta}\]</div>
+<p>with uncorrelated numbers <span class="math notranslate nohighlight">\(\overline{\eta}\)</span> drawn from a random uniform process <span class="math notranslate nohighlight">\(\eta(t)\)</span></p>
+</li>
+<li><p>Update the velocities</p>
+<div class="math notranslate nohighlight">
+\[v(t+dt) = v(t+dt/2) + \frac{F(t+dt)}{m} dt/2\]</div>
+</li>
+</ol>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>The NpT algorithm is only tested for all 3 directions enabled for scaling. Usage of <code class="docutils literal notranslate"><span class="pre">direction</span></code> is considered an experimental feature.</p></li>
+<li><p>In step 4, only those coordinates are scaled for which <code class="docutils literal notranslate"><span class="pre">direction</span></code> is set.</p></li>
+<li><p>For the instantaneous pressure, the same limitations of applicability hold as described in <a class="reference internal" href="analysis.html#pressure"><span class="std std-ref">Pressure</span></a>.</p></li>
+<li><p>The particle forces <span class="math notranslate nohighlight">\(F\)</span> include interactions as well as a friction (<span class="math notranslate nohighlight">\(\gamma^0\)</span>) and noise term (<span class="math notranslate nohighlight">\(\sqrt{k_B T \gamma^0 dt} \overline{\eta}\)</span>) analogous to the terms in the <a class="reference internal" href="#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>.</p></li>
+<li><p>The particle forces are only calculated in step 5 and then reused in step 1 of the next iteration. See <a class="reference internal" href="#velocity-verlet-algorithm"><span class="std std-ref">Velocity Verlet algorithm</span></a> for the implications of that.</p></li>
+<li><p>The NpT algorithm doesn’t support <a class="reference internal" href="system_setup.html#lees-edwards-boundary-conditions"><span class="std std-ref">Lees–Edwards boundary conditions</span></a>.</p></li>
+<li><p>The NpT algorithm doesn’t support propagation of angular velocities.</p></li>
+</ul>
+</section>
+<section id="steepest-descent">
+<span id="id8"></span><h3><span class="section-number">6.2.3. </span>Steepest descent<a class="headerlink" href="#steepest-descent" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_steepest_descent" title="espressomd.integrate.IntegratorHandle.set_steepest_descent"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.IntegratorHandle.set_steepest_descent()</span></code></a></p>
+<p>This feature is used to propagate each particle by a small distance parallel to the force acting on it.
+When only conservative forces for which a potential exists are in use, this is equivalent to a steepest descent energy minimization.
+A common application is removing overlap between randomly placed particles.</p>
+<p>Please note that the behavior is undefined if a thermostat is activated,
+in which case the integrator will generate an error. The integrator runs
+the following steepest descent algorithm:</p>
+<div class="math notranslate nohighlight">
+\[\vec{r}_{i+1} = \vec{r}_i + \min(\gamma \vec{F}_i, \vec{r}_{\text{max_displacement}}),\]</div>
+<p>while the maximal force/torque is bigger than <code class="docutils literal notranslate"><span class="pre">f_max</span></code> or for at most <code class="docutils literal notranslate"><span class="pre">steps</span></code> times. The energy
+is relaxed by <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, while the change per coordinate per step is limited to <code class="docutils literal notranslate"><span class="pre">max_displacement</span></code>.
+The combination of <code class="docutils literal notranslate"><span class="pre">gamma</span></code> and <code class="docutils literal notranslate"><span class="pre">max_displacement</span></code> can be used to get a poor man’s adaptive update.
+Rotational degrees of freedom are treated similarly: each particle is
+rotated around an axis parallel to the torque acting on the particle,
+with <code class="docutils literal notranslate"><span class="pre">max_displacement</span></code> interpreted as the maximal rotation angle.
+Please be aware of the fact that this needs not to converge to a local
+minimum in periodic boundary conditions. Translational and rotational
+coordinates that are fixed using the <code class="docutils literal notranslate"><span class="pre">fix</span></code> and <code class="docutils literal notranslate"><span class="pre">rotation</span></code> attribute of particles are not altered.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_steepest_descent</span><span class="p">(</span>
+    <span class="n">f_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_displacement</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>   <span class="c1"># maximal number of steps</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_vv</span><span class="p">()</span>  <span class="c1"># to switch back to velocity Verlet</span>
+</pre></div>
+</div>
+<section id="using-a-custom-convergence-criterion">
+<span id="id9"></span><h4><span class="section-number">6.2.3.1. </span>Using a custom convergence criterion<a class="headerlink" href="#using-a-custom-convergence-criterion" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">f_max</span></code> parameter can be set to zero to prevent the integrator from
+halting when a specific force/torque is reached. The integration can then
+be carried out in a loop with a custom convergence criterion:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">min_sigma</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># size of the smallest particle</span>
+<span class="n">max_sigma</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># size of the largest particle</span>
+<span class="n">min_dist</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_steepest_descent</span><span class="p">(</span><span class="n">f_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                                       <span class="n">max_displacement</span><span class="o">=</span><span class="n">min_sigma</span> <span class="o">*</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="c1"># gradient descent until particles are separated by at least max_sigma</span>
+<span class="k">while</span> <span class="n">min_dist</span> <span class="o">&lt;</span> <span class="n">max_sigma</span><span class="p">:</span>
+    <span class="n">min_dist</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">min_dist</span><span class="p">()</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_vv</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>When writing a custom convergence criterion based on forces or torques, keep
+in mind that particles whose motion and rotation are fixed in space along
+some or all axes with <code class="docutils literal notranslate"><span class="pre">fix</span></code> or <code class="docutils literal notranslate"><span class="pre">rotation</span></code> need to be filtered from the
+force/torque observable used in the custom convergence criterion. Since these
+two properties can be cast to boolean values, they can be used as masks to
+remove forces/torques that are ignored by the integrator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">particles</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="n">max_force</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">particles</span><span class="o">.</span><span class="n">f</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">particles</span><span class="o">.</span><span class="n">fix</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">max_torque</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">particles</span><span class="o">.</span><span class="n">torque_lab</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">particles</span><span class="o">.</span><span class="n">rotation</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Virtual sites can also be an issue since the force on the virtual site is
+transferred to the target particle at the beginning of the integration loop.
+The correct forces need to be re-calculated after running the integration:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">convergence_criterion</span><span class="p">(</span><span class="n">forces</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function that decides when the gradient descent has converged&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="o">...</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">vs_auto_relate_to</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_steepest_descent</span><span class="p">(</span><span class="n">f_max</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_displacement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="k">while</span> <span class="n">convergence_criterion</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">f</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">recalc_forces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># re-calculate forces from virtual sites</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_vv</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The algorithm can also be used for energy minimization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># minimize until energy difference &lt; 5% or energy &lt; 1e-3</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_steepest_descent</span><span class="p">(</span><span class="n">f_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_displacement</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">relative_energy_change</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+<span class="n">relative_energy_change_threshold</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">energy_threshold</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="n">energy_old</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">energy</span><span class="p">()[</span><span class="s1">&#39;total&#39;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Energy: </span><span class="si">{energy_old:.2e}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">energy</span><span class="p">()[</span><span class="s1">&#39;total&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Energy: </span><span class="si">{energy:.2e}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">relative_energy_change</span> <span class="o">=</span> <span class="p">(</span><span class="n">energy_old</span> <span class="o">-</span> <span class="n">energy</span><span class="p">)</span> <span class="o">/</span> <span class="n">energy_old</span>
+    <span class="k">if</span> <span class="n">relative_energy_change</span> <span class="o">&lt;</span> <span class="n">relative_energy_change_threshold</span> <span class="ow">or</span> <span class="n">energy</span> <span class="o">&lt;</span> <span class="n">energy_threshold</span><span class="p">:</span>
+        <span class="k">break</span>
+    <span class="n">energy_old</span> <span class="o">=</span> <span class="n">energy</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Energy minimization did not converge in {i + 1} cycles&#39;</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_vv</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Please note that not all features support energy calculation.
+For example <a class="reference internal" href="advanced_methods.html#immersed-boundary-method-for-soft-elastic-objects"><span class="std std-ref">IBM</span></a>
+and <a class="reference internal" href="advanced_methods.html#object-in-fluid"><span class="std std-ref">OIF</span></a> do not implement energy calculation for
+mesh surface deformation.</p>
+</section>
+</section>
+<section id="brownian-dynamics">
+<span id="id10"></span><h3><span class="section-number">6.2.4. </span>Brownian Dynamics<a class="headerlink" href="#brownian-dynamics" title="Permalink to this headline">¶</a></h3>
+<p>Brownian Dynamics integrator <span id="id11">[<a class="reference internal" href="bibliography.html#id80" title="Tamar Schlick. Molecular Modeling and Simulation: An Interdisciplinary Guide. Volume 21 of Interdisciplinary Applied Mathematics. Springer New York, New York, NY, 2010. ISBN 978-1-4419-6350-5. doi:10.1007/978-1-4419-6351-2.">Schlick, 2010</a>]</span>.
+See details in <a class="reference internal" href="#brownian-thermostat"><span class="std std-ref">Brownian thermostat</span></a>.</p>
+</section>
+<section id="stokesian-dynamics">
+<span id="id12"></span><h3><span class="section-number">6.2.5. </span>Stokesian Dynamics<a class="headerlink" href="#stokesian-dynamics" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">STOKESIAN_DYNAMICS</span></code> external feature, enabled with
+<code class="docutils literal notranslate"><span class="pre">-DWITH_STOKESIAN_DYNAMICS=ON</span></code>.</p>
+</div>
+<p><a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_stokesian_dynamics" title="espressomd.integrate.IntegratorHandle.set_stokesian_dynamics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.IntegratorHandle.set_stokesian_dynamics()</span></code></a></p>
+<p>The Stokesian Dynamics method is used to model the behavior of spherical
+particles in a viscous fluid. It is targeted at systems with very low Reynolds
+numbers. In such systems, particles come to a rest almost immediately as soon as
+any force on them is removed. In other words, motion has no memory of the past.</p>
+<p>The integration scheme is relatively simple. Only the particles’ positions,
+radii and forces (including torques) are needed to compute the momentary
+velocities (including angular velocities). The particle positions are
+integrated by the simple Euler scheme.</p>
+<p>The computation of the velocities is an approximation with good results
+in the far field.
+The Stokesian Dynamics method is only available for open systems,
+i.e. no periodic boundary conditions are supported. The box size has
+no effect either.</p>
+<p>The Stokesian Dynamics method is outlined in <span id="id13">[<a class="reference internal" href="bibliography.html#id36" title="L. Durlofsky, J. F. Brady, and G. Bossis. Dynamic simulation of hydrodynamically interacting particles. Journal of Fluid Mechanics, 180:21–49, 1987. doi:10.1017/S002211208700171X.">Durlofsky <em>et al.</em>, 1987</a>]</span>.</p>
+<p>The following minimal example illustrates how to use the SDM in <em>ESPResSo</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_stokesian_dynamics</span><span class="p">(</span><span class="n">viscosity</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Because there is no force on the particle yet, nothing will move. You will need
+to add your own actors to the system. The parameter <code class="docutils literal notranslate"><span class="pre">radii</span></code> is a dictionary
+that maps particle types to different radii. <code class="docutils literal notranslate"><span class="pre">viscosity</span></code> is the dynamic
+viscosity of the ambient infinite fluid. There are additional optional
+parameters for <code class="docutils literal notranslate"><span class="pre">set_stokesian_dynamics()</span></code>. For more information, see
+<a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_stokesian_dynamics" title="espressomd.integrate.IntegratorHandle.set_stokesian_dynamics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.integrate.IntegratorHandle.set_stokesian_dynamics()</span></code></a>.</p>
+<p>Note that this setup represents a system at zero temperature. In order to
+thermalize the system, the SD thermostat needs to be activated (see
+<a class="reference internal" href="#stokesian-thermostat"><span class="std std-ref">Stokesian thermostat</span></a>).</p>
+<section id="important">
+<span id="important-sd"></span><h4><span class="section-number">6.2.5.1. </span>Important<a class="headerlink" href="#important" title="Permalink to this headline">¶</a></h4>
+<p>The particles must be prevented from overlapping. It is mathematically allowed
+for the particles to overlap to a certain degree. However, once the distance
+of the sphere centers is less than 2/3 of the sphere diameter, the mobility
+matrix is no longer positive definite and the Stokesian Dynamics integrator
+will fail. Therefore, the particle centers must be kept apart from each
+other by a strongly repulsive potential, for example the WCA potential
+that is set to the appropriate particle radius (for more information about
+the available interaction types see <a class="reference internal" href="inter_non-bonded.html#non-bonded-interactions"><span class="std std-ref">Non-bonded interactions</span></a>).</p>
+<p>The current implementation of SD only includes the far field approximation.
+The near field (so-called lubrication) correction is planned. For now,
+Stokesian Dynamics provides a good approximation of the hydrodynamics
+in dilute systems where the average distance between particles is several
+sphere diameters.</p>
+</section>
+</section>
+</section>
+<section id="thermostats">
+<span id="id14"></span><h2><span class="section-number">6.3. </span>Thermostats<a class="headerlink" href="#thermostats" title="Permalink to this headline">¶</a></h2>
+<p>To add a thermostat, call the appropriate setter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">41</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The different thermostats available in <em>ESPResSo</em> will be described in the following
+subsections.</p>
+<p>You may combine different thermostats at your own risk by turning them on
+one by one. The list of active thermostats can be cleared at any time with
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.turn_off" title="espressomd.thermostat.Thermostat.turn_off"><code class="xref py py-meth docutils literal notranslate"><span class="pre">system.thermostat.turn_off()</span></code></a>.
+Not all combinations of thermostats are allowed, though (see
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.AssertThermostatType" title="espressomd.thermostat.AssertThermostatType"><code class="xref py py-func docutils literal notranslate"><span class="pre">espressomd.thermostat.AssertThermostatType()</span></code></a> for details).
+Some integrators only work with a specific thermostat and throw an
+error otherwise. Note that there is only one temperature for all
+thermostats, although for some thermostats like the Langevin thermostat,
+particles can be assigned individual temperatures.</p>
+<p>Since <em>ESPResSo</em> does not enforce a particular unit system, it cannot know about
+the current value of the Boltzmann constant. Therefore, when specifying
+the temperature of a thermostat, you actually do not define the
+temperature, but the value of the thermal energy <span class="math notranslate nohighlight">\(k_B T\)</span> in the
+current unit system (see the discussion on units, Section <a class="reference internal" href="introduction.html#on-units"><span class="std std-ref">On units</span></a>).</p>
+<p>All thermostats have a <code class="docutils literal notranslate"><span class="pre">seed</span></code> argument that controls the state of the random
+number generator (Philox Counter-based RNG). This seed is required on first
+activation of a thermostat, unless stated otherwise. It can be omitted in
+subsequent calls of the method that activates the same thermostat. The random
+sequence also depends on the thermostats counters that are
+incremented after each integration step.</p>
+<section id="langevin-thermostat">
+<span id="id15"></span><h3><span class="section-number">6.3.1. </span>Langevin thermostat<a class="headerlink" href="#langevin-thermostat" title="Permalink to this headline">¶</a></h3>
+<p>In order to activate the Langevin thermostat the member function
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_langevin" title="espressomd.thermostat.Thermostat.set_langevin"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_langevin()</span></code></a> of the thermostat
+class <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat" title="espressomd.thermostat.Thermostat"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.thermostat.Thermostat</span></code></a> has to be invoked.
+Best explained in an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">41</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As explained before the temperature is set as thermal energy <span class="math notranslate nohighlight">\(k_\mathrm{B} T\)</span>.</p>
+<p>The Langevin thermostat is based on an extension of Newton’s equation of motion to</p>
+<div class="math notranslate nohighlight">
+\[m_i \dot{v}_i(t) = f_i(\{x_j\},v_i,t) - \gamma v_i(t) + \sqrt{2\gamma k_B T} \eta_i(t).\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(f_i\)</span> are all deterministic forces from interactions,
+<span class="math notranslate nohighlight">\(\gamma\)</span> the bare friction coefficient and <span class="math notranslate nohighlight">\(\eta\)</span> a random, “thermal” force.
+The friction term accounts for dissipation in a surrounding fluid whereas
+the random force  mimics collisions of the particle with solvent molecules
+at temperature <span class="math notranslate nohighlight">\(T\)</span> and satisfies</p>
+<div class="math notranslate nohighlight">
+\[&lt;\eta(t)&gt; = 0 , &lt;\eta^\alpha_i(t)\eta^\beta_j(t')&gt; = \delta_{\alpha\beta} \delta_{ij}\delta(t-t')\]</div>
+<p>(<span class="math notranslate nohighlight">\(&lt;\cdot&gt;\)</span> denotes the ensemble average and <span class="math notranslate nohighlight">\(\alpha,\beta\)</span> are spatial coordinates).</p>
+<p>In the <em>ESPResSo</em> implementation of the Langevin thermostat,
+the additional terms only enter in the force calculation.
+This reduces the accuracy of the velocity Verlet integrator
+by one order in <span class="math notranslate nohighlight">\(dt\)</span> because forces are now velocity-dependent.</p>
+<p>The random process <span class="math notranslate nohighlight">\(\eta(t)\)</span> is discretized by drawing an uncorrelated random number
+<span class="math notranslate nohighlight">\(\overline{\eta}\)</span> for each component of all the particle forces.
+The distribution of <span class="math notranslate nohighlight">\(\overline{\eta}\)</span> is uniform and satisfies</p>
+<div class="math notranslate nohighlight">
+\[&lt;\overline{\eta}&gt; = 0 , &lt;\overline{\eta}\overline{\eta}&gt; = 1/dt\]</div>
+<p>If the feature <code class="docutils literal notranslate"><span class="pre">ROTATION</span></code> is compiled in, the rotational degrees of freedom are
+also coupled to the thermostat. If only the first two arguments are
+specified then the friction coefficient for the rotation is set to the
+same value as that for the translation.
+A separate rotational friction coefficient can be set by inputting
+<code class="docutils literal notranslate"><span class="pre">gamma_rotate</span></code>. The two options allow one to switch the translational and rotational
+thermalization on or off separately, maintaining the frictional behavior. This
+can be useful, for instance, in high Péclet number active matter systems, where
+one wants to thermalize only the rotational degrees of freedom while
+translational degrees of freedom are affected by the self-propulsion.</p>
+<p>The keywords <code class="docutils literal notranslate"><span class="pre">gamma</span></code> and <code class="docutils literal notranslate"><span class="pre">gamma_rotate</span></code> can be specified as a scalar,
+or, with feature <code class="docutils literal notranslate"><span class="pre">PARTICLE_ANISOTROPY</span></code> compiled in, as the three eigenvalues
+of the respective friction coefficient tensor. This is enables the simulation of
+the anisotropic diffusion of anisotropic colloids (rods, etc.).</p>
+<p>Using the Langevin thermostat, it is possible to set a temperature and a
+friction coefficient for every particle individually via the feature
+<code class="docutils literal notranslate"><span class="pre">THERMOSTAT_PER_PARTICLE</span></code>.  Consult the reference of the <code class="docutils literal notranslate"><span class="pre">part</span></code> command
+(chapter <a class="reference internal" href="particles.html#setting-up-particles"><span class="std std-ref">Setting up particles</span></a>) for information on how to achieve this.</p>
+</section>
+<section id="brownian-thermostat">
+<span id="id16"></span><h3><span class="section-number">6.3.2. </span>Brownian thermostat<a class="headerlink" href="#brownian-thermostat" title="Permalink to this headline">¶</a></h3>
+<p>Brownian thermostat is a formal name of a thermostat enabling the
+Brownian Dynamics feature (see <span id="id17">[<a class="reference internal" href="bibliography.html#id80" title="Tamar Schlick. Molecular Modeling and Simulation: An Interdisciplinary Guide. Volume 21 of Interdisciplinary Applied Mathematics. Springer New York, New York, NY, 2010. ISBN 978-1-4419-6350-5. doi:10.1007/978-1-4419-6351-2.">Schlick, 2010</a>]</span>) which implies
+a propagation scheme involving systematic and thermal parts of the
+classical Ermak-McCammom’s (see <span id="id18">[<a class="reference internal" href="bibliography.html#id37" title="Donald L Ermak and J Andrew McCammon. Brownian dynamics with hydrodynamic interactions. The Journal of Chemical Physics, 69(4):1352–1360, 1978. doi:10.1063/1.436761.">Ermak and McCammon, 1978</a>]</span>)
+Brownian Dynamics. Currently it is implemented without
+hydrodynamic interactions, i.e.
+with a diagonal diffusion tensor.
+The hydrodynamic interactions feature will be available later
+as a part of the present Brownian Dynamics or
+implemented separately within the Stokesian Dynamics.</p>
+<p>In order to activate the Brownian thermostat, the member function
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_brownian" title="espressomd.thermostat.Thermostat.set_brownian"><code class="xref py py-attr docutils literal notranslate"><span class="pre">set_brownian</span></code></a> of the thermostat
+class <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat" title="espressomd.thermostat.Thermostat"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.thermostat.Thermostat</span></code></a> has to be invoked.
+The system integrator should be also changed.
+Best explained in an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_brownian</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">41</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_brownian_dynamics</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">gamma</span></code> (hereinafter <span class="math notranslate nohighlight">\(\gamma\)</span>) is a viscous friction coefficient.
+In terms of the Python interface and setup, the Brownian thermostat is very
+similar to the <a class="reference internal" href="#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>. The feature
+<code class="docutils literal notranslate"><span class="pre">THERMOSTAT_PER_PARTICLE</span></code> is used to control the per-particle
+temperature and the friction coefficient setup. The major differences are
+its internal integrator implementation and other temporal constraints.
+The integrator is still a symplectic velocity Verlet-like one.
+It is implemented via a viscous drag part and a random walk of both the position and
+velocity. Due to a nature of the Brownian Dynamics method, its time step <span class="math notranslate nohighlight">\(\Delta t\)</span>
+should be large enough compared to the relaxation time
+<span class="math notranslate nohighlight">\(m/\gamma\)</span> where <span class="math notranslate nohighlight">\(m\)</span> is the particle mass.
+This requirement is just a conceptual one
+without specific implementation technical restrictions.
+Note that with all similarities of
+Langevin and Brownian Dynamics, the Langevin thermostat temporal constraint
+is opposite. A velocity is restarting from zero at every step.
+Formally, the previous step velocity at the beginning of the the <span class="math notranslate nohighlight">\(\Delta t\)</span> interval
+is dissipated further
+and does not contribute to the end one as well as to the positional random walk.
+Another temporal constraint
+which is valid for both Langevin and Brownian Dynamics: conservative forces
+should not change significantly over the <span class="math notranslate nohighlight">\(\Delta t\)</span> interval.</p>
+<p>The viscous terminal velocity <span class="math notranslate nohighlight">\(\Delta v\)</span> and corresponding positional
+step <span class="math notranslate nohighlight">\(\Delta r\)</span> are fully driven by conservative forces <span class="math notranslate nohighlight">\(F\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\Delta r = \frac{F \cdot \Delta t}{\gamma}\]</div>
+<div class="math notranslate nohighlight">
+\[\Delta v = \frac{F}{\gamma}\]</div>
+<p>A positional random walk variance of each coordinate <span class="math notranslate nohighlight">\(\sigma_p^2\)</span>
+corresponds to a diffusion within the Wiener process:</p>
+<div class="math notranslate nohighlight">
+\[\sigma_p^2 = 2 \frac{kT}{\gamma} \cdot \Delta t\]</div>
+<p>Each velocity component random walk variance <span class="math notranslate nohighlight">\(\sigma_v^2\)</span> is defined by the heat
+component:</p>
+<div class="math notranslate nohighlight">
+\[\sigma_v^2 = \frac{kT}{m}\]</div>
+<p>Note: the velocity random walk is propagated from zero at each step.</p>
+<p>A rotational motion is implemented similarly.
+Note: the rotational Brownian dynamics implementation is compatible with particles which have
+the isotropic moment of inertia tensor only. Otherwise, the viscous terminal angular velocity
+is not defined, i.e. it has no constant direction over the time.</p>
+</section>
+<section id="isotropic-npt-thermostat">
+<span id="id19"></span><h3><span class="section-number">6.3.3. </span>Isotropic NpT thermostat<a class="headerlink" href="#isotropic-npt-thermostat" title="Permalink to this headline">¶</a></h3>
+<p>This feature allows to simulate an (on average) homogeneous and isotropic system in the NpT ensemble.
+In order to use this feature, <code class="docutils literal notranslate"><span class="pre">NPT</span></code> has to be defined in the <code class="file docutils literal notranslate"><span class="pre">myconfig.hpp</span></code>.
+Activate the NpT thermostat with the command <a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_npt" title="espressomd.thermostat.Thermostat.set_npt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_npt()</span></code></a>
+and setup the integrator for the NpT ensemble with <a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle.set_isotropic_npt" title="espressomd.integrate.IntegratorHandle.set_isotropic_npt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_isotropic_npt()</span></code></a>.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_npt</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gamma0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gammav</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">41</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_isotropic_npt</span><span class="p">(</span><span class="n">ext_pressure</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">piston</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For an explanation of the algorithm involved, see <a class="reference internal" href="#isotropic-npt-integrator"><span class="std std-ref">Isotropic NpT integrator</span></a>.</p>
+<p>Be aware that this feature is neither properly examined for all systems
+nor is it maintained regularly. If you use it and notice strange
+behavior, please contribute to solving the problem.</p>
+</section>
+<section id="dissipative-particle-dynamics-dpd">
+<span id="id20"></span><h3><span class="section-number">6.3.4. </span>Dissipative Particle Dynamics (DPD)<a class="headerlink" href="#dissipative-particle-dynamics-dpd" title="Permalink to this headline">¶</a></h3>
+<p>The DPD thermostat adds friction and noise to the particle
+dynamics like the <a class="reference internal" href="#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a>, but these
+are not applied to every particle individually but instead
+encoded in a dissipative interaction between particles <span id="id21">[<a class="reference internal" href="bibliography.html#id84" title="T. Soddemann, B. Dünweg, and K. Kremer. Dissipative particle dynamics: a useful thermostat for equilibrium and nonequilibrium molecular dynamics simulations. Physical Review E, 68(4):046702, 2003. doi:10.1103/PhysRevE.68.046702.">Soddemann <em>et al.</em>, 2003</a>]</span>.</p>
+<p>To realize a complete DPD fluid model in <em>ESPResSo</em>, three parts are needed:
+the DPD thermostat, which controls the temperate, a dissipative interaction
+between the particles that make up the fluid, see <a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a>,
+and a repulsive conservative force, see <a class="reference internal" href="inter_non-bonded.html#hat-interaction"><span class="std std-ref">Hat interaction</span></a>.</p>
+<p>The temperature is set via
+<a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat.set_dpd" title="espressomd.thermostat.Thermostat.set_dpd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.thermostat.Thermostat.set_dpd()</span></code></a>
+which takes <code class="docutils literal notranslate"><span class="pre">kT</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code> as arguments.</p>
+<p>The friction coefficients and cutoff are controlled via the
+<a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a> on a per type-pair basis.</p>
+<p>The friction (dissipative) and noise (random) term are coupled via the
+fluctuation-dissipation theorem. The friction term is a function of the
+relative velocity of particle pairs. The DPD thermostat is better for
+dynamics than the Langevin thermostat, since it mimics hydrodynamics in
+the system.</p>
+<p>As a conservative force any interaction potential can be used,
+see <a class="reference internal" href="inter_non-bonded.html#isotropic-non-bonded-interactions"><span class="std std-ref">Isotropic non-bonded interactions</span></a>. A common choice is
+a force ramp which is implemented as <a class="reference internal" href="inter_non-bonded.html#hat-interaction"><span class="std std-ref">Hat interaction</span></a>.</p>
+<p>A complete example of setting up a DPD fluid and running it
+to sample the equation of state can be found in <code class="file docutils literal notranslate"><span class="pre">/samples/dpd.py</span></code>.</p>
+<p>When using a Lennard-Jones interaction, <span class="math notranslate nohighlight">\({r_\mathrm{cut}} =
+2^{\frac{1}{6}} \sigma\)</span> is a good value to choose, so that the
+thermostat acts on the relative velocities between nearest neighbor
+particles. Larger cutoffs including next nearest neighbors or even more
+are unphysical.</p>
+<p>Boundary conditions for DPD can be introduced by adding the boundary
+as a particle constraint, and setting a velocity and a type on it, see
+<a class="reference internal" href="espressomd.html#espressomd.constraints.Constraint" title="espressomd.constraints.Constraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.constraints.Constraint</span></code></a>. Then a
+<a class="reference internal" href="inter_non-bonded.html#dpd-interaction"><span class="std std-ref">DPD interaction</span></a> with the type can be defined, which acts as a
+boundary condition.</p>
+</section>
+<section id="lattice-boltzmann-thermostat">
+<span id="lb-thermostat"></span><h3><span class="section-number">6.3.5. </span>Lattice-Boltzmann thermostat<a class="headerlink" href="#lattice-boltzmann-thermostat" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="lb.html#lattice-boltzmann"><span class="std std-ref">Lattice-Boltzmann</span></a> thermostat acts similar to the <a class="reference internal" href="#langevin-thermostat"><span class="std std-ref">Langevin thermostat</span></a> in that the governing equation for particles is</p>
+<div class="math notranslate nohighlight">
+\[m_i \dot{v}_i(t) = f_i(\{x_j\},v_i,t) - \gamma (v_i(t)-u(x_i(t),t)) + \sqrt{2\gamma k_B T} \eta_i(t).\]</div>
+<p>where <span class="math notranslate nohighlight">\(u(x,t)\)</span> is the fluid velocity at position <span class="math notranslate nohighlight">\(x\)</span> and time <span class="math notranslate nohighlight">\(t\)</span>.
+To preserve momentum, an equal and opposite friction force and random force act on the fluid.</p>
+<p>Numerically the fluid velocity is determined from the lattice-Boltzmann node velocities
+by interpolating as described in <a class="reference internal" href="lb.html#interpolating-velocities"><span class="std std-ref">Interpolating velocities</span></a>.
+The backcoupling of friction forces and noise to the fluid is also done by distributing those forces amongst the nearest LB nodes.
+Details for both the interpolation and the force distribution can be found in <span id="id22">[<a class="reference internal" href="bibliography.html#id4" title="Patrick Ahlrichs and Burkhard Dünweg. Simulation of a single polymer chain in solution by combining lattice Boltzmann and molecular dynamics. The Journal of Chemical Physics, 111(17):8225–8239, 1999. doi:10.1063/1.480156.">Ahlrichs and Dünweg, 1999</a>]</span> and <span id="id23">[<a class="reference internal" href="bibliography.html#id33" title="Burkhard Dünweg and Anthony J. C. Ladd. Lattice Boltzmann simulations of soft matter systems. In Christian Holm and Kurt Kremer, editors, Advanced Computer Simulation Approaches for Soft Matter Sciences III, volume 221 of Advances in Polymer Science, pages 89–166. Springer Berlin Heidelberg, 2009. doi:10.1007/978-3-540-87706-6_2.">Dünweg and Ladd, 2009</a>]</span>.</p>
+<p>The LB fluid can be used to thermalize particles, while also including their hydrodynamic interactions.
+The LB thermostat expects an instance of either <a class="reference internal" href="espressomd.html#espressomd.lb.LBFluid" title="espressomd.lb.LBFluid"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lb.LBFluid</span></code></a> or <a class="reference internal" href="espressomd.html#espressomd.lb.LBFluidGPU" title="espressomd.lb.LBFluidGPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.lb.LBFluidGPU</span></code></a>.
+Temperature is set via the <code class="docutils literal notranslate"><span class="pre">kT</span></code> argument of the LB fluid.</p>
+<p>The magnitude of the frictional coupling can be adjusted by the
+parameter <code class="docutils literal notranslate"><span class="pre">gamma</span></code>. To enable the LB thermostat, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.lb</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">lbf</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">lb</span><span class="o">.</span><span class="n">LBFluid</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dens</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">visc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lbf</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">LB_fluid</span><span class="o">=</span><span class="n">lbf</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>No other thermostatting mechanism is necessary
+then. Please switch off any other thermostat before starting the LB
+thermostatting mechanism.</p>
+<p>The LBM implementation provides a fully thermalized LB fluid, all
+nonconserved modes, including the pressure tensor, fluctuate correctly
+according to the given temperature and the relaxation parameters. All
+fluctuations can be switched off by setting the temperature to 0.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Coupling between LB and MD only happens if the LB thermostat is set with a <span class="math notranslate nohighlight">\(\gamma \ge 0.0\)</span>.</p>
+</div>
+</section>
+<section id="stokesian-thermostat">
+<span id="id24"></span><h3><span class="section-number">6.3.6. </span>Stokesian thermostat<a class="headerlink" href="#stokesian-thermostat" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">STOKESIAN_DYNAMICS</span></code> external feature, enabled with
+<code class="docutils literal notranslate"><span class="pre">-DWITH_STOKESIAN_DYNAMICS=ON</span></code>.</p>
+</div>
+<p>In order to thermalize a Stokesian Dynamics simulation, the SD thermostat
+needs to be activated via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">periodicity</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ext_force</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_stokesian</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">43</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">set_stokesian_dynamics</span><span class="p">(</span><span class="n">viscosity</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">radii</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">})</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">kT</span></code> denotes the desired temperature of the system, and <code class="docutils literal notranslate"><span class="pre">seed</span></code> the
+seed for the random number generator.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">6. Integrators and thermostats</a><ul>
+<li><a class="reference internal" href="#particle-integration-and-propagation">6.1. Particle integration and propagation</a></li>
+<li><a class="reference internal" href="#integrators">6.2. Integrators</a><ul>
+<li><a class="reference internal" href="#velocity-verlet-algorithm">6.2.1. Velocity Verlet algorithm</a></li>
+<li><a class="reference internal" href="#isotropic-npt-integrator">6.2.2. Isotropic NpT integrator</a></li>
+<li><a class="reference internal" href="#steepest-descent">6.2.3. Steepest descent</a></li>
+<li><a class="reference internal" href="#brownian-dynamics">6.2.4. Brownian Dynamics</a></li>
+<li><a class="reference internal" href="#stokesian-dynamics">6.2.5. Stokesian Dynamics</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thermostats">6.3. Thermostats</a><ul>
+<li><a class="reference internal" href="#langevin-thermostat">6.3.1. Langevin thermostat</a></li>
+<li><a class="reference internal" href="#brownian-thermostat">6.3.2. Brownian thermostat</a></li>
+<li><a class="reference internal" href="#isotropic-npt-thermostat">6.3.3. Isotropic NpT thermostat</a></li>
+<li><a class="reference internal" href="#dissipative-particle-dynamics-dpd">6.3.4. Dissipative Particle Dynamics (DPD)</a></li>
+<li><a class="reference internal" href="#lattice-boltzmann-thermostat">6.3.5. Lattice-Boltzmann thermostat</a></li>
+<li><a class="reference internal" href="#stokesian-thermostat">6.3.6. Stokesian thermostat</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

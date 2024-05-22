@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.lees_edwards &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.lees_edwards</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2021-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="LeesEdwards"><a class="viewcode-back" href="../../espressomd.html#espressomd.lees_edwards.LeesEdwards">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LeesEdwards</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interface to the :ref:`Lees-Edwards boundary conditions`.</span>
+<span class="sd">    When writing H5MD files, the shear direction and shear plane normals</span>
+<span class="sd">    are written as integers instead of characters, with 0 = *x*-axis,</span>
+<span class="sd">    1 = *y*-axis, 2 = *z*-axis.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    protocol : :obj:`object`</span>
+<span class="sd">        Lees--Edwards protocol.</span>
+<span class="sd">    shear_velocity: :obj:`float`</span>
+<span class="sd">        Current shear velocity.</span>
+<span class="sd">    pos_offset : :obj:`float`</span>
+<span class="sd">        Current position offset</span>
+<span class="sd">    shear_direction : :obj:`str`, {&#39;x&#39;, &#39;y&#39;, &#39;z&#39;}</span>
+<span class="sd">        Shear direction.</span>
+<span class="sd">    shear_plane_normal : :obj:`str`, {&#39;x&#39;, &#39;y&#39;, &#39;z&#39;}</span>
+<span class="sd">        Shear plane normal.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_boundary_conditions()</span>
+<span class="sd">        Set a protocol, the shear direction and shear normal.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol : :obj:`object`</span>
+<span class="sd">        shear_direction : :obj:`str`, {&#39;x&#39;, &#39;y&#39;, &#39;z&#39;}</span>
+<span class="sd">        shear_plane_normal : :obj:`str`, {&#39;x&#39;, &#39;y&#39;, &#39;z&#39;}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LeesEdwards::LeesEdwards&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;set_boundary_conditions&quot;</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="Off"><a class="viewcode-back" href="../../espressomd.html#espressomd.lees_edwards.Off">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Off</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Lees--Edwards protocol resulting in un-shifted boundaries.&quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LeesEdwards::Off&quot;</span></div>
+
+
+<div class="viewcode-block" id="LinearShear"><a class="viewcode-back" href="../../espressomd.html#espressomd.lees_edwards.LinearShear">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LinearShear</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Lees--Edwards protocol for linear shear.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    initial_pos_offset : :obj:`float`</span>
+<span class="sd">       Positional offset at the Lees--Edwards boundary at t=0.</span>
+<span class="sd">    shear_velocity : :obj:`float`</span>
+<span class="sd">       Shear velocity (velocity jump) across the Lees--Edwards boundary.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LeesEdwards::LinearShear&quot;</span></div>
+
+
+<div class="viewcode-block" id="OscillatoryShear"><a class="viewcode-back" href="../../espressomd.html#espressomd.lees_edwards.OscillatoryShear">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">OscillatoryShear</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Lees--Edwards protocol for oscillatory shear.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    initial_pos_offset : :obj:`float`</span>
+<span class="sd">       Positional offset at the Lees--Edwards boundary at t=0.</span>
+<span class="sd">    amplitude : :obj:`float`</span>
+<span class="sd">       Maximum amplitude of the positional offset at the Lees--Edwards boundary.</span>
+<span class="sd">    omega : :obj:`float`</span>
+<span class="sd">       Radian frequency of the oscillation.</span>
+<span class="sd">    time_0 : :obj:`float`</span>
+<span class="sd">       Time offset of the oscillation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LeesEdwards::OscillatoryShear&quot;</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

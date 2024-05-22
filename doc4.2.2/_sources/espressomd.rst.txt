@@ -1,0 +1,342 @@
+espressomd package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   espressomd.MDA_ESP
+   espressomd.io
+
+Submodules
+----------
+
+espressomd.accumulators module
+------------------------------
+
+.. automodule:: espressomd.accumulators
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.actors module
+------------------------
+
+.. automodule:: espressomd.actors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.analyze module
+-------------------------
+
+.. automodule:: espressomd.analyze
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.bond\_breakage module
+--------------------------------
+
+.. automodule:: espressomd.bond_breakage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.cell\_system module
+------------------------------
+
+.. automodule:: espressomd.cell_system
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.checkpointing module
+-------------------------------
+
+.. automodule:: espressomd.checkpointing
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.cluster\_analysis module
+-----------------------------------
+
+.. automodule:: espressomd.cluster_analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.collision\_detection module
+--------------------------------------
+
+.. automodule:: espressomd.collision_detection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.comfixed module
+--------------------------
+
+.. automodule:: espressomd.comfixed
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.constraints module
+-----------------------------
+
+.. automodule:: espressomd.constraints
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.cuda\_init module
+----------------------------
+
+.. automodule:: espressomd.cuda_init
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.drude\_helpers module
+--------------------------------
+
+.. automodule:: espressomd.drude_helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.ekboundaries module
+------------------------------
+
+.. automodule:: espressomd.ekboundaries
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.electrokinetics module
+---------------------------------
+
+.. automodule:: espressomd.electrokinetics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.electrostatic\_extensions module
+-------------------------------------------
+
+.. automodule:: espressomd.electrostatic_extensions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.electrostatics module
+--------------------------------
+
+.. automodule:: espressomd.electrostatics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.galilei module
+-------------------------
+
+.. automodule:: espressomd.galilei
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.highlander module
+----------------------------
+
+.. automodule:: espressomd.highlander
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.integrate module
+---------------------------
+
+.. automodule:: espressomd.integrate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.interactions module
+------------------------------
+
+.. automodule:: espressomd.interactions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.lb module
+--------------------
+
+.. automodule:: espressomd.lb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.lbboundaries module
+------------------------------
+
+.. automodule:: espressomd.lbboundaries
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.lees\_edwards module
+-------------------------------
+
+.. automodule:: espressomd.lees_edwards
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.magnetostatics module
+--------------------------------
+
+.. automodule:: espressomd.magnetostatics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.math module
+----------------------
+
+.. automodule:: espressomd.math
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.observables module
+-----------------------------
+
+.. automodule:: espressomd.observables
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.pair\_criteria module
+--------------------------------
+
+.. automodule:: espressomd.pair_criteria
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.particle\_data module
+--------------------------------
+
+.. automodule:: espressomd.particle_data
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.polymer module
+-------------------------
+
+.. automodule:: espressomd.polymer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.profiler module
+--------------------------
+
+.. automodule:: espressomd.profiler
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.reaction\_methods module
+-----------------------------------
+
+.. automodule:: espressomd.reaction_methods
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.rotation module
+--------------------------
+
+.. automodule:: espressomd.rotation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.script\_interface module
+-----------------------------------
+
+.. automodule:: espressomd.script_interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.shapes module
+------------------------
+
+.. automodule:: espressomd.shapes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.system module
+------------------------
+
+.. automodule:: espressomd.system
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.thermostat module
+----------------------------
+
+.. automodule:: espressomd.thermostat
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.utils module
+-----------------------
+
+.. automodule:: espressomd.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.version module
+-------------------------
+
+.. automodule:: espressomd.version
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.virtual\_sites module
+--------------------------------
+
+.. automodule:: espressomd.virtual_sites
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.visualization module
+-------------------------------
+
+.. automodule:: espressomd.visualization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: espressomd
+   :members:
+   :undoc-members:
+   :show-inheritance:

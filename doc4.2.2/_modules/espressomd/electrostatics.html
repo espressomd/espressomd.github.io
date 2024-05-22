@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.electrostatics &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.electrostatics</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">from</span> <span class="nn">.__init__</span> <span class="k">import</span> <span class="n">has_features</span>
+
+
+<div class="viewcode-block" id="ElectrostaticInteraction"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ElectrostaticInteraction">[docs]</a><span class="k">class</span> <span class="nc">ElectrostaticInteraction</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Common interface for electrostatics solvers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor :math:`\\frac{1}{4\\pi\\varepsilon_0\\varepsilon_r}`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_required_features</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;sip&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_required_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;ELECTROSTATICS&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature ELECTROSTATICS not compiled in&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ElectrostaticInteraction.validate_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ElectrostaticInteraction.validate_params">[docs]</a>    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check validity of given parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefactor&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;prefactor should be a double&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ElectrostaticInteraction.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ElectrostaticInteraction.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Derived classes must implement this method&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ElectrostaticInteraction.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ElectrostaticInteraction.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Derived classes must implement this method&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ElectrostaticInteraction.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ElectrostaticInteraction.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Derived classes must implement this method&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;check_charge_neutrality&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;activate&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">handle_errors</span><span class="p">(</span><span class="s2">&quot;Coulomb actor activation failed&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;deactivate&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">handle_errors</span><span class="p">(</span><span class="s2">&quot;Coulomb actor deactivation failed&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DH"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.DH">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">DH</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Electrostatics solver based on the Debye-Hueckel framework.</span>
+<span class="sd">    See :ref:`Debye-Hückel potential` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor (see :eq:`coulomb_prefactor`).</span>
+<span class="sd">    kappa : :obj:`float`</span>
+<span class="sd">        Inverse Debye screening length.</span>
+<span class="sd">    r_cut : :obj:`float`</span>
+<span class="sd">        Cutoff radius for this interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::DebyeHueckel&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="DH.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.DH.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa&quot;</span><span class="p">,</span> <span class="s2">&quot;r_cut&quot;</span><span class="p">,</span> <span class="s2">&quot;check_neutrality&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="DH.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.DH.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa&quot;</span><span class="p">,</span> <span class="s2">&quot;r_cut&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="DH.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.DH.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="ReactionField"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ReactionField">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ReactionField</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Electrostatics solver based on the Reaction Field framework.</span>
+<span class="sd">    See :ref:`Reaction Field method` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor (see :eq:`coulomb_prefactor`).</span>
+<span class="sd">    kappa : :obj:`float`</span>
+<span class="sd">        Inverse Debye screening length.</span>
+<span class="sd">    epsilon1 : :obj:`float`</span>
+<span class="sd">        interior dielectric constant</span>
+<span class="sd">    epsilon2 : :obj:`float`</span>
+<span class="sd">        exterior dielectric constant</span>
+<span class="sd">    r_cut : :obj:`float`</span>
+<span class="sd">        Cutoff radius for this interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::ReactionField&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="ReactionField.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ReactionField.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa&quot;</span><span class="p">,</span> <span class="s2">&quot;epsilon1&quot;</span><span class="p">,</span> <span class="s2">&quot;epsilon2&quot;</span><span class="p">,</span> <span class="s2">&quot;r_cut&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;check_neutrality&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ReactionField.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ReactionField.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa&quot;</span><span class="p">,</span> <span class="s2">&quot;epsilon1&quot;</span><span class="p">,</span> <span class="s2">&quot;epsilon2&quot;</span><span class="p">,</span> <span class="s2">&quot;r_cut&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ReactionField.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ReactionField.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_P3MBase</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;mesh&quot;</span><span class="p">,</span> <span class="s2">&quot;cao&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="s2">&quot;epsilon&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;r_cut&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;tune&quot;</span><span class="p">,</span> <span class="s2">&quot;check_neutrality&quot;</span><span class="p">,</span> <span class="s2">&quot;timings&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="s2">&quot;mesh_off&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;accuracy&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;cao&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;r_cut&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span>
+                <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span>
+                <span class="s2">&quot;mesh&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;epsilon&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span>
+                <span class="s2">&quot;mesh_off&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">],</span>
+                <span class="s2">&quot;prefactor&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span>
+                <span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;tune&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;timings&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">utils</span><span class="o">.</span><span class="n">is_valid_type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">[</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">]]</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span>
+                                         <span class="s2">&quot;P3M mesh has to be an integer or integer list of length 3&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> \
+           <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;P3M requires an even number of mesh points in all directions&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;epsilon&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;metallic&quot;</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;epsilon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;epsilon&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s2">&quot;epsilon should be a double or &#39;metallic&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;mesh_off&quot;</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s2">&quot;mesh_off should be a (3,) array_like of values between 0 and 1&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">is_valid_type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;timings&quot;</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;P3M timings has to be an integer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;timings&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;P3M timings must be &gt; 0&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">is_valid_type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;tune&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;P3M tune has to be a boolean&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="P3M"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.P3M">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">P3M</span><span class="p">(</span><span class="n">_P3MBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    P3M electrostatics solver.</span>
+
+<span class="sd">    Particle--Particle--Particle--Mesh (P3M) is a Fourier-based Ewald</span>
+<span class="sd">    summation method to calculate potentials in N-body simulation.</span>
+<span class="sd">    See :ref:`Coulomb P3M` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor (see :eq:`coulomb_prefactor`).</span>
+<span class="sd">    accuracy : :obj:`float`</span>
+<span class="sd">        P3M tunes its parameters to provide this target accuracy.</span>
+<span class="sd">    alpha : :obj:`float`, optional</span>
+<span class="sd">        The Ewald parameter.</span>
+<span class="sd">    cao : :obj:`float`, optional</span>
+<span class="sd">        The charge-assignment order, an integer between 1 and 7.</span>
+<span class="sd">    epsilon : :obj:`float` or :obj:`str`, optional</span>
+<span class="sd">        A positive number for the dielectric constant of the</span>
+<span class="sd">        surrounding medium. Use ``&#39;metallic&#39;`` to set the dielectric</span>
+<span class="sd">        constant of the surrounding medium to infinity (default).</span>
+<span class="sd">    mesh : :obj:`int` or (3,) array_like of :obj:`int`, optional</span>
+<span class="sd">        The number of mesh points in x, y and z direction. Use a single</span>
+<span class="sd">        value for cubic boxes.</span>
+<span class="sd">    mesh_off : (3,) array_like of :obj:`float`, optional</span>
+<span class="sd">        Mesh offset.</span>
+<span class="sd">    r_cut : :obj:`float`, optional</span>
+<span class="sd">        The real space cutoff.</span>
+<span class="sd">    tune : :obj:`bool`, optional</span>
+<span class="sd">        Used to activate/deactivate the tuning method on activation.</span>
+<span class="sd">        Defaults to ``True``.</span>
+<span class="sd">    timings : :obj:`int`</span>
+<span class="sd">        Number of force calculations during tuning.</span>
+<span class="sd">    verbose : :obj:`bool`, optional</span>
+<span class="sd">        If ``False``, disable log output during tuning.</span>
+<span class="sd">    check_neutrality : :obj:`bool`, optional</span>
+<span class="sd">        Raise a warning if the system is not electrically neutral when</span>
+<span class="sd">        set to ``True`` (default).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::CoulombP3M&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_required_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;P3M&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature P3M not compiled in&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="P3MGPU"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.P3MGPU">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">P3MGPU</span><span class="p">(</span><span class="n">_P3MBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    P3M electrostatics solver with GPU support.</span>
+
+<span class="sd">    Particle--Particle--Particle--Mesh (P3M) is a Fourier-based Ewald</span>
+<span class="sd">    summation method to calculate potentials in N-body simulation.</span>
+<span class="sd">    See :ref:`Coulomb P3M on GPU` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor (see :eq:`coulomb_prefactor`).</span>
+<span class="sd">    accuracy : :obj:`float`</span>
+<span class="sd">        P3M tunes its parameters to provide this target accuracy.</span>
+<span class="sd">    alpha : :obj:`float`, optional</span>
+<span class="sd">        The Ewald parameter.</span>
+<span class="sd">    cao : :obj:`float`, optional</span>
+<span class="sd">        The charge-assignment order, an integer between 0 and 7.</span>
+<span class="sd">    epsilon : :obj:`float` or :obj:`str`, optional</span>
+<span class="sd">        A positive number for the dielectric constant of the</span>
+<span class="sd">        surrounding medium. Use ``&#39;metallic&#39;`` to set the dielectric</span>
+<span class="sd">        constant of the surrounding medium to infinity (default).</span>
+<span class="sd">    mesh : :obj:`int` or (3,) array_like of :obj:`int`, optional</span>
+<span class="sd">        The number of mesh points in x, y and z direction. Use a single</span>
+<span class="sd">        value for cubic boxes.</span>
+<span class="sd">    mesh_off : (3,) array_like of :obj:`float`, optional</span>
+<span class="sd">        Mesh offset.</span>
+<span class="sd">    r_cut : :obj:`float`, optional</span>
+<span class="sd">        The real space cutoff</span>
+<span class="sd">    tune : :obj:`bool`, optional</span>
+<span class="sd">        Used to activate/deactivate the tuning method on activation.</span>
+<span class="sd">        Defaults to ``True``.</span>
+<span class="sd">    timings : :obj:`int`</span>
+<span class="sd">        Number of force calculations during tuning.</span>
+<span class="sd">    verbose : :obj:`bool`, optional</span>
+<span class="sd">        If ``False``, disable log output during tuning.</span>
+<span class="sd">    check_neutrality : :obj:`bool`, optional</span>
+<span class="sd">        Raise a warning if the system is not electrically neutral when</span>
+<span class="sd">        set to ``True`` (default).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::CoulombP3MGPU&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_required_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;P3M&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature P3M not compiled in&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;CUDA&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature CUDA not compiled in&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ELC"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ELC">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ELC</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Electrostatics solver for systems with two periodic dimensions.</span>
+<span class="sd">    See :ref:`Electrostatic Layer Correction (ELC)` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    actor : :obj:`P3M`, required</span>
+<span class="sd">        Base P3M actor.</span>
+<span class="sd">    gap_size : :obj:`float`, required</span>
+<span class="sd">        The gap size gives the height :math:`h` of the empty region between</span>
+<span class="sd">        the system box and the neighboring artificial images. |es| checks</span>
+<span class="sd">        that the gap is empty and will throw an error if it isn&#39;t. Therefore</span>
+<span class="sd">        you should really make sure that the gap region is empty (e.g.</span>
+<span class="sd">        with wall constraints).</span>
+<span class="sd">    maxPWerror : :obj:`float`, required</span>
+<span class="sd">        The maximal pairwise error sets the least upper bound (LUB) error</span>
+<span class="sd">        of the force between any two charges without prefactors (see the</span>
+<span class="sd">        papers). The algorithm tries to find parameters to meet this LUB</span>
+<span class="sd">        requirements or will throw an error if there are none.</span>
+<span class="sd">    delta_mid_top : :obj:`float`, optional</span>
+<span class="sd">        Dielectric contrast :math:`\\Delta_t` between the upper boundary</span>
+<span class="sd">        and the simulation box. Value between -1 and +1 (inclusive).</span>
+<span class="sd">    delta_mid_bottom : :obj:`float`, optional</span>
+<span class="sd">        Dielectric contrast :math:`\\Delta_b` between the lower boundary</span>
+<span class="sd">        and the simulation box. Value between -1 and +1 (inclusive).</span>
+<span class="sd">    const_pot : :obj:`bool`, optional</span>
+<span class="sd">        Activate a constant electric potential between the top and bottom</span>
+<span class="sd">        of the simulation box.</span>
+<span class="sd">    pot_diff : :obj:`float`, optional</span>
+<span class="sd">        If ``const_pot`` is enabled, this parameter controls the applied</span>
+<span class="sd">        voltage between the boundaries of the simulation box in the</span>
+<span class="sd">        *z*-direction (at :math:`z = 0` and :math:`z = L_z - h`).</span>
+<span class="sd">    neutralize : :obj:`bool`, optional</span>
+<span class="sd">        By default, *ELC* just as P3M adds a homogeneous neutralizing</span>
+<span class="sd">        background to the system in case of a net charge. However, unlike</span>
+<span class="sd">        in three dimensions, this background adds a parabolic potential</span>
+<span class="sd">        across the slab :cite:`ballenegger09a`. Therefore, under normal</span>
+<span class="sd">        circumstances, you will probably want to disable the neutralization</span>
+<span class="sd">        for non-neutral systems. This corresponds then to a formal</span>
+<span class="sd">        regularization of the forces and energies :cite:`ballenegger09a`.</span>
+<span class="sd">        Also, if you add neutralizing walls explicitly as constraints, you</span>
+<span class="sd">        have to disable the neutralization. When using a dielectric</span>
+<span class="sd">        contrast or full metallic walls (``delta_mid_top != 0`` or</span>
+<span class="sd">        ``delta_mid_bot != 0`` or ``const_pot=True``), ``neutralize`` is</span>
+<span class="sd">        overwritten and switched off internally. Note that the special</span>
+<span class="sd">        case of non-neutral systems with a *non-metallic* dielectric jump</span>
+<span class="sd">        (e.g. ``delta_mid_top`` or ``delta_mid_bot`` in ``]-1,1[``) is not</span>
+<span class="sd">        covered by the algorithm and will throw an error.</span>
+<span class="sd">    far_cut : :obj:`float`, optional</span>
+<span class="sd">        Cutoff radius, use with care, intended for testing purposes. When</span>
+<span class="sd">        setting the cutoff directly, the maximal pairwise error is ignored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::ElectrostaticLayerCorrection&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_required_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;P3M&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature P3M not compiled in&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ELC.validate_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ELC.validate_params">[docs]</a>    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;maxPWerror has to be a float&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;gap_size&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;gap_size has to be a float&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;far_cut&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;far_cut has to be a float&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;neutralize&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="s2">&quot;neutralize has to be a bool&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ELC.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ELC.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;actor&quot;</span><span class="p">,</span> <span class="s2">&quot;maxPWerror&quot;</span><span class="p">,</span> <span class="s2">&quot;gap_size&quot;</span><span class="p">,</span> <span class="s2">&quot;far_cut&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;neutralize&quot;</span><span class="p">,</span> <span class="s2">&quot;delta_mid_top&quot;</span><span class="p">,</span> <span class="s2">&quot;delta_mid_bot&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;const_pot&quot;</span><span class="p">,</span> <span class="s2">&quot;pot_diff&quot;</span><span class="p">,</span> <span class="s2">&quot;check_neutrality&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ELC.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ELC.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;actor&quot;</span><span class="p">,</span> <span class="s2">&quot;maxPWerror&quot;</span><span class="p">,</span> <span class="s2">&quot;gap_size&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="ELC.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.ELC.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;far_cut&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span>
+                <span class="s2">&quot;delta_mid_top&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span>
+                <span class="s2">&quot;delta_mid_bot&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span>
+                <span class="s2">&quot;const_pot&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;pot_diff&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span>
+                <span class="s2">&quot;neutralize&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="MMM1D"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1D">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">MMM1D</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Electrostatics solver for systems with one periodic direction.</span>
+<span class="sd">    See :ref:`MMM1D` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor (see :eq:`coulomb_prefactor`).</span>
+<span class="sd">    maxWPerror : :obj:`float`</span>
+<span class="sd">        Maximal pairwise error.</span>
+<span class="sd">    far_switch_radius : :obj:`float`, optional</span>
+<span class="sd">        Radius where near-field and far-field calculation are switched.</span>
+<span class="sd">    verbose : :obj:`bool`, optional</span>
+<span class="sd">        If ``False``, disable log output during tuning.</span>
+<span class="sd">    timings : :obj:`int`, optional</span>
+<span class="sd">        Number of force calculations during tuning.</span>
+<span class="sd">    check_neutrality : :obj:`bool`, optional</span>
+<span class="sd">        Raise a warning if the system is not electrically neutral when</span>
+<span class="sd">        set to ``True`` (default).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::CoulombMMM1D&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="MMM1D.validate_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1D.validate_params">[docs]</a>    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">default_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefactor&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;prefactor should be a positive float&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">default_params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;maxPWerror should be a positive double&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">default_params</span><span class="p">[</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;switch radius should be a positive double&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MMM1D.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1D.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span>
+                <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;timings&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+                <span class="s2">&quot;tune&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="MMM1D.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1D.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;maxPWerror&quot;</span><span class="p">,</span> <span class="s2">&quot;far_switch_radius&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="s2">&quot;timings&quot;</span><span class="p">,</span> <span class="s2">&quot;tune&quot;</span><span class="p">,</span> <span class="s2">&quot;check_neutrality&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="MMM1D.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1D.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;maxPWerror&quot;</span><span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="MMM1DGPU"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1DGPU">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">MMM1DGPU</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Electrostatics solver with GPU support for systems with one periodic</span>
+<span class="sd">    direction. See :ref:`MMM1D on GPU` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Electrostatics prefactor (see :eq:`coulomb_prefactor`).</span>
+<span class="sd">    maxWPerror : :obj:`float`</span>
+<span class="sd">        Maximal pairwise error.</span>
+<span class="sd">    far_switch_radius : :obj:`float`, optional</span>
+<span class="sd">        Radius where near-field and far-field calculation are switched</span>
+<span class="sd">    bessel_cutoff : :obj:`int`, optional</span>
+<span class="sd">    timings : :obj:`int`, optional</span>
+<span class="sd">        Number of force calculations during tuning.</span>
+<span class="sd">    check_neutrality : :obj:`bool`, optional</span>
+<span class="sd">        Raise a warning if the system is not electrically neutral when</span>
+<span class="sd">        set to ``True`` (default).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::CoulombMMM1DGpu&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_required_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;MMM1D_GPU&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature MMM1D_GPU not compiled in&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MMM1DGPU.validate_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1DGPU.validate_params">[docs]</a>    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">default_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;prefactor&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;prefactor should be a positive float&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">default_params</span><span class="p">[</span><span class="s2">&quot;maxPWerror&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;maxPWerror should be a positive double&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">default_params</span><span class="p">[</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;switch radius should be a positive double&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;bessel_cutoff&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;bessel_cutoff&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">default_params</span><span class="p">[</span><span class="s2">&quot;bessel_cutoff&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bessel_cutoff should be a positive integer&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MMM1DGPU.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1DGPU.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;far_switch_radius&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span>
+                <span class="s2">&quot;bessel_cutoff&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;tune&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="MMM1DGPU.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1DGPU.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;maxPWerror&quot;</span><span class="p">,</span> <span class="s2">&quot;far_switch_radius&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;bessel_cutoff&quot;</span><span class="p">,</span> <span class="s2">&quot;tune&quot;</span><span class="p">,</span> <span class="s2">&quot;check_neutrality&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="MMM1DGPU.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.MMM1DGPU.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;maxPWerror&quot;</span><span class="p">}</span></div></div>
+
+
+<div class="viewcode-block" id="Scafacos"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.Scafacos">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Scafacos</span><span class="p">(</span><span class="n">ElectrostaticInteraction</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Coulomb interaction using the ScaFaCoS library.</span>
+<span class="sd">    See :ref:`ScaFaCoS electrostatics` for more details.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Coulomb prefactor as defined in :eq:`coulomb_prefactor`.</span>
+<span class="sd">    method_name : :obj:`str`</span>
+<span class="sd">        Name of the ScaFaCoS method to use.</span>
+<span class="sd">    method_params : :obj:`dict`</span>
+<span class="sd">        Dictionary containing the method-specific parameters.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    get_available_methods()</span>
+<span class="sd">        List long-range methods available in the ScaFaCoS library.</span>
+
+<span class="sd">    set_near_field_delegation()</span>
+<span class="sd">        Choose whether to delegate short-range calculation to ESPResSo</span>
+<span class="sd">        (this is the default when the method supports it) or ScaFaCos.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        delegate : :obj:`bool`</span>
+<span class="sd">            Delegate to ESPResSo if ``True`` and the method supports it.</span>
+
+<span class="sd">    get_near_field_delegation()</span>
+<span class="sd">        Find whether the short-range calculation is delegated to ESPResSo</span>
+<span class="sd">        (this is the default when the method supports it) or ScaFaCos.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        delegate : :obj:`bool`</span>
+<span class="sd">            Delegate to ESPResSo if ``True`` and the method supports it,</span>
+<span class="sd">            ``False`` if delegated to ScaFaCoS or the method doesn&#39;t have a</span>
+<span class="sd">            short-range kernel.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Coulomb::CoulombScafacos&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="n">ElectrostaticInteraction</span><span class="o">.</span><span class="n">_so_bind_methods</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="s2">&quot;get_available_methods&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;get_near_field_delegation&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;set_near_field_delegation&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_required_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;ELECTROSTATICS&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature ELECTROSTATICS not compiled in&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;SCAFACOS&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Feature SCAFACOS not compiled in&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Scafacos.validate_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.Scafacos.validate_params">[docs]</a>    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Scafacos.default_params"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.Scafacos.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;check_neutrality&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Scafacos.valid_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.Scafacos.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;method_name&quot;</span><span class="p">,</span> <span class="s2">&quot;method_params&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;prefactor&quot;</span><span class="p">,</span> <span class="s2">&quot;check_neutrality&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Scafacos.required_keys"><a class="viewcode-back" href="../../espressomd.html#espressomd.electrostatics.Scafacos.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;method_name&quot;</span><span class="p">,</span> <span class="s2">&quot;method_params&quot;</span><span class="p">,</span> <span class="s2">&quot;prefactor&quot;</span><span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.io.writer.h5md &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.io.writer.h5md</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+
+<span class="kn">from</span> <span class="nn">...script_interface</span> <span class="k">import</span> <span class="n">script_interface_register</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span>  <span class="c1"># pylint: disable=import</span>
+<span class="kn">from</span> <span class="nn">...__init__</span> <span class="k">import</span> <span class="n">assert_features</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="UnitSystem"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.UnitSystem">[docs]</a><span class="k">class</span> <span class="nc">UnitSystem</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data class for writing H5MD trajectories with</span>
+<span class="sd">    `physical units &lt;https://nongnu.org/h5md/modules/units.html&gt;`__.</span>
+<span class="sd">    There are four settable units: &#39;mass&#39;, &#39;length&#39;, &#39;time&#39;, &#39;charge&#39;.</span>
+<span class="sd">    Units should be written as strings following the specifications defined</span>
+<span class="sd">    `here &lt;https://nongnu.org/h5md/modules/units.html#unit-string&gt;`__,</span>
+<span class="sd">    e.g. ``UnitSystem(time=&#39;ps&#39;, mass=&#39;u&#39;, length=&#39;nm&#39;, charge=&#39;e&#39;)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">f</span><span class="s1">&#39;unknown dimension </span><span class="si">{key}</span><span class="s1">&#39;</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">force</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.length}</span><span class="s1"> </span><span class="si">{self.mass}</span><span class="s1"> </span><span class="si">{self.time}</span><span class="s1">-2&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">force</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.length}</span><span class="s1"> </span><span class="si">{self.time}</span><span class="s1">-1&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span></div>
+
+
+<div class="viewcode-block" id="H5md"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">H5md</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    H5md file object.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">       Bonds will be written to the file if they exist.</span>
+<span class="sd">       The pypresso script will be written in the metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : :obj:`str`</span>
+<span class="sd">        Path to the trajectory file, or an existing file to append data to</span>
+<span class="sd">        (it must have the same specifications).</span>
+<span class="sd">    unit_system : :obj:`UnitSystem`, optional</span>
+<span class="sd">        Physical units for the data.</span>
+<span class="sd">    fields : :obj:`set` or :obj:`str`, optional</span>
+<span class="sd">        List of fields to write to the trajectory file. Defaults to ``&#39;all&#39;``.</span>
+<span class="sd">        See :meth:`~espressomd.io.writer.h5md.H5md.valid_fields()` for the</span>
+<span class="sd">        list of valid fields. This list defines the H5MD specifications.</span>
+<span class="sd">        If the file in ``file_path`` already exists but has different</span>
+<span class="sd">        specifications, an exception is raised.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    get_params()</span>
+<span class="sd">        Get the parameters from the script interface.</span>
+
+<span class="sd">    valid_fields()</span>
+<span class="sd">        Get the list of valid fields.</span>
+
+<span class="sd">    write()</span>
+<span class="sd">        Call the H5md write method.</span>
+
+<span class="sd">    flush()</span>
+<span class="sd">        Call the H5md flush method.</span>
+
+<span class="sd">    close()</span>
+<span class="sd">        Close the H5md file.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path: :obj:`str`</span>
+<span class="sd">        Path to the trajectory file.</span>
+<span class="sd">    script_path: :obj:`str`</span>
+<span class="sd">        Path to the pypresso script, or empty string for interactive sessions.</span>
+<span class="sd">    fields: :obj:`list`</span>
+<span class="sd">        List of fields to write to the trajectory file.</span>
+<span class="sd">    mass_unit: :obj:`str`</span>
+<span class="sd">    length_unit: :obj:`str`</span>
+<span class="sd">    time_unit: :obj:`str`</span>
+<span class="sd">    force_unit: :obj:`str`</span>
+<span class="sd">    velocity_unit: :obj:`str`</span>
+<span class="sd">    charge_unit: :obj:`str`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;ScriptInterface::Writer::H5md&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;valid_fields&quot;</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">,</span> <span class="s2">&quot;flush&quot;</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;H5MD&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">unit_system</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;unit_system&quot;</span><span class="p">]</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">fields</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">script_path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">script_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;file_path&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">file_path</span><span class="o">=</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">script_path</span><span class="o">=</span><span class="n">script_path</span><span class="p">,</span>
+            <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span>
+            <span class="n">mass_unit</span><span class="o">=</span><span class="n">unit_system</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span>
+            <span class="n">length_unit</span><span class="o">=</span><span class="n">unit_system</span><span class="o">.</span><span class="n">length</span><span class="p">,</span>
+            <span class="n">time_unit</span><span class="o">=</span><span class="n">unit_system</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+            <span class="n">force_unit</span><span class="o">=</span><span class="n">unit_system</span><span class="o">.</span><span class="n">force</span><span class="p">,</span>
+            <span class="n">velocity_unit</span><span class="o">=</span><span class="n">unit_system</span><span class="o">.</span><span class="n">velocity</span><span class="p">,</span>
+            <span class="n">charge_unit</span><span class="o">=</span><span class="n">unit_system</span><span class="o">.</span><span class="n">charge</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="H5md.default_params"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.default_params">[docs]</a>    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;unit_system&quot;</span><span class="p">:</span> <span class="n">UnitSystem</span><span class="p">(),</span> <span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="H5md.required_keys"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.required_keys">[docs]</a>    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;file_path&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="H5md.valid_keys"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.valid_keys">[docs]</a>    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;file_path&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_system&quot;</span><span class="p">,</span> <span class="s2">&quot;fields&quot;</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="H5md.validate_params"><a class="viewcode-back" href="../../../../espressomd.io.writer.html#espressomd.io.writer.h5md.H5md.validate_params">[docs]</a>    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check validity of given parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;file_path&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;&#39;file_path&#39; should be a string&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">]:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+                <span class="n">item</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;&#39;fields&#39; should be a string or a list of strings&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

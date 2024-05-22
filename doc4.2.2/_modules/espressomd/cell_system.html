@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.cell_system &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/toggleprompt.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.cell_system</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">particle_data</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="k">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="CellSystem"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem">[docs]</a><span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CellSystem</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class controls the particle decomposition.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    decomposition_type : :obj:`str`</span>
+<span class="sd">        Name of the currently active particle decomposition.</span>
+<span class="sd">    use_verlet_lists : :obj:`bool`</span>
+<span class="sd">        Whether to use Verlet lists.</span>
+<span class="sd">    skin : :obj:`float`</span>
+<span class="sd">        Verlet list skin.</span>
+<span class="sd">    node_grid : (3,) array_like of :obj:`int`</span>
+<span class="sd">        MPI repartition for the regular decomposition cell system.</span>
+<span class="sd">    max_cut_bonded : :obj:`float`</span>
+<span class="sd">        Maximal range from bonded interactions.</span>
+<span class="sd">    max_cut_nonbonded : :obj:`float`</span>
+<span class="sd">        Maximal range from non-bonded interactions.</span>
+<span class="sd">    interaction_range : :obj:`float`</span>
+<span class="sd">        Maximal interaction range from all interactions,</span>
+<span class="sd">        or -1 when no interactions are active (or their</span>
+<span class="sd">        cutoff has no impact when only 1 MPI rank is used).</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    resort()</span>
+<span class="sd">        Resort the particles in the cell system.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        global_flag : :obj:`bool`, optional</span>
+<span class="sd">            If true (default), a global resorting is done, otherwise particles</span>
+<span class="sd">            are only exchanged between neighboring nodes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (N,) array_like of :obj:`int`</span>
+<span class="sd">            The number of particles per node.</span>
+
+<span class="sd">    tune_skin()</span>
+<span class="sd">        Tune the skin by measuring the integration time and bisecting over the</span>
+<span class="sd">        given range of skins. The best skin is set in the simulation core.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        min_skin : :obj:`float`</span>
+<span class="sd">            Minimum skin to test.</span>
+<span class="sd">        max_skin : :obj:`float`</span>
+<span class="sd">            Maximum skin.</span>
+<span class="sd">        tol : :obj:`float`</span>
+<span class="sd">            Accuracy in skin to tune to.</span>
+<span class="sd">        int_steps : :obj:`int`</span>
+<span class="sd">            Integration steps to time.</span>
+<span class="sd">        adjust_max_skin : :obj:`bool`, optional</span>
+<span class="sd">            If ``True``, the value of ``max_skin`` is reduced</span>
+<span class="sd">            to the maximum permissible skin (in case the passed</span>
+<span class="sd">            value is too large). Defaults to ``False``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`float` :</span>
+<span class="sd">            The :attr:`skin`</span>
+
+<span class="sd">    get_state()</span>
+<span class="sd">        Get the current state of the cell system.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`dict` :</span>
+<span class="sd">            The cell system state.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;CellSystem::CellSystem&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;get_state&quot;</span><span class="p">,</span> <span class="s2">&quot;tune_skin&quot;</span><span class="p">,</span> <span class="s2">&quot;resort&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">so_callback</span><span class="p">,</span> <span class="n">so_callback_args</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__reduce__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">CellSystem</span><span class="o">.</span><span class="n">_restore_object</span><span class="p">,</span> <span class="p">(</span><span class="n">so_callback</span><span class="p">,</span> <span class="n">so_callback_args</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_restore_object</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">so_callback</span><span class="p">,</span> <span class="n">so_callback_args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">so_callback</span><span class="p">(</span><span class="o">*</span><span class="n">so_callback_args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CellSystem.set_regular_decomposition"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem.set_regular_decomposition">[docs]</a>    <span class="k">def</span> <span class="nf">set_regular_decomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate the regular decomposition cell system.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_verlet_lists : :obj:`bool`, optional</span>
+<span class="sd">            Activates or deactivates the usage of Verlet lists.</span>
+<span class="sd">            Defaults to ``True``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;initialize&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;regular_decomposition&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CellSystem.set_n_square"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem.set_n_square">[docs]</a>    <span class="k">def</span> <span class="nf">set_n_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate the N-square cell system.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_verlet_lists : :obj:`bool`, optional</span>
+<span class="sd">            Activates or deactivates the usage of Verlet lists.</span>
+<span class="sd">            Defaults to ``True``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;initialize&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;n_square&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CellSystem.set_hybrid_decomposition"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem.set_hybrid_decomposition">[docs]</a>    <span class="k">def</span> <span class="nf">set_hybrid_decomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate the hybrid domain decomposition.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cutoff_regular : :obj:`float`</span>
+<span class="sd">            Maximum cutoff to consider in regular decomposition.</span>
+<span class="sd">            Should be as low as the system permits.</span>
+<span class="sd">        n_square_types : list of :obj:`int`, optional</span>
+<span class="sd">            Particles types that should be handled in the N-square cell system.</span>
+<span class="sd">            Defaults to an empty list.</span>
+<span class="sd">        use_verlet_lists : :obj:`bool`, optional</span>
+<span class="sd">            Activates or deactivates the usage of Verlet lists.</span>
+<span class="sd">            Defaults to ``True``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;initialize&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hybrid_decomposition&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CellSystem.get_pairs"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem.get_pairs">[docs]</a>    <span class="k">def</span> <span class="nf">get_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get pairs of particles closer than threshold value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        distance : :obj:`float`</span>
+<span class="sd">            Pairs of particles closer than ``distance`` are found.</span>
+<span class="sd">        types : list of :obj:`int` or ``&#39;all&#39;``, optional</span>
+<span class="sd">            Restrict the pair search to the specified types.</span>
+<span class="sd">            Defaults to ``&#39;all&#39;``, in which case all particles are considered.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of tuples of :obj:`int`</span>
+<span class="sd">            The particle pairs identified by their index</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception</span>
+<span class="sd">            If the pair search distance is greater than the cell size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_pairs&quot;</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="n">types</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="CellSystem.get_neighbors"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem.get_neighbors">[docs]</a>    <span class="k">def</span> <span class="nf">get_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get neighbors of a given particle up to a certain distance.</span>
+
+<span class="sd">        The choice of :ref:`cell systems &lt;Cell systems&gt;` has an impact on</span>
+<span class="sd">        how far the algorithm can detect particle pairs:</span>
+
+<span class="sd">        * N-square: no restriction on the search distance, no double counting</span>
+<span class="sd">          if search distance is larger than the box size</span>
+<span class="sd">        * regular decomposition: the search distance is bounded by half</span>
+<span class="sd">          the local cell geometry</span>
+<span class="sd">        * hybrid decomposition: not supported</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle : :class:`~espressomd.particle_data.ParticleHandle`</span>
+<span class="sd">        distance : :obj:`float`</span>
+<span class="sd">            Pairs of particles closer than ``distance`` are found.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (N,) array_like of :obj:`int`</span>
+<span class="sd">            The list of neighbor particles surrounding the particle</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">particle</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">.</span><span class="n">ParticleHandle</span><span class="p">,</span> <span class="s2">&quot;Parameter &#39;particle&#39; must be a particle&quot;</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">distance</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;Parameter &#39;distance&#39; must be a float&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;get_neighbors&quot;</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CellSystem.non_bonded_loop_trace"><a class="viewcode-back" href="../../espressomd.html#espressomd.cell_system.CellSystem.non_bonded_loop_trace">[docs]</a>    <span class="k">def</span> <span class="nf">non_bonded_loop_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;non_bonded_loop_trace&quot;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span><span class="p">,</span> <span class="n">vec21</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+            <span class="n">pos1</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">pos1</span><span class="p">)</span>
+            <span class="n">pos2</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">pos2</span><span class="p">)</span>
+            <span class="n">vec21</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">vec21</span><span class="p">)</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">,</span> <span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span><span class="p">,</span> <span class="n">vec21</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">res</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

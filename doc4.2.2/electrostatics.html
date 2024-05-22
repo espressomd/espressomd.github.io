@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>9. Electrostatics &#8212; ESPResSo 4.2.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/toggleprompt.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="10. Magnetostatics" href="magnetostatics.html" />
+    <link rel="prev" title="8. Bonded interactions" href="inter_bonded.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="electrostatics">
+<span id="id1"></span><h1><span class="section-number">9. </span>Electrostatics<a class="headerlink" href="#electrostatics" title="Permalink to this headline">¶</a></h1>
+<p>The Coulomb (or electrostatic) interaction is defined as
+follows. For a pair of particles at distance <span class="math notranslate nohighlight">\(r\)</span> with charges
+<span class="math notranslate nohighlight">\(q_1\)</span> and <span class="math notranslate nohighlight">\(q_2\)</span>, the interaction is given by</p>
+<div class="math notranslate nohighlight">
+\[U_C(r)=C \cdot \frac{q_1 q_2}{r}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight" id="equation-coulomb-prefactor">
+<span class="eqno">(1)<a class="headerlink" href="#equation-coulomb-prefactor" title="Permalink to this equation">¶</a></span>\[C=\frac{1}{4\pi \varepsilon_0 \varepsilon_r}\]</div>
+<p>is a prefactor which can be set by the user. The commonly used Bjerrum length
+<span class="math notranslate nohighlight">\(l_B = e^2 / (4 \pi \varepsilon_0 \varepsilon_r k_B T)\)</span> is the length at
+which the Coulomb energy between two unit charges is equal to the thermal
+energy <span class="math notranslate nohighlight">\(k_B T\)</span>.
+Based on this length, the prefactor is given by <span class="math notranslate nohighlight">\(C=l_B k_B T / e^2\)</span>.</p>
+<p>Computing electrostatic interactions is computationally very expensive.
+<em>ESPResSo</em> features some state-of-the-art algorithms to deal with these
+interactions as efficiently as possible, but almost all of them require
+some knowledge to use them properly. Uneducated use can result in
+completely unphysical simulations.</p>
+<p>Coulomb interactions have to be added to the list of active actors of the system object to become
+active. This is done by calling the add-method of <a class="reference internal" href="espressomd.html#espressomd.system.System.actors" title="espressomd.system.System.actors"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.system.System.actors</span></code></a>.
+Only one electrostatics method can be active at any time.</p>
+<p>Note that using the electrostatic interaction also requires assigning charges to
+the particles via the particle property
+<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.q" title="espressomd.particle_data.ParticleHandle.q"><code class="xref py py-attr docutils literal notranslate"><span class="pre">q</span></code></a>.</p>
+<p>All solvers need a prefactor and a set of other required parameters.
+This example shows the general usage of the electrostatic method <code class="docutils literal notranslate"><span class="pre">P3M</span></code>.
+An instance of the solver is created and added to the actors list, at which
+point it will be automatically activated. This activation will internally
+call a tuning function to achieve the requested accuracy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.electrostatics</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">q</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">P3M</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">accuracy</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the prefactor is defined as <span class="math notranslate nohighlight">\(C\)</span> in Eqn. <a class="reference internal" href="#equation-coulomb-prefactor">(1)</a>.</p>
+<p>The list of actors can be cleared with
+<a class="reference internal" href="espressomd.html#espressomd.actors.Actors.clear" title="espressomd.actors.Actors.clear"><code class="xref py py-meth docutils literal notranslate"><span class="pre">system.actors.clear()</span></code></a> and
+<a class="reference internal" href="espressomd.html#espressomd.actors.Actors.remove" title="espressomd.actors.Actors.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">system.actors.remove(actor)</span></code></a>.</p>
+<section id="coulomb-p3m">
+<span id="id2"></span><h2><span class="section-number">9.1. </span>Coulomb P3M<a class="headerlink" href="#coulomb-p3m" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.P3M" title="espressomd.electrostatics.P3M"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.P3M</span></code></a></p>
+<p>For this feature to work, you need to have the <code class="docutils literal notranslate"><span class="pre">fftw3</span></code> library
+installed on your system. In <em>ESPResSo</em>, you can check if it is compiled in by
+checking for the feature <code class="docutils literal notranslate"><span class="pre">FFTW</span></code> with <code class="docutils literal notranslate"><span class="pre">espressomd.features</span></code>.
+P3M requires full periodicity (1 1 1). When using a non-metallic dielectric
+constant (<code class="docutils literal notranslate"><span class="pre">epsilon</span> <span class="pre">!=</span> <span class="pre">0.0</span></code>), the box must be cubic.
+Make sure that you know the relevance of the P3M parameters before using P3M!
+If you are not sure, read the following references:
+<span id="id3">[<a class="reference internal" href="bibliography.html#id20" title="Juan J. Cerdà, Vincent Ballenegger, Olaf Lenz, and Christian Holm. P3M algorithm for dipolar interactions. The Journal of Chemical Physics, 129:234104, 2008. doi:10.1063/1.3000389.">Cerdà <em>et al.</em>, 2008</a>, <a class="reference internal" href="bibliography.html#id26" title="Markus Deserno. Counterion condensation for rigid linear polyelectrolytes. PhD thesis, Universität Mainz, February 2000. doi:10.25358/openscience-1411.">Deserno, 2000</a>, <a class="reference internal" href="bibliography.html#id28" title="Markus Deserno and Christian Holm. How to mesh up Ewald sums. I. A theoretical and numerical comparison of various particle mesh routines. The Journal of Chemical Physics, 109:7678, 1998. doi:10.1063/1.477414.">Deserno and Holm, 1998</a>, <a class="reference internal" href="bibliography.html#id29" title="Markus Deserno and Christian Holm. How to mesh up Ewald sums. II. An accurate error estimate for the Particle-Particle-Particle-Mesh algorithm. The Journal of Chemical Physics, 109:7694, 1998. doi:10.1063/1.477415.">Deserno and Holm, 1998</a>, <a class="reference internal" href="bibliography.html#id27" title="Markus Deserno, Christian Holm, and Hans Jörg Limbach. How to mesh up Ewald sums. In R. Esser, P. Grassberger, J. Grotendorst, and M. Lewerenz, editors, Molecular Dynamics on Parallel Computers, 319–320. World Scientific, Singapore, 2000. doi:10.1142/9789812793768_0023.">Deserno <em>et al.</em>, 2000</a>, <a class="reference internal" href="bibliography.html#id39" title="P. P. Ewald. Die Berechnung optischer und elektrostatischer Gitterpotentiale. Annalen der Physik, 369(3):253–287, 1921. doi:10.1002/andp.19213690304.">Ewald, 1921</a>, <a class="reference internal" href="bibliography.html#id46" title="R. W. Hockney and J. W. Eastwood. Computer Simulation Using Particles. CRC Press, 1988. ISBN 9780852743928.">Hockney and Eastwood, 1988</a>, <a class="reference internal" href="bibliography.html#id52" title="Jiri Kolafa and John W. Perram. Cutoff errors in the Ewald summation formulae for point charge systems. Molecular Simulation, 9(5):351–368, 1992. doi:10.1080/08927029208049126.">Kolafa and Perram, 1992</a>]</span>.</p>
+<section id="tuning-coulomb-p3m">
+<span id="id4"></span><h3><span class="section-number">9.1.1. </span>Tuning Coulomb P3M<a class="headerlink" href="#tuning-coulomb-p3m" title="Permalink to this headline">¶</a></h3>
+<p>It is not easy to calculate the various parameters of the P3M method
+such that the method provides the desired accuracy at maximum speed. To
+simplify this, it provides a function to automatically tune the algorithm.
+Note that for this function to work properly, your system should already
+contain an initial configuration of charges and the correct initial box size.
+The tuning method is called when the handle of the Coulomb P3M is added to
+the actor list. Some parameters can be fixed (<code class="docutils literal notranslate"><span class="pre">r_cut</span></code>, <code class="docutils literal notranslate"><span class="pre">cao</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>)
+to speed up the tuning if the parameters are already known.</p>
+<p>Please note that the provided tuning algorithms works very well on
+homogeneous charge distributions, but might not achieve the requested
+precision for highly inhomogeneous or symmetric systems. For example,
+because of the nature of the P3M algorithm, systems are problematic
+where most charges are placed in one plane, one small region, or on a
+regular grid.</p>
+<p>The function employs the analytical expression of the error estimate for
+the P3M method <span id="id5">[<a class="reference internal" href="bibliography.html#id46" title="R. W. Hockney and J. W. Eastwood. Computer Simulation Using Particles. CRC Press, 1988. ISBN 9780852743928.">Hockney and Eastwood, 1988</a>]</span> and its real space error <span id="id6">[<a class="reference internal" href="bibliography.html#id52" title="Jiri Kolafa and John W. Perram. Cutoff errors in the Ewald summation formulae for point charge systems. Molecular Simulation, 9(5):351–368, 1992. doi:10.1080/08927029208049126.">Kolafa and Perram, 1992</a>]</span> to
+obtain sets of parameters that yield the desired accuracy, then it measures how
+long it takes to compute the Coulomb interaction using these parameter sets and
+chooses the set with the shortest run time.</p>
+<p>During tuning, the algorithm reports the tested parameter sets,
+the corresponding k-space and real-space errors and the timings needed
+for force calculations. In the output, the timings are given in units of
+milliseconds, length scales are in units of inverse box lengths.</p>
+</section>
+<section id="coulomb-p3m-on-gpu">
+<span id="id7"></span><h3><span class="section-number">9.1.2. </span>Coulomb P3M on GPU<a class="headerlink" href="#coulomb-p3m-on-gpu" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.P3MGPU" title="espressomd.electrostatics.P3MGPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.P3MGPU</span></code></a></p>
+<p>The GPU implementation of P3M calculates the far field contribution to the
+forces on the GPU. The near-field contribution to the forces, as well as the
+near- and far-field contributions to the energies are calculated on the CPU.
+It uses the same parameters
+and interface functionality as the CPU version of the solver.
+It should be noted that this does not always provide significant
+increase in performance. Furthermore it computes the far field interactions
+with only single precision which limits the maximum precision.
+The algorithm does not work in combination with the electrostatic extension
+<a class="reference internal" href="#dielectric-interfaces-with-the-icc-algorithm"><span class="std std-ref">Dielectric interfaces with the ICC* algorithm</span></a>.</p>
+<p>The algorithm doesn’t have kernels to compute energies, and will therefore
+contribute 0 to the long-range potential energy of the system. This can be
+an issue for other algorithms, such as <a class="reference internal" href="reaction_methods.html#reaction-methods"><span class="std std-ref">reaction methods</span></a>
+and <a class="reference internal" href="integration.html#using-a-custom-convergence-criterion"><span class="std std-ref">energy-based steepest descent</span></a>.</p>
+</section>
+</section>
+<section id="debye-huckel-potential">
+<span id="id8"></span><h2><span class="section-number">9.2. </span>Debye-Hückel potential<a class="headerlink" href="#debye-huckel-potential" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.DH" title="espressomd.electrostatics.DH"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.DH</span></code></a></p>
+<p>The Debye-Hückel electrostatic potential is defined by</p>
+<div class="math notranslate nohighlight">
+\[U^{C-DH} = C \cdot \frac{q_1 q_2 \exp(-\kappa r)}{r}\quad \mathrm{for}\quad r&lt;r_{\mathrm{cut}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(C\)</span> is defined as in Eqn. <a class="reference internal" href="#equation-coulomb-prefactor">(1)</a> and
+<span class="math notranslate nohighlight">\(\kappa\)</span> is the inverse Debye screening length.
+The Debye-Hückel potential is an approximate method for calculating
+electrostatic interactions, but technically it is treated as other
+short-ranged non-bonding potentials. For <span class="math notranslate nohighlight">\(r &gt; r_{\textrm{cut}}\)</span> it is
+set to zero which introduces a step in energy. Therefore, it introduces
+fluctuations in energy.</p>
+<p>For <span class="math notranslate nohighlight">\(\kappa = 0\)</span>, this corresponds to the plain Coulomb potential.</p>
+</section>
+<section id="reaction-field-method">
+<span id="id9"></span><h2><span class="section-number">9.3. </span>Reaction Field method<a class="headerlink" href="#reaction-field-method" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.ReactionField" title="espressomd.electrostatics.ReactionField"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.ReactionField</span></code></a></p>
+<p>The Reaction Field electrostatic potential is defined by</p>
+<div class="math notranslate nohighlight">
+\[U^{C-RF} = C \cdot q_1 q_2 \left[\frac{1}{r} - \frac{B r^2}{2r_{\mathrm{cut}}^3} - \frac{1 - B/2}{r_{\mathrm{cut}}}\right] \quad \mathrm{for}\quad r&lt;r_{\mathrm{cut}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(C\)</span> is defined as in Eqn. <a class="reference internal" href="#equation-coulomb-prefactor">(1)</a> and <span class="math notranslate nohighlight">\(B\)</span>
+is defined as:</p>
+<div class="math notranslate nohighlight">
+\[B = \frac{2(\varepsilon_1 - \varepsilon_2)(1 + \kappa r_{\mathrm{cut}}) - \varepsilon_2 (\kappa r_{\mathrm{cut}})^2}{(\varepsilon_1 + 2\varepsilon_2)(1 + \kappa r_{\mathrm{cut}}) + \varepsilon_2 (\kappa r_{\mathrm{cut}})^2}\]</div>
+<p>with <span class="math notranslate nohighlight">\(\kappa\)</span> the inverse Debye screening length, <span class="math notranslate nohighlight">\(\varepsilon_1\)</span> the dielectric
+constant inside the cavity and <span class="math notranslate nohighlight">\(\varepsilon_2\)</span> the dielectric constant
+outside the cavity <span id="id10">[<a class="reference internal" href="bibliography.html#id91" title="Ilario G. Tironi, René Sperb, Paul E. Smith, and Wilfred F. van Gunsteren. A generalized reaction field method for molecular-dynamics simulations. The Journal of Chemical Physics, 102(13):5451–5459, 1995. doi:10.1063/1.469273.">Tironi <em>et al.</em>, 1995</a>]</span>.</p>
+<p>The term in <span class="math notranslate nohighlight">\(1 - B/2\)</span> is a correction to make the
+potential continuous at <span class="math notranslate nohighlight">\(r = r_{\mathrm{cut}}\)</span>.</p>
+</section>
+<section id="dielectric-interfaces-with-the-icc-star-algorithm">
+<span id="dielectric-interfaces-with-the-icc-algorithm"></span><h2><span class="section-number">9.4. </span>Dielectric interfaces with the ICC<span class="math notranslate nohighlight">\(\star\)</span> algorithm<a class="headerlink" href="#dielectric-interfaces-with-the-icc-star-algorithm" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatic_extensions.ICC" title="espressomd.electrostatic_extensions.ICC"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatic_extensions.ICC</span></code></a></p>
+<p>The ICC<span class="math notranslate nohighlight">\(\star\)</span> algorithm allows to take into account arbitrarily shaped
+dielectric interfaces and dynamic charge induction. For instance, it can be
+used to simulate a curved metallic boundary. This is done by iterating the
+charge on a set of spatially fixed <em>ICC particles</em> until they correctly
+represent the influence of the dielectric discontinuity. All <em>ICC particles</em>
+need a certain area, normal vector and dielectric constant to fully specify the
+surface. ICC relies on a Coulomb solver that is already initialized. So far, it
+is implemented and well tested with the Coulomb solver P3M. ICC is an <em>ESPResSo</em>
+actor and can be activated via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.electrostatic_extensions</span>
+<span class="n">icc</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatic_extensions</span><span class="o">.</span><span class="n">ICC</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">icc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The ICC particles are setup as normal <em>ESPResSo</em> particles. Note that they should
+be fixed in space and need an initial non-zero charge. The following example
+sets up parallel metallic plates and activates ICC:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the ICC line density and calculate the number of</span>
+<span class="c1"># ICC particles according to the box size</span>
+<span class="n">box_l</span> <span class="o">=</span> <span class="mf">9.</span>
+<span class="n">system</span><span class="o">.</span><span class="n">box_l</span> <span class="o">=</span> <span class="p">[</span><span class="n">box_l</span><span class="p">,</span> <span class="n">box_l</span><span class="p">,</span> <span class="mf">12.</span><span class="p">]</span>
+<span class="n">nicc</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># linear density</span>
+<span class="n">nicc_per_electrode</span> <span class="o">=</span> <span class="n">nicc</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># surface density</span>
+<span class="n">nicc_tot</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nicc_per_electrode</span>
+<span class="n">iccArea</span> <span class="o">=</span> <span class="n">box_l</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">nicc_per_electrode</span>
+<span class="n">l</span> <span class="o">=</span> <span class="n">box_l</span> <span class="o">/</span> <span class="n">nicc</span>
+
+<span class="c1"># Lists to collect required parameters</span>
+<span class="n">iccNormals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">iccAreas</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">iccSigmas</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">iccEpsilons</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># Add the fixed ICC particles:</span>
+
+<span class="c1"># Left electrode (normal [0, 0, 1])</span>
+<span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nicc</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nicc</span><span class="p">):</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="n">l</span> <span class="o">*</span> <span class="n">xi</span><span class="p">,</span> <span class="n">l</span> <span class="o">*</span> <span class="n">yi</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">q</span><span class="o">=-</span><span class="mf">0.0001</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="n">icc_type</span><span class="p">,</span> <span class="n">fix</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
+<span class="n">iccNormals</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">nicc_per_electrode</span><span class="p">)</span>
+
+<span class="c1"># Right electrode (normal [0, 0, -1])</span>
+<span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nicc</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nicc</span><span class="p">):</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="n">l</span> <span class="o">*</span> <span class="n">xi</span><span class="p">,</span> <span class="n">l</span> <span class="o">*</span> <span class="n">yi</span><span class="p">,</span> <span class="n">box_l</span><span class="p">],</span> <span class="n">q</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span>
+                        <span class="nb">type</span><span class="o">=</span><span class="n">icc_type</span><span class="p">,</span> <span class="n">fix</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">])</span>
+<span class="n">iccNormals</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">nicc_per_electrode</span><span class="p">)</span>
+
+<span class="c1"># Common area, sigma and metallic epsilon</span>
+<span class="n">iccAreas</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">iccArea</span><span class="p">]</span> <span class="o">*</span> <span class="n">nicc_tot</span><span class="p">)</span>
+<span class="n">iccSigmas</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">nicc_tot</span><span class="p">)</span>
+<span class="n">iccEpsilons</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">100000</span><span class="p">]</span> <span class="o">*</span> <span class="n">nicc_tot</span><span class="p">)</span>
+
+<span class="n">icc</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatic_extensions</span><span class="o">.</span><span class="n">ICC</span><span class="p">(</span>
+    <span class="n">first_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">n_icc</span><span class="o">=</span><span class="n">nicc_tot</span><span class="p">,</span>
+    <span class="n">convergence</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+    <span class="n">relaxation</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">ext_field</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">eps_out</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">normals</span><span class="o">=</span><span class="n">iccNormals</span><span class="p">,</span>
+    <span class="n">areas</span><span class="o">=</span><span class="n">iccAreas</span><span class="p">,</span>
+    <span class="n">sigmas</span><span class="o">=</span><span class="n">iccSigmas</span><span class="p">,</span>
+    <span class="n">epsilons</span><span class="o">=</span><span class="n">iccEpsilons</span><span class="p">)</span>
+
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">icc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With each iteration, ICC has to solve electrostatics which can severely slow
+down the integration. The performance can be improved by using multiple cores,
+a minimal set of ICC particles and convergence and relaxation parameters that
+result in a minimal number of iterations. Also please make sure to read the
+corresponding articles, mainly <span id="id11">[<a class="reference internal" href="bibliography.html#id12" title="A. Arnold, O. Lenz, S. Kesselheim, R. Weeber, F. Fahrenberger, D. Röhm, P. Košovan, and C. Holm. ESPResSo 3.1 — molecular dynamics software for coarse-grained models. In M. Griebel and M. A. Schweitzer, editors, Meshfree Methods for Partial Differential Equations VI, volume 89 of Lecture Notes in Computational Science and Engineering, pages 1–23. Springer Berlin Heidelberg, 2013. doi:10.1007/978-3-642-32979-1_1.">Arnold <em>et al.</em>, 2013</a>, <a class="reference internal" href="bibliography.html#id51" title="Stefan Kesselheim, Marcello Sega, and Christian Holm. Applying ICC* to DNA translocation. Effect of dielectric boundaries. Computer Physics Communications, 182(1):33–35, 2011. doi:10.1016/j.cpc.2010.08.014.">Kesselheim <em>et al.</em>, 2011</a>, <a class="reference internal" href="bibliography.html#id95" title="Sandeep Tyagi, Mehmet Süzen, Marcello Sega, Marcia C. Barbosa, Sofia S. Kantorovich, and Christian Holm. An iterative, fast, linear-scaling method for computing induced charges on arbitrary dielectric boundaries. The Journal of Chemical Physics, 132:154112, 2010. doi:10.1063/1.3376011.">Tyagi <em>et al.</em>, 2010</a>]</span> before
+using it.</p>
+</section>
+<section id="electrostatic-layer-correction-elc">
+<span id="id12"></span><h2><span class="section-number">9.5. </span>Electrostatic Layer Correction (ELC)<a class="headerlink" href="#electrostatic-layer-correction-elc" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.ELC" title="espressomd.electrostatics.ELC"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.ELC</span></code></a></p>
+<p><em>ELC</em> is an extension of the P3M electrostatics solver for explicit 2D periodic
+systems. It can account for different dielectric jumps on both sides of the
+non-periodic direction. In more detail, it is a special procedure that
+converts a 3D electrostatic method to a 2D method in computational order N.
+The periodicity has to be set to (1 1 1). <em>ELC</em> cancels the electrostatic
+contribution of the periodic replica in <strong>z-direction</strong>. Make sure that you
+read the papers on ELC (<span id="id13">[<a class="reference internal" href="bibliography.html#id10" title="A. Arnold, J. de Joannis, and C. Holm. Electrostatics in periodic slab geometries II. The Journal of Chemical Physics, 117:2503–2512, 2002. doi:10.1063/1.1491954.">Arnold <em>et al.</em>, 2002</a>, <a class="reference internal" href="bibliography.html#id9" title="A. Arnold, J. de Joannis, and C. Holm. Electrostatics in periodic slab geometries I. The Journal of Chemical Physics, 117:2496–2502, 2002. doi:10.1063/1.1491955.">Arnold <em>et al.</em>, 2002</a>, <a class="reference internal" href="bibliography.html#id94" title="Sandeep Tyagi, Axel Arnold, and Christian Holm. Electrostatic layer correction with image charges: a linear scaling method to treat slab 2D + h systems with dielectric interfaces. The Journal of Chemical Physics, 129(20):204102, 2008. doi:10.1063/1.3021064.">Tyagi <em>et al.</em>, 2008</a>]</span>) before using it.
+See <a class="reference internal" href="appendix.html#elc-theory"><span class="std std-ref">ELC theory</span></a> for more details.</p>
+<p>Usage notes:</p>
+<ul class="simple">
+<li><p>The non-periodic direction is always the <strong>z-direction</strong>.</p></li>
+<li><p>The method relies on a slab of the simulation box perpendicular to the
+z-direction not to contain particles. The size in z-direction of this slab
+is controlled by the <code class="docutils literal notranslate"><span class="pre">gap_size</span></code> parameter. The user has to ensure that
+no particles enter this region by means of constraints or by fixing the
+particles’ z-coordinate. When particles enter the slab of the specified
+size, an error will be thrown.</p></li>
+</ul>
+<p><em>ELC</em> is an <em>ESPResSo</em> actor and is used with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.electrostatics</span>
+<span class="n">p3m</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">P3M</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">accuracy</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+<span class="n">elc</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">ELC</span><span class="p">(</span><span class="n">actor</span><span class="o">=</span><span class="n">p3m</span><span class="p">,</span> <span class="n">gap_size</span><span class="o">=</span><span class="n">box_l</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">maxPWerror</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">elc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Although it is technically feasible to remove <code class="docutils literal notranslate"><span class="pre">elc</span></code> from the list of actors
+and then to add the <code class="docutils literal notranslate"><span class="pre">p3m</span></code> object, it is not recommended because the P3M
+parameters are mutated by <em>ELC</em>, e.g. the <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> is made metallic.
+It is safer to instantiate a new P3M object instead of recycling one that
+has been adapted by <em>ELC</em>.</p>
+<p><em>ELC</em> can also be used to simulate 2D periodic systems with image charges,
+specified by dielectric contrasts on the non-periodic boundaries
+(<span id="id14">[<a class="reference internal" href="bibliography.html#id94" title="Sandeep Tyagi, Axel Arnold, and Christian Holm. Electrostatic layer correction with image charges: a linear scaling method to treat slab 2D + h systems with dielectric interfaces. The Journal of Chemical Physics, 129(20):204102, 2008. doi:10.1063/1.3021064.">Tyagi <em>et al.</em>, 2008</a>]</span>). This is achieved by setting the dielectric jump from the
+simulation region (<em>middle</em>) to <em>bottom</em> (at <span class="math notranslate nohighlight">\(z=0\)</span>) and from <em>middle</em> to
+<em>top</em> (at <span class="math notranslate nohighlight">\(z = L_z - h\)</span>), where <span class="math notranslate nohighlight">\(L_z\)</span> denotes the box length in
+<span class="math notranslate nohighlight">\(z\)</span>-direction and <span class="math notranslate nohighlight">\(h\)</span> the gap size. The corresponding expressions
+are <span class="math notranslate nohighlight">\(\Delta_t=\frac{\varepsilon_m-\varepsilon_t}{\varepsilon_m+\varepsilon_t}\)</span>
+and <span class="math notranslate nohighlight">\(\Delta_b=\frac{\varepsilon_m-\varepsilon_b}{\varepsilon_m+\varepsilon_b}\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elc</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">ELC</span><span class="p">(</span><span class="n">actor</span><span class="o">=</span><span class="n">p3m</span><span class="p">,</span> <span class="n">gap_size</span><span class="o">=</span><span class="n">box_l</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">maxPWerror</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                                    <span class="n">delta_mid_top</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">delta_mid_bot</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The fully metallic case <span class="math notranslate nohighlight">\(\Delta_t=\Delta_b=-1\)</span> would lead to divergence
+of the forces/energies in <em>ELC</em> and is therefore only possible with the
+<code class="docutils literal notranslate"><span class="pre">const_pot</span></code> option.</p>
+<p>Toggle <code class="docutils literal notranslate"><span class="pre">const_pot</span></code> on to maintain a constant electric potential difference
+<code class="docutils literal notranslate"><span class="pre">pot_diff</span></code> between the xy-planes at <span class="math notranslate nohighlight">\(z=0\)</span> and <span class="math notranslate nohighlight">\(z = L_z - h\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elc</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">ELC</span><span class="p">(</span><span class="n">actor</span><span class="o">=</span><span class="n">p3m</span><span class="p">,</span> <span class="n">gap_size</span><span class="o">=</span><span class="n">box_l</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">maxPWerror</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                                    <span class="n">const_pot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">delta_mid_bot</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is done by countering the total dipole moment of the system with the
+electric field <span class="math notranslate nohighlight">\(E_{\textrm{induced}}\)</span> and superposing a homogeneous
+electric field <span class="math notranslate nohighlight">\(E_{\textrm{applied}} = \frac{U}{L}\)</span> to retain <span class="math notranslate nohighlight">\(U\)</span>.
+This mimics the induction of surface charges
+<span class="math notranslate nohighlight">\(\pm\sigma = E_{\textrm{induced}} \cdot \varepsilon_0\)</span>
+for planar electrodes at <span class="math notranslate nohighlight">\(z=0\)</span> and <span class="math notranslate nohighlight">\(z=L_z - h\)</span> in a capacitor
+connected to a battery with voltage <code class="docutils literal notranslate"><span class="pre">pot_diff</span></code>.</p>
+</section>
+<section id="mmm1d">
+<span id="id15"></span><h2><span class="section-number">9.6. </span>MMM1D<a class="headerlink" href="#mmm1d" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.MMM1D" title="espressomd.electrostatics.MMM1D"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.MMM1D</span></code></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Required features: <code class="docutils literal notranslate"><span class="pre">ELECTROSTATICS</span></code> for MMM1D, the GPU version
+additionally needs the features <code class="docutils literal notranslate"><span class="pre">CUDA</span></code> and <code class="docutils literal notranslate"><span class="pre">MMM1D_GPU</span></code>.</p>
+</div>
+<p>Please cite <span id="id16">[<a class="reference internal" href="bibliography.html#id11" title="A. Arnold and C. Holm. MMM1D: A method for calculating electrostatic interactions in one-dimensional periodic geometries. The Journal of Chemical Physics, 123(12):144103, 2005. doi:10.1063/1.2052647.">Arnold and Holm, 2005</a>]</span> when using MMM1D. See <a class="reference internal" href="appendix.html#mmm1d-theory"><span class="std std-ref">MMM1D theory</span></a> for
+the details.</p>
+<p>MMM1D is used with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.electrostatics</span>
+<span class="n">mmm1d</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">MMM1D</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">far_switch_radius</span><span class="o">=</span><span class="n">fr</span><span class="p">,</span>
+                                        <span class="n">maxPWerror</span><span class="o">=</span><span class="n">err</span><span class="p">,</span> <span class="n">tune</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bessel_cutoff</span><span class="o">=</span><span class="n">bc</span><span class="p">)</span>
+<span class="n">mmm1d</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">MMM1D</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">maxPWerror</span><span class="o">=</span><span class="n">err</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the prefactor <span class="math notranslate nohighlight">\(C\)</span> is defined in Eqn. <a class="reference internal" href="#equation-coulomb-prefactor">(1)</a>.
+MMM1D requires for systems with periodicity (0 0 1) and the N-squared
+cell system (see section <a class="reference internal" href="system_setup.html#cell-systems"><span class="std std-ref">Cell systems</span></a>). The first form sets parameters
+manually. The switch radius determines at which xy-distance the force
+calculation switches from the near to the far formula. The Bessel cutoff
+does not need to be specified as it is automatically determined from the
+particle distances and maximal pairwise error. The second tuning form
+just takes the maximal pairwise error and tries out a lot of switching
+radii to find out the fastest one. If this takes too long, you can
+change the value of the <code class="docutils literal notranslate"><span class="pre">timings</span></code> argument of the
+<a class="reference internal" href="espressomd.html#espressomd.electrostatics.MMM1D" title="espressomd.electrostatics.MMM1D"><code class="xref py py-class docutils literal notranslate"><span class="pre">MMM1D</span></code></a> class,
+which controls the number of test force calculations.</p>
+<section id="mmm1d-on-gpu">
+<span id="id17"></span><h3><span class="section-number">9.6.1. </span>MMM1D on GPU<a class="headerlink" href="#mmm1d-on-gpu" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.MMM1DGPU" title="espressomd.electrostatics.MMM1DGPU"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.MMM1DGPU</span></code></a></p>
+<p>MMM1D is also available in a GPU implementation. Unlike its CPU
+counterpart, it does not need the N-squared cell system.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.electrostatics</span>
+<span class="n">mmm1d</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">MMM1DGPU</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">far_switch_radius</span><span class="o">=</span><span class="n">fr</span><span class="p">,</span>
+                                           <span class="n">maxPWerror</span><span class="o">=</span><span class="n">err</span><span class="p">,</span> <span class="n">tune</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bessel_cutoff</span><span class="o">=</span><span class="n">bc</span><span class="p">)</span>
+<span class="n">mmm1d</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">MMM1DGPU</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">maxPWerror</span><span class="o">=</span><span class="n">err</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first form sets parameters manually. The switch radius determines at which
+xy-distance the force calculation switches from the near to the far
+formula. If the Bessel cutoff is not explicitly given, it is determined
+from the maximal pairwise error, otherwise this error only counts for
+the near formula. The second tuning form just takes the maximal pairwise
+error and tries out a lot of switching radii to find out the fastest one.</p>
+<p>For details on the MMM family of algorithms, refer to appendix
+<a class="reference internal" href="appendix.html#the-mmm-family-of-algorithms"><span class="std std-ref">The MMM family of algorithms</span></a>.</p>
+</section>
+</section>
+<section id="scafacos-electrostatics">
+<span id="id18"></span><h2><span class="section-number">9.7. </span>ScaFaCoS electrostatics<a class="headerlink" href="#scafacos-electrostatics" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrostatics.Scafacos" title="espressomd.electrostatics.Scafacos"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.electrostatics.Scafacos</span></code></a></p>
+<p><em>ESPResSo</em> can use the methods from the ScaFaCoS <em>Scalable fast Coulomb solvers</em>
+library. The specific methods available depend on the compile-time options of
+the library, and can be queried with
+<a class="reference internal" href="espressomd.html#espressomd.electrostatics.Scafacos.get_available_methods" title="espressomd.electrostatics.Scafacos.get_available_methods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.electrostatics.Scafacos.get_available_methods()</span></code></a>.</p>
+<p>To use ScaFaCoS, create an instance of <a class="reference internal" href="espressomd.html#espressomd.electrostatics.Scafacos" title="espressomd.electrostatics.Scafacos"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scafacos</span></code></a>
+and add it to the list of active actors. Three parameters have to be specified:
+<code class="docutils literal notranslate"><span class="pre">prefactor</span></code> (as defined in <a class="reference internal" href="#equation-coulomb-prefactor">(1)</a>), <code class="docutils literal notranslate"><span class="pre">method_name</span></code>,
+<code class="docutils literal notranslate"><span class="pre">method_params</span></code>. The method-specific parameters are described in the
+ScaFaCoS manual. In addition, methods supporting tuning have a parameter
+<code class="docutils literal notranslate"><span class="pre">tolerance_field</span></code> which sets the desired root mean square accuracy for
+the electric field.</p>
+<p>To use a specific electrostatics solver from ScaFaCoS for your system,
+e.g. <code class="docutils literal notranslate"><span class="pre">ewald</span></code>, set its cutoff to <span class="math notranslate nohighlight">\(1.5\)</span> and tune the other parameters
+for an accuracy of <span class="math notranslate nohighlight">\(10^{-3}\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.electrostatics</span>
+<span class="n">scafacos</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrostatics</span><span class="o">.</span><span class="n">Scafacos</span><span class="p">(</span>
+   <span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">method_name</span><span class="o">=</span><span class="s2">&quot;ewald&quot;</span><span class="p">,</span>
+   <span class="n">method_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ewald_r_cut&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span> <span class="s2">&quot;tolerance_field&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">})</span>
+<span class="n">system</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">scafacos</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For details of the various methods and their parameters please refer to
+the ScaFaCoS manual. To use this feature, ScaFaCoS has to be built as a
+shared library.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">9. Electrostatics</a><ul>
+<li><a class="reference internal" href="#coulomb-p3m">9.1. Coulomb P3M</a><ul>
+<li><a class="reference internal" href="#tuning-coulomb-p3m">9.1.1. Tuning Coulomb P3M</a></li>
+<li><a class="reference internal" href="#coulomb-p3m-on-gpu">9.1.2. Coulomb P3M on GPU</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debye-huckel-potential">9.2. Debye-Hückel potential</a></li>
+<li><a class="reference internal" href="#reaction-field-method">9.3. Reaction Field method</a></li>
+<li><a class="reference internal" href="#dielectric-interfaces-with-the-icc-star-algorithm">9.4. Dielectric interfaces with the ICC<span class="math notranslate nohighlight">\(\star\)</span> algorithm</a></li>
+<li><a class="reference internal" href="#electrostatic-layer-correction-elc">9.5. Electrostatic Layer Correction (ELC)</a></li>
+<li><a class="reference internal" href="#mmm1d">9.6. MMM1D</a><ul>
+<li><a class="reference internal" href="#mmm1d-on-gpu">9.6.1. MMM1D on GPU</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scafacos-electrostatics">9.7. ScaFaCoS electrostatics</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2023, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
