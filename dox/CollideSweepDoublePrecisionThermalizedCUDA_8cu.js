@@ -1,0 +1,26 @@
+var CollideSweepDoublePrecisionThermalizedCUDA_8cu =
+[
+    [ "FUNC_PREFIX", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a51a2ba326e140bf59e73b07a680ff233", null ],
+    [ "__launch_bounds__", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#ad8d5d1b7b04fdb89cda1e24d5b4a47fd", null ],
+    [ "_data_pdfs", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#ac874082d68a3ba8c7c041ae3cf45a3f0", null ],
+    [ "_size_force_0", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a33f000b1f4a9037fe29bf4c3fd00cc32", null ],
+    [ "_size_force_1", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#ac7c929ede3ca95cd8fe73185cee4d653", null ],
+    [ "_size_force_2", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a73e05d51a50aefd0d49a7c20651c2291", null ],
+    [ "_stride_force_0", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a380da7723e094690c336f70c58031f3e", null ],
+    [ "_stride_force_1", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#ad8aed5ad1816000c46be263302ec8517", null ],
+    [ "_stride_force_2", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#acb1dd93326b00c49f7fdf6fa2d825a0e", null ],
+    [ "_stride_force_3", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a8daedd2758799eb13df4af2a5ce01736", null ],
+    [ "_stride_pdfs_0", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a7e3b1c921604a8ec067b66218997d14a", null ],
+    [ "_stride_pdfs_1", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a44da5242af94fae75be3378430a52785", null ],
+    [ "_stride_pdfs_2", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a92ba042c11035696ecdf9b07657ac49f", null ],
+    [ "_stride_pdfs_3", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#ab2d7bb4e3a358d668ba7905f6f21425c", null ],
+    [ "block_offset_0", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a1bc21c3ddbf0b88cbc1f492823e870a6", null ],
+    [ "block_offset_1", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a19389a933514b34a7c19bcfbafa4a58e", null ],
+    [ "block_offset_2", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a058097aea8e0b43c15d8307ca590a9b3", null ],
+    [ "kT", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a5fd3cf288ad1551707aa88db2405127b", null ],
+    [ "omega_bulk", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#add799e353d43f88e3333461b5e6f01b6", null ],
+    [ "omega_even", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#ae2cb4645ced25bc2138612c43e2e3068", null ],
+    [ "omega_odd", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#abb48add57ec087f3884b85865fe49598", null ],
+    [ "omega_shear", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a03f95446c0828cd31981cbf754225989", null ],
+    [ "seed", "CollideSweepDoublePrecisionThermalizedCUDA_8cu.html#a20bab64b3aabb2774efe0cf1062f082b", null ]
+];
