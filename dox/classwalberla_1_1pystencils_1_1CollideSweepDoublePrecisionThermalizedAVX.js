@@ -1,0 +1,25 @@
+var classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX =
+[
+    [ "CollideSweepDoublePrecisionThermalizedAVX", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a8771c0a8dd48fc6a3d4cfb1dd69af71f", null ],
+    [ "configure", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#ab995960536f00d7ef5994824590bf34b", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a73cbe5d9041b377b1813bbcbc5315bf7", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a4116817fb7f730e9131bb2187204e60a", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#ac486ee1419aaea60edc865526f78fcd9", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#ab1018aec44d7c352a88e45462ff6615e", null ],
+    [ "operator()", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a9a21dab14120200b2092ec4bf9658db0", null ],
+    [ "run", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a022b9257efbd7d1f0303d904adf33858", null ],
+    [ "runOnCellInterval", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a8e70e96e515761e625f12829da697bb5", null ],
+    [ "block_offset_0_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a1d61f44e9effeca8b9904db89d1f472c", null ],
+    [ "block_offset_1_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#ab7aa439b493e1494f647e0ea555682c0", null ],
+    [ "block_offset_2_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#af66f99088e1b6033b3de7eeb78efe568", null ],
+    [ "configured_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#acf212c919952c459efbca37b2828b859", null ],
+    [ "forceID", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#ae54a0d2d61e2c51bab2af7a973441854", null ],
+    [ "kT_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#ae2a4f34ff369d736c42414a9de895cb4", null ],
+    [ "omega_bulk_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#afd0cf9132d699a5594d46f75ccb18e9a", null ],
+    [ "omega_even_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a6b3b0e0e1b4ad2d4ffe3ad8d80f68b64", null ],
+    [ "omega_odd_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a089f43a5b7114abcc4c033cc2ebabe83", null ],
+    [ "omega_shear_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a57e585eecab56febf6d2e66ad5e6ac91", null ],
+    [ "pdfsID", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a51ab38dad2cf3d46569720b5b8b52a3f", null ],
+    [ "seed_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#a76cb946ab51360467604a72729c63ea7", null ],
+    [ "time_step_", "classwalberla_1_1pystencils_1_1CollideSweepDoublePrecisionThermalizedAVX.html#af427a716e5e4d7b2924915639c2f87b4", null ]
+];
