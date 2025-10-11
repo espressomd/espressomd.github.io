@@ -1,0 +1,48 @@
+var elc_8cpp =
+[
+    [ "SCCache", "structSCCache.html", "structSCCache" ],
+    [ "ImageSum", "structImageSum.html", "structImageSum" ],
+    [ "POQECM", "elc_8cpp.html#abf586b060afb3082b041bf5508cfa057", null ],
+    [ "POQECP", "elc_8cpp.html#aa6bf435b321dd2ebf548f4843d277e07", null ],
+    [ "POQESM", "elc_8cpp.html#ace232a845e4e2fed2265ccb3ec88418f", null ],
+    [ "POQESP", "elc_8cpp.html#a176c132f5aacc91ff5f17b9954fec889", null ],
+    [ "PQECCM", "elc_8cpp.html#aba8c13a225fab3de137414771e45b266", null ],
+    [ "PQECCP", "elc_8cpp.html#a95681192b137d2931c26bdeb4ae6ade1", null ],
+    [ "PQECSM", "elc_8cpp.html#af0c240e9c9d1ff17298efcaad5472fbc", null ],
+    [ "PQECSP", "elc_8cpp.html#ae91716d031b114a9ca38439070e8249d", null ],
+    [ "PQESCM", "elc_8cpp.html#a4943e413108e7f988c7ff7b68e60ecf5", null ],
+    [ "PQESCP", "elc_8cpp.html#a2cb38afc86403b200a0f8c80fb924394", null ],
+    [ "PQESSM", "elc_8cpp.html#a14cc644f22c46f9c37900efd46f3386c", null ],
+    [ "PQESSP", "elc_8cpp.html#ae7b1f453c432b8bebf9168a6efee288f", null ],
+    [ "ChargeProtocol", "elc_8cpp.html#addb37f7590f3da8238d5f08564e1901d", [
+      [ "REAL", "elc_8cpp.html#addb37f7590f3da8238d5f08564e1901da8cf125b0e31559ba75a9d9b4f818a554", null ],
+      [ "IMAGE", "elc_8cpp.html#addb37f7590f3da8238d5f08564e1901da23a12f67f614b5518c7f1c2465bf95e3", null ],
+      [ "BOTH", "elc_8cpp.html#addb37f7590f3da8238d5f08564e1901da6328e5e3186c227a021ef2ff77e40197", null ]
+    ] ],
+    [ "PoQ", "elc_8cpp.html#aefc3e9bddfd5ceec4017ee0f31f253f4", [
+      [ "P", "elc_8cpp.html#aefc3e9bddfd5ceec4017ee0f31f253f4a44c29edb103a2872f519ad0c9a0fdaaa", null ],
+      [ "Q", "elc_8cpp.html#aefc3e9bddfd5ceec4017ee0f31f253f4af09564c9ca56850d4cd6b3319e541aee", null ]
+    ] ],
+    [ "add_PoQ_force", "elc_8cpp.html#ad4fa21abfb5ec14b8b7a7c7cb445ebc8", null ],
+    [ "add_PQ_force", "elc_8cpp.html#a2e099d21a43f63aa8a7c97913313f07c", null ],
+    [ "add_vec", "elc_8cpp.html#acd22b49243e7027d931bcef45b8841d0", null ],
+    [ "addscale_vec", "elc_8cpp.html#a10dc543b6df802a3d26b9f819f100157", null ],
+    [ "block", "elc_8cpp.html#a69b1c4a09c7a73cf22e95f511399d111", null ],
+    [ "calc_sc_cache", "elc_8cpp.html#ae6e012e566b88bdf037c21a68f434973", null ],
+    [ "calc_total_charge", "elc_8cpp.html#a309f31c3d04a160309d89591e8939d89", null ],
+    [ "charge_assign", "elc_8cpp.html#aa5698ae3ba0d1f2ce9a4cf25712be489", null ],
+    [ "clear_vec", "elc_8cpp.html#a4a3a2d719a5769360eb91f1f5d639f39", null ],
+    [ "copy_vec", "elc_8cpp.html#ab883667a3bf6893044ad21f7e90862f2", null ],
+    [ "distribute", "elc_8cpp.html#a6fbc87d2e2cc52af807ec8b0b702a08c", null ],
+    [ "modify_p3m_sums", "elc_8cpp.html#a75c50f4a1a391199ff0d61325117a13c", null ],
+    [ "PoQ_energy", "elc_8cpp.html#a7c79c50451a36ff81794ee63d7b542e9", null ],
+    [ "PQ_energy", "elc_8cpp.html#a9eb79b59d80e7e3c708be774effdedc9", null ],
+    [ "prepare_sc_cache", "elc_8cpp.html#a1fb4ad42af7414ce2866986ae1c197a1", null ],
+    [ "scale_vec", "elc_8cpp.html#ad46ac6f4092c5c94f93b7ce668226f58", null ],
+    [ "setup_PoQ", "elc_8cpp.html#a6c0023c0cd23aa02eaaee2e2bae75a8e", null ],
+    [ "setup_PQ", "elc_8cpp.html#ab52bea205c23ad233d4cff22f68394b0", null ],
+    [ "gblcblk", "elc_8cpp.html#aeb1e11ca428b9e4b8088570de3174472", null ],
+    [ "partblk", "elc_8cpp.html#a3a46935571cda7b1423acd97eeb65a86", null ],
+    [ "scxcache", "elc_8cpp.html#a8246a3f23a937fef62e132d84ecc41c0", null ],
+    [ "scycache", "elc_8cpp.html#ab07120caf0e389158437b00cd8e8b5b3", null ]
+];
