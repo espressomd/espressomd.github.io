@@ -1,0 +1,11 @@
+var structp3m__data__struct__dipoles =
+[
+    [ "init_labels", "structp3m__data__struct__dipoles.html#ab2b743773d558e6c61366a984c15c4f4", null ],
+    [ "energy_correction", "structp3m__data__struct__dipoles.html#a1600a88d756c5a08029b64a681aaedc9", null ],
+    [ "inter_weights", "structp3m__data__struct__dipoles.html#a71d6f9eebd76aa098c5170306f0e0f30", null ],
+    [ "ks_scalar", "structp3m__data__struct__dipoles.html#ad4824767b7d089531739bd830f7d3da5", null ],
+    [ "pos_shift", "structp3m__data__struct__dipoles.html#a3dfe52d110c58a081df4b787063e683d", null ],
+    [ "rs_fields_kokkos", "structp3m__data__struct__dipoles.html#ab664c1b95d76e934329bb4b5560e724a", null ],
+    [ "sum_dip_part", "structp3m__data__struct__dipoles.html#aa3dfb69ab19f027c24f5bfb1637862cb", null ],
+    [ "sum_mu2", "structp3m__data__struct__dipoles.html#a83f6fae94569ae5adc7921f1ed47da20", null ]
+];
