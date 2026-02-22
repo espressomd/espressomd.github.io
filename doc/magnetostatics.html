@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>10. Magnetostatics &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="11. Magnetodynamics" href="magnetodynamics.html" />
+    <link rel="prev" title="9. Electrostatics" href="electrostatics.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="magnetostatics">
+<span id="id1"></span><h1><span class="section-number">10. </span>Magnetostatics<a class="headerlink" href="#magnetostatics" title="Link to this heading">¶</a></h1>
+<section id="dipolar-interaction">
+<span id="id2"></span><h2><span class="section-number">10.1. </span>Dipolar interaction<a class="headerlink" href="#dipolar-interaction" title="Link to this heading">¶</a></h2>
+<p>ESPResSo contains methods to calculate the interactions between point dipoles</p>
+<div class="math notranslate nohighlight">
+\[U^{Dip}(\vec{r}) = D \cdot \left( \frac{(\vec{\mu}_i \cdot \vec{\mu}_j)}{r^3}
+  - \frac{3  (\vec{\mu}_i \cdot \vec{r})  (\vec{\mu}_j \cdot \vec{r}) }{r^5} \right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(r=|\vec{r}|\)</span>.
+The prefactor <span class="math notranslate nohighlight">\(D\)</span> is can be set by the user and is given by</p>
+<div class="math notranslate nohighlight" id="equation-dipolar-prefactor">
+<span class="eqno">(1)<a class="headerlink" href="#equation-dipolar-prefactor" title="Link to this equation">¶</a></span>\[D =\frac{\mu_0 \mu}{4\pi}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mu_0\)</span> and <span class="math notranslate nohighlight">\(\mu\)</span> are the vacuum permittivity and the
+relative permittivity of the background material, respectively.</p>
+<p>Magnetostatic interactions are activated when attached to the system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dip</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+                <span class="n">rotation</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="p">[(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)])</span>
+
+<span class="n">actor</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">DipolarDirectSum</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">actor</span>
+</pre></div>
+</div>
+<p>The solver can be detached with either:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="dipolar-p3m">
+<span id="id3"></span><h3><span class="section-number">10.1.1. </span>Dipolar P3M<a class="headerlink" href="#dipolar-p3m" title="Link to this heading">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarP3M" title="espressomd.magnetostatics.DipolarP3M"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatics.DipolarP3M</span></code></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires feature <code class="docutils literal notranslate"><span class="pre">DIPOLES</span></code> and
+external feature <code class="docutils literal notranslate"><span class="pre">FFTW</span></code>, enabled with
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_FFTW=ON</span></code>.</p>
+</div>
+<p>This is the dipolar version of the P3M algorithm, described in <span id="id4">[<a class="reference internal" href="bibliography.html#id30" title="Juan J. Cerdà, Vincent Ballenegger, Olaf Lenz, and Christian Holm. P3M algorithm for dipolar interactions. The Journal of Chemical Physics, 129:234104, 2008. doi:10.1063/1.3000389.">Cerdà <em>et al.</em>, 2008</a>]</span>.</p>
+<p>Make sure that you know the relevance of the P3M parameters before using
+P3M! If you are not sure, read the following references:
+<span id="id5">[<a class="reference internal" href="bibliography.html#id30" title="Juan J. Cerdà, Vincent Ballenegger, Olaf Lenz, and Christian Holm. P3M algorithm for dipolar interactions. The Journal of Chemical Physics, 129:234104, 2008. doi:10.1063/1.3000389.">Cerdà <em>et al.</em>, 2008</a>, <a class="reference internal" href="bibliography.html#id38" title="Markus Deserno. Counterion condensation for rigid linear polyelectrolytes. PhD thesis, Universität Mainz, February 2000. doi:10.25358/openscience-1411.">Deserno, 2000</a>, <a class="reference internal" href="bibliography.html#id40" title="Markus Deserno and Christian Holm. How to mesh up Ewald sums. I. A theoretical and numerical comparison of various particle mesh routines. The Journal of Chemical Physics, 109:7678, 1998. doi:10.1063/1.477414.">Deserno and Holm, 1998</a>, <a class="reference internal" href="bibliography.html#id41" title="Markus Deserno and Christian Holm. How to mesh up Ewald sums. II. An accurate error estimate for the Particle-Particle-Particle-Mesh algorithm. The Journal of Chemical Physics, 109:7694, 1998. doi:10.1063/1.477415.">Deserno and Holm, 1998</a>, <a class="reference internal" href="bibliography.html#id39" title="Markus Deserno, Christian Holm, and Hans Jörg Limbach. How to mesh up Ewald sums. In R. Esser, P. Grassberger, J. Grotendorst, and M. Lewerenz, editors, Molecular Dynamics on Parallel Computers, 319–320. World Scientific, Singapore, 2000. doi:10.1142/9789812793768_0023.">Deserno <em>et al.</em>, 2000</a>, <a class="reference internal" href="bibliography.html#id54" title="P. P. Ewald. Die Berechnung optischer und elektrostatischer Gitterpotentiale. Annalen der Physik, 369(3):253–287, 1921. doi:10.1002/andp.19213690304.">Ewald, 1921</a>, <a class="reference internal" href="bibliography.html#id63" title="R. W. Hockney and J. W. Eastwood. Computer Simulation Using Particles. CRC Press, 1988. ISBN 9780852743928. URL: https://www.routledge.com/Computer-Simulation-Using-Particles/Hockney-Eastwood/p/book/9780852743928.">Hockney and Eastwood, 1988</a>, <a class="reference internal" href="bibliography.html#id73" title="Jiri Kolafa and John W. Perram. Cutoff errors in the Ewald summation formulae for point charge systems. Molecular Simulation, 9(5):351–368, 1992. doi:10.1080/08927029208049126.">Kolafa and Perram, 1992</a>]</span>.</p>
+<p>Note that dipolar P3M does not work with non-cubic boxes.</p>
+<p>The parameters of the dipolar P3M method can be tuned automatically, by
+providing <code class="docutils literal notranslate"><span class="pre">accuracy=&lt;TARGET_ACCURACY&gt;</span></code> to the method. It is also possible to
+pass a subset of the method parameters such as <code class="docutils literal notranslate"><span class="pre">mesh</span></code>. In that case, only
+the omitted parameters are tuned:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span> <span class="k">as</span> <span class="nn">magnetostatics</span>
+<span class="n">p3m</span> <span class="o">=</span> <span class="n">magnetostatics</span><span class="o">.</span><span class="n">DipolarP3M</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">accuracy</span><span class="o">=</span><span class="mf">1E-4</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">p3m</span>
+</pre></div>
+</div>
+<p>It is important to note that the error estimates given in <span id="id6">[<a class="reference internal" href="bibliography.html#id30" title="Juan J. Cerdà, Vincent Ballenegger, Olaf Lenz, and Christian Holm. P3M algorithm for dipolar interactions. The Journal of Chemical Physics, 129:234104, 2008. doi:10.1063/1.3000389.">Cerdà <em>et al.</em>, 2008</a>]</span>
+used in the tuning contain assumptions about the system. In particular, a
+homogeneous system is assumed. If this is no longer the case during the
+simulation, actual force and torque errors can be significantly larger.</p>
+</section>
+<section id="dipolar-layer-correction-dlc">
+<span id="id7"></span><h3><span class="section-number">10.1.2. </span>Dipolar Layer Correction (DLC)<a class="headerlink" href="#dipolar-layer-correction-dlc" title="Link to this heading">¶</a></h3>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DLC" title="espressomd.magnetostatics.DLC"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatics.DLC</span></code></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires feature <code class="docutils literal notranslate"><span class="pre">DIPOLES</span></code>.</p>
+</div>
+<p>The dipolar layer correction (DLC) is used in conjunction with the dipolar P3M
+method to calculate dipolar interactions in a 2D-periodic system.
+It is based on <span id="id8">[<a class="reference internal" href="bibliography.html#id27" title="A. Bródka. Ewald summation method with electrostatic layer correction for interactions of point dipoles in slab geometry. Chemical Physics Letters, 400(1–3):62–67, 2004. doi:10.1016/j.cplett.2004.10.086.">Bródka, 2004</a>]</span> and the dipolar version of
+<a class="reference internal" href="electrostatics.html#electrostatic-layer-correction-elc"><span class="std std-ref">Electrostatic Layer Correction (ELC)</span></a>.</p>
+<p>Usage notes:</p>
+<ul class="simple">
+<li><p>The non-periodic direction is always the <strong>z-direction</strong>.</p></li>
+<li><p>The method relies on a slab of the simulation box perpendicular to the
+z-direction not to contain particles. The size in z-direction of this slab
+is controlled by the <code class="docutils literal notranslate"><span class="pre">gap_size</span></code> parameter. The user has to ensure that
+no particles enter this region by means of constraints or by fixing the
+particles’ z-coordinate. When particles enter the slab of the specified
+size, an error will be thrown.</p></li>
+<li><p>The method can be tuned using the <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> parameter. In contrast to
+the electrostatic method, it refers to the energy. Furthermore, it is
+assumed that all dipole moment are as large as the largest of the dipoles
+in the system.</p></li>
+<li><p>When the base solver is not a P3M method, metallic epsilon is assumed.</p></li>
+</ul>
+<p>The method is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span>
+<span class="n">dp3m</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">DipolarP3M</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">accuracy</span><span class="o">=</span><span class="mf">1E-4</span><span class="p">)</span>
+<span class="n">mdlc</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">DLC</span><span class="p">(</span><span class="n">actor</span><span class="o">=</span><span class="n">dp3m</span><span class="p">,</span> <span class="n">maxPWerror</span><span class="o">=</span><span class="mf">1E-5</span><span class="p">,</span> <span class="n">gap_size</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">mdlc</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dipolar-direct-sum">
+<span id="id9"></span><h2><span class="section-number">10.2. </span>Dipolar direct sum<a class="headerlink" href="#dipolar-direct-sum" title="Link to this heading">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSum" title="espressomd.magnetostatics.DipolarDirectSum"><code class="xref py py-class docutils literal notranslate"><span class="pre">DipolarDirectSum</span></code></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires feature <code class="docutils literal notranslate"><span class="pre">DIPOLES</span></code> and optionally
+external feature <code class="docutils literal notranslate"><span class="pre">CUDA</span></code>, enabled with
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_CUDA=ON</span></code>.</p>
+</div>
+<p>This interaction calculates energies and forces between dipoles by
+explicitly summing over all pairs. For the directions in which the
+system is periodic (as defined by <code class="docutils literal notranslate"><span class="pre">system.periodicity</span></code>), it applies the
+minimum image convention, i.e. the interaction is effectively cut off at
+half a box length. This can be changed by adding replicas.</p>
+<p>The direct summation method is mainly intended for non-periodic systems
+which cannot be solved using the dipolar P3M method.
+Due to the long-range nature of dipolar interactions, direct summation with
+minimum image convention does not yield good accuracy with periodic systems.</p>
+<p>The CPU implementation performs the calculation in double-precision,
+while the GPU implementation performs the calculations in single-precision.</p>
+<p>The only required parameter is the prefactor <a class="reference internal" href="#equation-dipolar-prefactor">(1)</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span>
+<span class="n">dds</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">DipolarDirectSum</span><span class="p">(</span><span class="n">prefactor</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">n_replicas</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">gpu</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">dds</span>
+</pre></div>
+</div>
+<p>The optional argument <code class="docutils literal notranslate"><span class="pre">n_replicas</span></code> adds periodic copies to the system along
+periodic directions. In that case, the minimum image convention is no longer used.
+Additionally, enabling the <code class="docutils literal notranslate"><span class="pre">DIPOLE_FIELD_TRACKING</span></code> feature enables either
+implementation to calculate the total dipole field at the position of each
+magnetic particle in the primary simulation box. These values are stored in
+the particle handle’s <code class="docutils literal notranslate"><span class="pre">dip_fld</span></code> property and can be accessed directly or
+via an observable.</p>
+<p>Both the CPU and GPU implementations support MPI-parallelization.
+The GPU implementation doesn’t support multi-GPU acceleration.</p>
+</section>
+<section id="scafacos-magnetostatics">
+<span id="id10"></span><h2><span class="section-number">10.3. </span>ScaFaCoS magnetostatics<a class="headerlink" href="#scafacos-magnetostatics" title="Link to this heading">¶</a></h2>
+<p><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.Scafacos" title="espressomd.magnetostatics.Scafacos"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.magnetostatics.Scafacos</span></code></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires feature <code class="docutils literal notranslate"><span class="pre">SCAFACOS_DIPOLES</span></code> and
+external feature <code class="docutils literal notranslate"><span class="pre">SCAFACOS</span></code>, enabled with
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_SCAFACOS=ON</span></code>.</p>
+</div>
+<p>ESPResSo can use the methods from the ScaFaCoS <em>Scalable fast Coulomb solvers</em>
+library for dipoles, if the methods support dipolar calculations.
+Dipolar calculations are only included in the <code class="docutils literal notranslate"><span class="pre">dipoles</span></code> branch of
+the ScaFaCoS code. The specific methods available can be queried with
+<a class="reference internal" href="espressomd.html#espressomd.electrostatics.Scafacos.get_available_methods" title="espressomd.electrostatics.Scafacos.get_available_methods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.electrostatics.Scafacos.get_available_methods()</span></code></a>.</p>
+<p>To use ScaFaCoS, create an instance of <a class="reference internal" href="espressomd.html#espressomd.magnetostatics.Scafacos" title="espressomd.magnetostatics.Scafacos"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scafacos</span></code></a>
+and attach it to the system. Three parameters have to be specified:
+<code class="docutils literal notranslate"><span class="pre">prefactor</span></code>, <code class="docutils literal notranslate"><span class="pre">method_name</span></code>, <code class="docutils literal notranslate"><span class="pre">method_params</span></code>. The method-specific
+parameters are described in the ScaFaCoS manual. In addition, methods
+supporting tuning have a parameter <code class="docutils literal notranslate"><span class="pre">tolerance_field</span></code> which sets the desired
+root mean square accuracy for the magnetic field.</p>
+<p>Here is an example with the P2NFFT method for 2D-periodic systems:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.magnetostatics</span>
+<span class="n">scafacos</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">Scafacos</span><span class="p">(</span>
+    <span class="n">prefactor</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">method_name</span><span class="o">=</span><span class="s2">&quot;p2nfft&quot;</span><span class="p">,</span>
+    <span class="n">method_params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;p2nfft_verbose_tuning&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;pnfft_N&quot;</span><span class="p">:</span> <span class="s2">&quot;80,80,160&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pnfft_window_name&quot;</span><span class="p">:</span> <span class="s2">&quot;bspline&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pnfft_m&quot;</span><span class="p">:</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p2nfft_ignore_tolerance&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pnfft_diff_ik&quot;</span><span class="p">:</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p2nfft_r_cut&quot;</span><span class="p">:</span> <span class="s2">&quot;6&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p2nfft_alpha&quot;</span><span class="p">:</span> <span class="s2">&quot;0.8&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p2nfft_epsB&quot;</span><span class="p">:</span> <span class="s2">&quot;0.05&quot;</span><span class="p">})</span>
+<span class="n">system</span><span class="o">.</span><span class="n">magnetostatics</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">scafacos</span>
+</pre></div>
+</div>
+<p>For details of the various methods and their parameters please refer to
+the ScaFaCoS manual. To use this feature, ScaFaCoS has to be built as a
+shared library.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">10. Magnetostatics</a><ul>
+<li><a class="reference internal" href="#dipolar-interaction">10.1. Dipolar interaction</a><ul>
+<li><a class="reference internal" href="#dipolar-p3m">10.1.1. Dipolar P3M</a></li>
+<li><a class="reference internal" href="#dipolar-layer-correction-dlc">10.1.2. Dipolar Layer Correction (DLC)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dipolar-direct-sum">10.2. Dipolar direct sum</a></li>
+<li><a class="reference internal" href="#scafacos-magnetostatics">10.3. ScaFaCoS magnetostatics</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

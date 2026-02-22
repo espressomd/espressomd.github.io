@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.analyze &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.analyze</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.code_features</span> <span class="kn">import</span> <span class="n">assert_features</span><span class="p">,</span> <span class="n">has_features</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">script_interface_register</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span>
+
+
+<div class="viewcode-block" id="autocorrelation">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.autocorrelation">[docs]</a>
+<span class="k">def</span> <span class="nf">autocorrelation</span><span class="p">(</span><span class="n">time_series</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the unnormalized autocorrelation function :math:`R_{XX}`</span>
+<span class="sd">    of an observable :math:`X` measured at time :math:`t` with constant</span>
+<span class="sd">    time step for lag times :math:`\\tau` such that:</span>
+
+<span class="sd">    :math:`\\displaystyle R_{XX}(\\tau) = \\frac{1}{N - \\tau} \\sum_{t=0}^{N - \\tau} X_{t} \\cdot X_{t + \\tau}`</span>
+
+<span class="sd">    This is a scipy implementation of the algorithm described</span>
+<span class="sd">    in :cite:`debuyl18a` that uses FFT. This implementation:</span>
+
+<span class="sd">    - doesn&#39;t subtract the mean of the time series before calculating the ACF,</span>
+<span class="sd">    - doesn&#39;t normalize the ACF by the variance of the time series,</span>
+<span class="sd">    - assumes the time series is aperiodic (i.e. uses zero-padding).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time_series : (N,) or (N, M) array_like of :obj:`float`</span>
+<span class="sd">        Time series to correlate. For multi-dimensional data, M is the</span>
+<span class="sd">        number of columns.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N,) array_like of :obj:`float`</span>
+<span class="sd">        The time series autocorrelation function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy.signal</span>
+
+    <span class="k">def</span> <span class="nf">acf_1d</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">n_with_padding</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">acf</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">signal</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;full&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;fft&quot;</span><span class="p">)</span>
+        <span class="n">acf</span> <span class="o">=</span> <span class="n">acf</span><span class="p">[</span><span class="o">-</span><span class="n">n_with_padding</span><span class="p">:][:</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">acf</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_series</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">time_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time_series</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">time_series</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">n_with_padding</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">signal_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_with_padding</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">time_series</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">signal_padded</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">time_series</span>
+        <span class="k">return</span> <span class="n">acf_1d</span><span class="p">(</span><span class="n">signal_padded</span><span class="p">,</span> <span class="n">n_with_padding</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">time_series</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">signal_acf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">time_series</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">signal_padded</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">time_series</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">signal_acf</span> <span class="o">+=</span> <span class="n">acf_1d</span><span class="p">(</span><span class="n">signal_padded</span><span class="p">,</span> <span class="n">n_with_padding</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">signal_acf</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only 1-dimensional and 2-dimensional time series &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;are supported, got shape </span><span class="si">{</span><span class="n">time_series</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Analysis">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Analysis</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    linear_momentum()</span>
+<span class="sd">        Calculates the system&#39;s linear momentum.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        include_particles : :obj:`bool`, optional</span>
+<span class="sd">            Whether to include the particles contribution to the linear</span>
+<span class="sd">            momentum. True by default.</span>
+<span class="sd">        include_lbfluid : :obj:`bool`, optional</span>
+<span class="sd">            whether to include the lattice-Boltzmann fluid contribution</span>
+<span class="sd">            to the linear momentum. True by default.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (3,) array_like of :obj:`float`</span>
+<span class="sd">            The linear momentum of the system.</span>
+
+<span class="sd">    center_of_mass()</span>
+<span class="sd">        Calculate the center of mass of particles of a given type.</span>
+
+<span class="sd">        Note that virtual sites are not included, as they do not have a</span>
+<span class="sd">        meaningful mass.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p_type : :obj:`int`</span>
+<span class="sd">            Particle :attr:`~espressomd.particle_data.ParticleHandle.type`</span>
+<span class="sd">            for which to calculate the center of mass.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (3,) array_like of :obj:`float`</span>
+<span class="sd">            The center of mass of the particles.</span>
+
+<span class="sd">    nbhood()</span>
+<span class="sd">        Get all particles in a defined neighborhood.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos : array of :obj:`float`</span>
+<span class="sd">            Reference position for the neighborhood.</span>
+<span class="sd">        r_catch : :obj:`float`</span>
+<span class="sd">            Radius of the region.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (N,) array_like of :obj:`int`</span>
+<span class="sd">            The neighbouring particle ids.</span>
+
+<span class="sd">    particle_neighbor_pids()</span>
+<span class="sd">        Get a list of all short-range neighbors for each particle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj: `dict`</span>
+<span class="sd">            A dictionary where each item is a pair of a particle id and</span>
+<span class="sd">            its respective neighboring particle ids.</span>
+
+<span class="sd">    calc_re()</span>
+<span class="sd">        Calculate the mean end-to-end distance of chains and its</span>
+<span class="sd">        standard deviation, as well as mean square end-to-end distance of</span>
+<span class="sd">        chains and its standard deviation.</span>
+
+<span class="sd">        This requires that a set of chains of equal length which start</span>
+<span class="sd">        with the particle number ``chain_start`` and are consecutively</span>
+<span class="sd">        numbered, the last particle in that topology having id number</span>
+<span class="sd">        ``chain_start + number_of_chains * chain_length - 1``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chain_start : :obj:`int`</span>
+<span class="sd">            The id of the first monomer of the first chain.</span>
+<span class="sd">        number_of_chains : :obj:`int`</span>
+<span class="sd">            Number of chains contained in the range.</span>
+<span class="sd">        chain_length : :obj:`int`</span>
+<span class="sd">            The length of every chain.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (4,) array_like of :obj:`float`</span>
+<span class="sd">            Where [0] is the mean end-to-end distance of chains and [1] its</span>
+<span class="sd">            standard deviation, [2] the mean square end-to-end distance and</span>
+<span class="sd">            [3] its standard deviation.</span>
+
+<span class="sd">    calc_rg()</span>
+<span class="sd">        Calculate the mean radius of gyration of chains and its standard</span>
+<span class="sd">        deviation, as well as the mean square radius of gyration of chains</span>
+<span class="sd">        and its standard deviation.</span>
+
+<span class="sd">        This requires that a set of chains of equal length which start</span>
+<span class="sd">        with the particle number ``chain_start`` and are consecutively</span>
+<span class="sd">        numbered, the last particle in that topology having id number</span>
+<span class="sd">        ``chain_start + number_of_chains * chain_length - 1``.</span>
+
+<span class="sd">        The radius of gyration is the radius of a sphere which would have</span>
+<span class="sd">        the same moment of inertia as a polymer, and is defined as</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           R_{\\mathrm G}^2 = \\frac{1}{N} \\sum\\limits_{i=1}^{N} \\left(\\vec r_i - \\vec r_{\\mathrm{cm}}\\right)^2\\,,</span>
+
+<span class="sd">        where :math:`\\vec r_i` are position vectors of individual particles</span>
+<span class="sd">        constituting the polymer and :math:`\\vec r_{\\mathrm{cm}}` is the</span>
+<span class="sd">        position of its center of mass. The sum runs over all :math:`N`</span>
+<span class="sd">        particles comprising the polymer. For more information see any</span>
+<span class="sd">        polymer science book, e.g. :cite:`rubinstein03a`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chain_start : :obj:`int`</span>
+<span class="sd">            The id of the first monomer of the first chain.</span>
+<span class="sd">        number_of_chains : :obj:`int`</span>
+<span class="sd">            Number of chains contained in the range.</span>
+<span class="sd">        chain_length : :obj:`int`</span>
+<span class="sd">            The length of every chain.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (4,) array_like of :obj:`float`</span>
+<span class="sd">            Where [0] is the mean radius of gyration of the chains and [1] its</span>
+<span class="sd">            standard deviation, [2] the mean square radius of gyration and [3]</span>
+<span class="sd">            its standard deviation.</span>
+
+<span class="sd">    calc_rh()</span>
+<span class="sd">        Calculate the mean hydrodynamic radius of chains and its standard</span>
+<span class="sd">        deviation.</span>
+
+<span class="sd">        This requires that a set of chains of equal length which start</span>
+<span class="sd">        with the particle number ``chain_start`` and are consecutively</span>
+<span class="sd">        numbered, the last particle in that topology having id number</span>
+<span class="sd">        ``chain_start + number_of_chains * chain_length - 1``.</span>
+
+<span class="sd">        The following formula is used for the calculation:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           \\frac{1}{R_{\\mathrm H}} = \\frac{2}{N(N-1)} \\sum\\limits_{i=1}^{N} \\sum\\limits_{j&lt;i}^{N} \\frac{1}{|\\vec r_i - \\vec r_j|}\\,,</span>
+
+<span class="sd">        This formula is only valid under certain assumptions. For more</span>
+<span class="sd">        information, see chapter 4 and equation 4.102 in :cite:`doi86a`.</span>
+<span class="sd">        Note that the hydrodynamic radius is sometimes defined in a similar</span>
+<span class="sd">        fashion but with a denominator of :math:`N^2` instead of :math:`N(N-1)`</span>
+<span class="sd">        in the prefactor. Both versions are equivalent in the</span>
+<span class="sd">        :math:`N\\rightarrow \\infty` limit but give numerically different</span>
+<span class="sd">        values for finite polymers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chain_start : :obj:`int`</span>
+<span class="sd">            The id of the first monomer of the first chain</span>
+<span class="sd">        number_of_chains : :obj:`int`</span>
+<span class="sd">            Number of chains contained in the range.</span>
+<span class="sd">        chain_length : :obj:`int`</span>
+<span class="sd">            The length of every chain.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (2,) array_like of :obj:`float`:</span>
+<span class="sd">            Where [0] is the mean hydrodynamic radius of the chains</span>
+<span class="sd">            and [1] its standard deviation.</span>
+
+<span class="sd">    angular_momentum()</span>
+<span class="sd">        Calculate the system&#39;s angular momentum with respect to the origin.</span>
+
+<span class="sd">        Note that virtual sites are not included, as they do not have a</span>
+<span class="sd">        meaningful mass.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p_type : :obj:`int`</span>
+<span class="sd">            Particle :attr:`~espressomd.particle_data.ParticleHandle.type` for</span>
+<span class="sd">            which to calculate the center of mass, or ``-1`` for all particles.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (3,) array_like of :obj:`float`</span>
+<span class="sd">           The center of mass of the system.</span>
+
+<span class="sd">    structure_factor()</span>
+<span class="sd">        Calculate the structure factor for given types.  Returns the</span>
+<span class="sd">        spherically averaged structure factor of particles specified in</span>
+<span class="sd">        ``sf_types``.  The structure factor is calculated for all possible wave</span>
+<span class="sd">        vectors q up to ``sf_order``. Do not choose parameter ``sf_order`` too</span>
+<span class="sd">        large because the number of calculations grows as ``sf_order`` to the</span>
+<span class="sd">        third power.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sf_types : list of :obj:`int`</span>
+<span class="sd">            Particle :attr:`~espressomd.particle_data.ParticleHandle.type`</span>
+<span class="sd">            which should be considered.</span>
+<span class="sd">        sf_order : :obj:`int`</span>
+<span class="sd">            Specifies the maximum wavevector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`ndarray`</span>
+<span class="sd">            Where [0] contains the wave vectors q</span>
+<span class="sd">            and [1] contains the structure factors S(q)</span>
+
+<span class="sd">    distribution()</span>
+<span class="sd">        Calculate the minimal distance distribution of particles (probability of</span>
+<span class="sd">        finding a particle of type A at a certain distance to the nearest particle of</span>
+<span class="sd">        type B, disregarding the fact that a spherical shell of a larger radius</span>
+<span class="sd">        covers a larger volume). The distance is defined as the minimal distance</span>
+<span class="sd">        between a particle of group ``type_list_a`` to any of the group</span>
+<span class="sd">        ``type_list_b``. Returns two arrays, the bins and the (normalized)</span>
+<span class="sd">        distribution.</span>
+
+<span class="sd">        For the radial distribution function,</span>
+<span class="sd">        use :class:`espressomd.observables.RDF` instead.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type_list_a : list of :obj:`int`</span>
+<span class="sd">            List of particle :attr:`~espressomd.particle_data.ParticleHandle.type`,</span>
+<span class="sd">            only consider distances from these types.</span>
+<span class="sd">        type_list_b : list of :obj:`int`</span>
+<span class="sd">            List of particle :attr:`~espressomd.particle_data.ParticleHandle.type`,</span>
+<span class="sd">            only consider distances to these types.</span>
+<span class="sd">        r_min : :obj:`float`</span>
+<span class="sd">            Minimum distance. Default is 0.</span>
+<span class="sd">        r_max : :obj:`float`</span>
+<span class="sd">            Maximum distance. By default, it is half the box size.</span>
+<span class="sd">            A value larger than half the box size is allowed for systems</span>
+<span class="sd">            with :ref:`open boundary conditions &lt;Open boundaries&gt;`.</span>
+<span class="sd">        r_bins : :obj:`int`</span>
+<span class="sd">            Number of bins. Default is 100.</span>
+<span class="sd">        log_flag : :obj:`bool`</span>
+<span class="sd">            When set to ``False``, the bins are linearly equidistant; when set</span>
+<span class="sd">            to ``True``, the bins are logarithmically equidistant.</span>
+<span class="sd">        int_flag : :obj:`bool`</span>
+<span class="sd">            When set to ``True``, the result is an integrated distribution.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`ndarray`</span>
+<span class="sd">            Where [0] contains the midpoints of the bins,</span>
+<span class="sd">            and [1] contains the values of the minimal distance distribution function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Analysis::Analysis&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;linear_momentum&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;center_of_mass&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;nbhood&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;particle_neighbor_pids&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;calc_re&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;calc_rg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;calc_rh&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;angular_momentum&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;structure_factor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;distribution&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Analysis.min_dist">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.min_dist">[docs]</a>
+    <span class="k">def</span> <span class="nf">min_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="n">p2</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Minimal distance between two sets of particle types.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p1, p2 : lists of :obj:`int`</span>
+<span class="sd">            Particle :attr:`~espressomd.particle_data.ParticleHandle.type` in</span>
+<span class="sd">            both sets. If both are set to ``&#39;default&#39;``, the minimum distance</span>
+<span class="sd">            of all pairs is returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`float`</span>
+<span class="sd">            Minimal distance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span> <span class="ow">and</span> <span class="n">p2</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="n">p1</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span> <span class="ow">or</span> <span class="n">p2</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Both p1 and p2 have to be specified&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;min_dist&quot;</span><span class="p">,</span> <span class="n">p_types1</span><span class="o">=</span><span class="n">p1</span><span class="p">,</span> <span class="n">p_types2</span><span class="o">=</span><span class="n">p2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Analysis.pressure">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.pressure">[docs]</a>
+    <span class="k">def</span> <span class="nf">pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the instantaneous scalar pressure in parallel. This is only</span>
+<span class="sd">        sensible in an isotropic system which is homogeneous (on average)! Do</span>
+<span class="sd">        not use this in an anisotropic or inhomogeneous system. In order to</span>
+<span class="sd">        obtain the pressure, the ensemble average needs to be calculated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`dict`</span>
+<span class="sd">            A dictionary with the following keys:</span>
+
+<span class="sd">            * ``&quot;total&quot;``: total pressure</span>
+<span class="sd">            * ``&quot;kinetic&quot;``: kinetic pressure</span>
+<span class="sd">            * ``&quot;bonded&quot;``: total bonded pressure</span>
+<span class="sd">            * ``&quot;bonded&quot;, &lt;bond_id&gt;``: bonded pressure from the bond</span>
+<span class="sd">              identified by ``bond_id``</span>
+<span class="sd">            * ``&quot;non_bonded&quot;``: total non-bonded pressure</span>
+<span class="sd">            * ``&quot;non_bonded&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded pressure which</span>
+<span class="sd">              arises from the interactions between ``type_i`` and ``type_j``</span>
+<span class="sd">            * ``&quot;non_bonded_intra&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded pressure</span>
+<span class="sd">              from short-range forces between ``type_i`` and ``type_j``</span>
+<span class="sd">              with the same ``mol_id``</span>
+<span class="sd">            * ``&quot;non_bonded_inter&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded pressure</span>
+<span class="sd">              from short-range forces between ``type_i`` and ``type_j``</span>
+<span class="sd">              with different ``mol_id``</span>
+<span class="sd">            * ``&quot;coulomb&quot;``: Coulomb pressure, how it is calculated depends on</span>
+<span class="sd">              the method. It is equivalent to 1/3 of the trace of the Coulomb</span>
+<span class="sd">              pressure tensor. For how the pressure tensor is calculated,</span>
+<span class="sd">              see :ref:`Pressure Tensor`. The averaged value in an isotropic</span>
+<span class="sd">              NVT simulation is equivalent to the average of</span>
+<span class="sd">              :math:`E^{\\mathrm{coulomb}}/(3V)`, see :cite:`brown95a`.</span>
+<span class="sd">            * ``&quot;coulomb&quot;, &lt;i&gt;``: Coulomb pressure from particle pairs</span>
+<span class="sd">              (``i=0``), electrostatics solvers (``i=1``)</span>
+<span class="sd">            * ``&quot;dipolar&quot;``: not implemented</span>
+<span class="sd">            * ``&quot;virtual_sites&quot;``: Pressure contribution from virtual sites</span>
+<span class="sd">            * ``&quot;external_fields&quot;``: external fields contribution</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;calculate_scalar_pressure&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_summary</span><span class="p">(</span><span class="n">observable</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Analysis.pressure_tensor">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.pressure_tensor">[docs]</a>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the instantaneous pressure tensor in parallel. This is</span>
+<span class="sd">        sensible in an anisotropic system. Still it assumes that the system is</span>
+<span class="sd">        homogeneous since the volume-averaged pressure tensor is used. Do not use</span>
+<span class="sd">        this pressure tensor in an (on average) inhomogeneous system. If the</span>
+<span class="sd">        system is (on average inhomogeneous) then use a local pressure tensor.</span>
+<span class="sd">        In order to obtain the pressure tensor, the ensemble average needs to be</span>
+<span class="sd">        calculated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`dict`</span>
+<span class="sd">            A dictionary with the following keys:</span>
+
+<span class="sd">            * ``&quot;total&quot;``: total pressure tensor</span>
+<span class="sd">            * ``&quot;kinetic&quot;``: kinetic pressure tensor</span>
+<span class="sd">            * ``&quot;bonded&quot;``: total bonded pressure tensor</span>
+<span class="sd">            * ``&quot;bonded&quot;, &lt;bond_id&gt;``: bonded pressure tensor from the bond</span>
+<span class="sd">              identified by ``bond_id``</span>
+<span class="sd">            * ``&quot;non_bonded&quot;``: total non-bonded pressure tensor</span>
+<span class="sd">            * ``&quot;non_bonded&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded pressure tensor</span>
+<span class="sd">              from short-range forces between ``type_i`` and ``type_j``</span>
+<span class="sd">            * ``&quot;non_bonded_intra&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded pressure</span>
+<span class="sd">              tensor from short-range forces between ``type_i`` and ``type_j``</span>
+<span class="sd">              with the same ``mol_id``</span>
+<span class="sd">            * ``&quot;non_bonded_inter&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded pressure</span>
+<span class="sd">              tensor from short-range forces between ``type_i`` and ``type_j``</span>
+<span class="sd">              with different ``mol_id``</span>
+<span class="sd">            * ``&quot;coulomb&quot;``: Maxwell pressure tensor, how it is calculated</span>
+<span class="sd">              depends on the method</span>
+<span class="sd">            * ``&quot;coulomb&quot;, &lt;i&gt;``: Maxwell pressure tensor from particle pairs</span>
+<span class="sd">              (``i=0``), electrostatics solvers (``i=1``)</span>
+<span class="sd">            * ``&quot;dipolar&quot;``: not implemented</span>
+<span class="sd">            * ``&quot;virtual_sites&quot;``: pressure tensor contribution from virtual sites</span>
+<span class="sd">            * ``&quot;external_fields&quot;``: external fields contribution</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;calculate_pressure_tensor&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_summary</span><span class="p">(</span><span class="n">observable</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Analysis.get_instantaneous_pressure">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.get_instantaneous_pressure">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_instantaneous_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;NPT&quot;</span><span class="p">)</span>
+        <span class="n">observable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_instantaneous_pressure&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">observable</span></div>
+
+
+<div class="viewcode-block" id="Analysis.get_instantaneous_pressure_virial">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.get_instantaneous_pressure_virial">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_instantaneous_pressure_virial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;NPT&quot;</span><span class="p">)</span>
+        <span class="n">observable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_instantaneous_pressure_virial&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">observable</span></div>
+
+
+<div class="viewcode-block" id="Analysis.energy">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.energy">[docs]</a>
+    <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the system energy in parallel.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`dict`</span>
+<span class="sd">            A dictionary with the following keys:</span>
+
+<span class="sd">            * ``&quot;total&quot;``: total energy</span>
+<span class="sd">            * ``&quot;kinetic&quot;``: linear and rotational kinetic energy</span>
+<span class="sd">            * ``&quot;kinetic_lin&quot;``: linear kinetic energy</span>
+<span class="sd">            * ``&quot;kinetic_rot&quot;``: rotational kinetic energy</span>
+<span class="sd">            * ``&quot;bonded&quot;``: total bonded energy</span>
+<span class="sd">            * ``&quot;bonded&quot;, &lt;bond_id&gt;``: bonded energy from the bond</span>
+<span class="sd">              identified by ``bond_id``</span>
+<span class="sd">            * ``&quot;non_bonded&quot;``: total non-bonded energy</span>
+<span class="sd">            * ``&quot;non_bonded&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded energy</span>
+<span class="sd">              from short-range interactions between ``type_i`` and ``type_j``</span>
+<span class="sd">            * ``&quot;non_bonded_intra&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded energy</span>
+<span class="sd">              from short-range interactions between ``type_i`` and ``type_j``</span>
+<span class="sd">              with the same ``mol_id``</span>
+<span class="sd">            * ``&quot;non_bonded_inter&quot;, &lt;type_i&gt;, &lt;type_j&gt;``: non-bonded energy</span>
+<span class="sd">              from short-range interactions between ``type_i`` and ``type_j``</span>
+<span class="sd">              with different ``mol_id``</span>
+<span class="sd">            * ``&quot;coulomb&quot;``: Coulomb energy, how it is calculated depends</span>
+<span class="sd">              on the method</span>
+<span class="sd">            * ``&quot;coulomb&quot;, &lt;i&gt;``: Coulomb energy from particle pairs</span>
+<span class="sd">              (``i=0``), electrostatics solvers (``i=1``)</span>
+<span class="sd">            * ``&quot;dipolar&quot;``: dipolar energy</span>
+<span class="sd">            * ``&quot;dipolar&quot;, &lt;i&gt;``: dipolar energy from particle pairs and</span>
+<span class="sd">              magnetic field constraints (``i=0``), magnetostatics solvers</span>
+<span class="sd">              (``i=1``)</span>
+<span class="sd">            * ``&quot;external_fields&quot;``: external fields contribution</span>
+
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; energy = system.analysis.energy()</span>
+<span class="sd">        &gt;&gt;&gt; print(energy[&quot;total&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; print(energy[&quot;kinetic&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; print(energy[&quot;bonded&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; print(energy[&quot;non_bonded&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; print(energy[&quot;external_fields&quot;])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">observable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;calculate_energy&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_summary</span><span class="p">(</span><span class="n">observable</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Analysis.particle_non_bonded_energy">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.particle_non_bonded_energy">[docs]</a>
+    <span class="k">def</span> <span class="nf">particle_non_bonded_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the non-bonded energy of a single given particle.</span>
+
+<span class="sd">        This excludes the short-range part of electrostatics and magnetostatics</span>
+<span class="sd">        solvers, as well as corrections implemented as non-bonded interactions</span>
+<span class="sd">        (e.g. :ref:`Thole correction`).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle : :class:`~espressomd.particle_data.ParticleHandle`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`float`</span>
+<span class="sd">            Non-bonded energy of that particle</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;particle_energy&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Analysis.particle_bond_energy">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.particle_bond_energy">[docs]</a>
+    <span class="k">def</span> <span class="nf">particle_bond_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the bonded energy for the given particle and bond.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle : :class:`~espressomd.particle_data.ParticleHandle`</span>
+<span class="sd">        bond : :class:`~espressomd.interactions.BondedInteraction`. The bond has to exist on the given particle</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj: `float`</span>
+<span class="sd">           Energy contribution of the bond</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">interaction</span><span class="p">,</span> <span class="o">*</span><span class="n">partners</span> <span class="o">=</span> <span class="n">bond</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;particle_bond_energy&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">particle</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                                <span class="n">bond_id</span><span class="o">=</span><span class="n">interaction</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">,</span> <span class="n">partners</span><span class="o">=</span><span class="n">partners</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Analysis.dpd_stress">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.dpd_stress">[docs]</a>
+    <span class="k">def</span> <span class="nf">dpd_stress</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;DPD&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;dpd_stress&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Analysis.gyration_tensor">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.gyration_tensor">[docs]</a>
+    <span class="k">def</span> <span class="nf">gyration_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze the gyration tensor of particles of a given type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p_type : list of :obj:`int`</span>
+<span class="sd">            A particle :attr:`~espressomd.particle_data.ParticleHandle.type`,</span>
+<span class="sd">            or list of particle types to be considered.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`dict`</span>
+<span class="sd">            A dictionary with the following keys:</span>
+
+<span class="sd">            * ``&quot;Rg^2&quot;``: squared radius of gyration</span>
+<span class="sd">            * ``&quot;shape&quot;``: three shape descriptors (asphericity, acylindricity, and relative shape anisotropy)</span>
+<span class="sd">            * ``&quot;eva0&quot;``: eigenvalue 0 of the gyration tensor and its corresponding eigenvector.</span>
+<span class="sd">            * ``&quot;eva1&quot;``: eigenvalue 1 of the gyration tensor and its corresponding eigenvector.</span>
+<span class="sd">            * ``&quot;eva2&quot;``: eigenvalue 2 of the gyration tensor and its corresponding eigenvector.</span>
+
+<span class="sd">            The eigenvalues are sorted in descending order.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">p_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The p_type keyword argument must be provided (particle type)&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p_type</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">p_type</span> <span class="o">=</span> <span class="p">[</span><span class="n">p_type</span><span class="p">]</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;gyration_tensor&quot;</span><span class="p">,</span> <span class="n">p_types</span><span class="o">=</span><span class="n">p_type</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+        <span class="c1"># return eigenvalue/vector tuples in order of increasing eigenvalues</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">rad_gyr_sqr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+        <span class="n">aspheric</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="n">acylindric</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">rel_shape_anis</span> <span class="o">=</span> <span class="p">(</span><span class="n">aspheric</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.75</span> <span class="o">*</span> <span class="n">acylindric</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">rad_gyr_sqr</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;Rg^2&quot;</span><span class="p">:</span> <span class="n">rad_gyr_sqr</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">aspheric</span><span class="p">,</span> <span class="n">acylindric</span><span class="p">,</span> <span class="n">rel_shape_anis</span><span class="p">],</span>
+            <span class="s2">&quot;eva0&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]]),</span>
+            <span class="s2">&quot;eva1&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]]),</span>
+            <span class="s2">&quot;eva2&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">order</span><span class="p">[</span><span class="mi">2</span><span class="p">]])}</span></div>
+
+
+<div class="viewcode-block" id="Analysis.moment_of_inertia_matrix">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.analyze.Analysis.moment_of_inertia_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">moment_of_inertia_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the 3x3 moment of inertia matrix for particles of a given type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p_type : :obj:`int`</span>
+<span class="sd">            A particle :attr:`~espressomd.particle_data.ParticleHandle.type`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (3,3) array_like of :obj:`float`</span>
+<span class="sd">            Moment of inertia matrix.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;moment_of_inertia_matrix&quot;</span><span class="p">,</span> <span class="n">p_type</span><span class="o">=</span><span class="n">p_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_generate_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">calc_sp</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute derived quantities and reshape pressure tensors as 3x3 matrices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">zero</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">calc_sp</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mf">0.</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">reduction</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="n">zero</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">total</span> <span class="o">+=</span> <span class="n">obj</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">total</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;bonded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero</span><span class="p">()</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded_intra&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero</span><span class="p">()</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded_inter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;,&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;bonded&quot;</span><span class="p">:</span>
+                    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;bonded&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+                <span class="k">elif</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;non_bonded_&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;non_bonded_intra&quot;</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded_intra&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded_inter&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+                    <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;non_bonded&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">zero</span><span class="p">()</span>
+                    <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded_intra&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">out</span><span class="p">[</span><span class="s2">&quot;non_bonded_inter&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;ELECTROSTATICS&quot;</span><span class="p">):</span>
+            <span class="n">reduction</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;coulomb&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;DIPOLES&quot;</span><span class="p">):</span>
+            <span class="n">reduction</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;dipolar&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;VIRTUAL_SITES&quot;</span><span class="p">):</span>
+            <span class="n">reduction</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;virtual_sites&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;DPD&quot;</span><span class="p">):</span>
+            <span class="n">reduction</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;dpd&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">calc_sp</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

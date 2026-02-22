@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>espressomd.plugins package &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="espressomd.io.writer package" href="espressomd.io.writer.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="espressomd-plugins-package">
+<h1>espressomd.plugins package<a class="headerlink" href="#espressomd-plugins-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-espressomd.plugins.ase">
+<span id="espressomd-plugins-ase-module"></span><h2>espressomd.plugins.ase module<a class="headerlink" href="#module-espressomd.plugins.ase" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.plugins.ase.ASEInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">espressomd.plugins.ase.</span></span><span class="sig-name descname"><span class="pre">ASEInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><span class="pre">System</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_slice</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleSlice" title="espressomd.particle_data.ParticleSlice"><span class="pre">ParticleSlice</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_charges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_momenta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_forces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assume_constant_charges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assume_constant_masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assume_constant_types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_folded_positions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/plugins/ase.html#ASEInterface"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.plugins.ase.ASEInterface" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Interface for ASE <span id="id1">[<a class="reference internal" href="bibliography.html#id61" title="Ask Hjorth Larsen, Jens Jørgen Mortensen, Jakob Blomqvist, Ivano E Castelli, Rune Christensen, Marcin Dułak, Jesper Friis, Michael N Groves, Bjørk Hammer, Cory Hargus, Eric D Hermes, Paul C Jennings, Peter Bjerre Jensen, James Kermode, John R Kitchin, Esben Leonhard Kolsbjerg, Joseph Kubal, Kristen Kaasbjerg, Steen Lysgaard, Jón Bergmann Maronsson, Tristan Maxson, Thomas Olsen, Lars Pastewka, Andrew Peterson, Carsten Rostgaard, Jakob Schiøtz, Ole Schütt, Mikkel Strange, Kristian S Thygesen, Tejs Vegge, Lasse Vilhelmsen, Michael Walter, Zhenhua Zeng, and Karsten W Jacobsen. The atomic simulation environment—a Python library for working with atoms. Journal of Physics: Condensed Matter, 29(27):273002, June 2017. doi:10.1088/1361-648X/aa680e.">Hjorth Larsen <em>et al.</em>, 2017</a>]</span> with calculator support.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="espressomd.html#espressomd.system.System" title="espressomd.system.System"><code class="xref py py-obj docutils literal notranslate"><span class="pre">espressomd.system.System</span></code></a>) – The ESPResSo system object.</p></li>
+<li><p><strong>particle_slice</strong> (<a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleSlice" title="espressomd.particle_data.ParticleSlice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">espressomd.particle_data.ParticleSlice</span></code></a>) – The particle slice to work on.</p></li>
+<li><p><strong>export_charges</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Whether to make particle charges available to ASE.</p></li>
+<li><p><strong>export_masses</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Whether to make particle masses available to ASE.</p></li>
+<li><p><strong>export_momenta</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Whether to make particle momenta available to ASE.</p></li>
+<li><p><strong>export_forces</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Whether to make particle forces available to ASE.</p></li>
+<li><p><strong>assume_constant_charges</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Assume that the particles’ charges won’t change while this instance
+is valid (faster update).</p></li>
+<li><p><strong>assume_constant_masses</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Assume that the particles’ masses won’t change while this instance
+is valid (faster update).</p></li>
+<li><p><strong>assume_constant_types</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – Assume that the particles’ types won’t change while this instance
+is valid (faster update).</p></li>
+<li><p><strong>use_folded_positions</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, optional) – If True, use folded positions (particles.pos_folded) which are always
+within the simulation box. If False, use unfolded positions (particles.pos).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.plugins.ase.ASEInterface.integrate">
+<span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/espressomd/plugins/ase.html#ASEInterface.integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.plugins.ase.ASEInterface.integrate" title="Link to this definition">¶</a></dt>
+<dd><p>Integrate the system for the specified number of steps.</p>
+<p>For each step:</p>
+<ol class="arabic simple">
+<li><p>Update ASE with current particle data</p></li>
+<li><p>Get forces from calculator</p></li>
+<li><p>Set external forces on particles</p></li>
+<li><p>Run one integration step</p></li>
+</ol>
+<p>Since the particle property <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle.ext_force" title="espressomd.particle_data.ParticleHandle.ext_force"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ext_force</span></code></a>
+is updated at every time step, cache invalidation is inevitable,
+and the symplectic Euler method is needed to conserve momentum
+(<a class="reference internal" href="espressomd.html#espressomd.integrate.SymplecticEuler" title="espressomd.integrate.SymplecticEuler"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.integrate.SymplecticEuler</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>steps</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of integration steps to perform.</p></li>
+<li><p><strong>calculator</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">ase.calculators.calculator.Calculator</span></code>) – ASE calculator to use for force calculations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of steps actually performed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.plugins.ase.ASEInterface.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/plugins/ase.html#ASEInterface.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.plugins.ase.ASEInterface.reset" title="Link to this definition">¶</a></dt>
+<dd><p>Re-create the ASE atoms object using ESPResSo system properties.</p>
+<p>New ASE atom objects are created from the current particle slice
+with positions, types, periodicity and box dimensions.
+If export flags are set, charges, masses, momenta and/or forces
+are also initialized.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.plugins.ase.ASEInterface.set_slice">
+<span class="sig-name descname"><span class="pre">set_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/plugins/ase.html#ASEInterface.set_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.plugins.ase.ASEInterface.set_slice" title="Link to this definition">¶</a></dt>
+<dd><p>Set the slice of particles to work on.
+This results in the re-creation of the ASE atom objects.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.plugins.ase.ASEInterface.update_ase">
+<span class="sig-name descname"><span class="pre">update_ase</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/plugins/ase.html#ASEInterface.update_ase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.plugins.ase.ASEInterface.update_ase" title="Link to this definition">¶</a></dt>
+<dd><p>Update the arrays in the atom objects based on the desired properties.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">assume_constant_*</span></code> flags determine which properties to update.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-espressomd.plugins">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-espressomd.plugins" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">espressomd.plugins package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-espressomd.plugins.ase">espressomd.plugins.ase module</a><ul>
+<li><a class="reference internal" href="#espressomd.plugins.ase.ASEInterface"><code class="docutils literal notranslate"><span class="pre">ASEInterface</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-espressomd.plugins">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

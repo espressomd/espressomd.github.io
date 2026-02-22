@@ -1,0 +1,26 @@
+var classwalberla_1_1PoissonSolverFFT =
+[
+    [ "FieldTrait", "structwalberla_1_1PoissonSolverFFT_1_1FieldTrait.html", "structwalberla_1_1PoissonSolverFFT_1_1FieldTrait" ],
+    [ "heffte_container", "structwalberla_1_1PoissonSolverFFT_1_1heffte__container.html", "structwalberla_1_1PoissonSolverFFT_1_1heffte__container" ],
+    [ "PotentialVTKWriter", "classwalberla_1_1PoissonSolverFFT_1_1PotentialVTKWriter.html", "classwalberla_1_1PoissonSolverFFT_1_1PotentialVTKWriter" ],
+    [ "VTKWriter", "classwalberla_1_1PoissonSolverFFT_1_1VTKWriter.html", "classwalberla_1_1PoissonSolverFFT_1_1VTKWriter" ],
+    [ "ComplexType", "classwalberla_1_1PoissonSolverFFT.html#a78b942548926caba91ed81918c1f8dd7", null ],
+    [ "FullCommunicator", "classwalberla_1_1PoissonSolverFFT.html#a09d0103afdc32b6f1f85147292291fcd", null ],
+    [ "PackInfo", "classwalberla_1_1PoissonSolverFFT.html#ae45958011149d3722447f20db2bc6f9b", null ],
+    [ "PotentialField", "classwalberla_1_1PoissonSolverFFT.html#ac7b7ca774f484daf0371e3a9eff04a29", null ],
+    [ "PotentialFieldVTK", "classwalberla_1_1PoissonSolverFFT.html#a40cc4ec2242f96892244a9abccfd0d45", null ],
+    [ "~PoissonSolverFFT", "classwalberla_1_1PoissonSolverFFT.html#ae60e89e80b288e50679209c9d4096755", null ],
+    [ "PoissonSolverFFT", "classwalberla_1_1PoissonSolverFFT.html#a725f24f35700ce93f6ad7acbbd3b3105", null ],
+    [ "add_charge_to_field", "classwalberla_1_1PoissonSolverFFT.html#ab2abe7780591d9f2ec7b24cd15f9f209", null ],
+    [ "get_node_potential", "classwalberla_1_1PoissonSolverFFT.html#a8a1421b892d82da170c360f2ffc9448f", null ],
+    [ "get_potential_field_id", "classwalberla_1_1PoissonSolverFFT.html#afb1d74b12e30e7b10ad9323dee65ddec", null ],
+    [ "get_slice_potential", "classwalberla_1_1PoissonSolverFFT.html#a6432e72dc4a95be16c7dd68c35d7711f", null ],
+    [ "ghost_communication", "classwalberla_1_1PoissonSolverFFT.html#ab0784c1fa2bb57632a09716f4f730886", null ],
+    [ "integrate_vtk_writers", "classwalberla_1_1PoissonSolverFFT.html#ad5f5183cdb2042ad97feaf143ce8bbea", null ],
+    [ "is_double_precision", "classwalberla_1_1PoissonSolverFFT.html#a639917bfbe3aa3acb343ac0f527b30fa", null ],
+    [ "is_gpu", "classwalberla_1_1PoissonSolverFFT.html#a1b894c2f2c055382fd9475097af60ef9", null ],
+    [ "register_vtk_field_writers", "classwalberla_1_1PoissonSolverFFT.html#ad6c985804130fe8ccf3c84fe69c56ef5", null ],
+    [ "reset_charge_field", "classwalberla_1_1PoissonSolverFFT.html#a50bd3423166eadb0b7df201e43a62dcc", null ],
+    [ "setup_fft", "classwalberla_1_1PoissonSolverFFT.html#a7318497b16fd1ae1c963faf332acff53", null ],
+    [ "solve", "classwalberla_1_1PoissonSolverFFT.html#a7fde47c1827e70ada6dfb526f0f017c0", null ]
+];

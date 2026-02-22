@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>3. Running a simulation &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="4. Setting up the system" href="system_setup.html" />
+    <link rel="prev" title="2. Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="running-a-simulation">
+<span id="id1"></span><h1><span class="section-number">3. </span>Running a simulation<a class="headerlink" href="#running-a-simulation" title="Link to this heading">¶</a></h1>
+<p>ESPResSo is implemented as a Python module. This means that you need to write a
+python script for any task you want to perform with ESPResSo. In this chapter,
+the basic structure of the interface will be explained. For a practical
+introduction, see the tutorials, which are also part of the distribution.</p>
+<p>Most users should consider building and then installing ESPResSo locally.
+In this way, ESPResSo behaves like any regular Python package and will
+be recognized by the Python interpreter and Jupyter notebooks.</p>
+<p>Most developers prefer the <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> resp. <code class="docutils literal notranslate"><span class="pre">ipypresso</span></code> wrapper scripts,
+which export the build folder into the <code class="docutils literal notranslate"><span class="pre">$PYTHONPATH</span></code> environment variable
+and then call <code class="docutils literal notranslate"><span class="pre">python</span></code> resp. <code class="docutils literal notranslate"><span class="pre">jupyter</span></code>. They also introduce extra command
+line options to help developers run simulations inside a debugger.
+Command line examples in this chapter use the wrapper scripts instead of the
+Python and Jupyter programs, although they are perfectly interchangeable
+when not using a debugger.</p>
+<section id="running-es">
+<span id="id2"></span><h2><span class="section-number">3.1. </span>Running ESPResSo<a class="headerlink" href="#running-es" title="Link to this heading">¶</a></h2>
+<section id="running-a-script">
+<h3><span class="section-number">3.1.1. </span>Running a script<a class="headerlink" href="#running-a-script" title="Link to this heading">¶</a></h3>
+<p>To use ESPResSo, you need to import the <code class="docutils literal notranslate"><span class="pre">espressomd</span></code> module in your
+Python script. To this end, the folder containing the python module
+needs to be in the Python search path. The module is located in the
+<code class="file docutils literal notranslate"><span class="pre">src/python</span></code> folder under the build directory.</p>
+<p>A convenient way to run Python with the correct path is to use the
+<code class="docutils literal notranslate"><span class="pre">pypresso</span></code> script located in the build directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>simulation.py
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> script is just a wrapper in order to expose the ESPResSo python
+module to the system’s Python interpreter by modifying the <code class="docutils literal notranslate"><span class="pre">$PYTHONPATH</span></code>.
+If you have installed ESPResSo from a Linux package manager that doesn’t provide
+the <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> script, you will need to modify the <code class="docutils literal notranslate"><span class="pre">$PYTHONPATH</span></code> and
+possibly the <code class="docutils literal notranslate"><span class="pre">$LD_LIBRARY_PATH</span></code> too, depending on which symbols are missing.</p>
+<p>The next chapter, <a class="reference internal" href="system_setup.html#setting-up-the-system"><span class="std std-ref">Setting up the system</span></a>, will explain in more details
+how to write a simulation script for ESPResSo. If you don’t have any script,
+simply call one of the files listed in section <a class="reference internal" href="introduction.html#sample-scripts"><span class="std std-ref">Sample scripts</span></a>.</p>
+</section>
+<section id="using-the-console">
+<h3><span class="section-number">3.1.2. </span>Using the console<a class="headerlink" href="#using-the-console" title="Link to this heading">¶</a></h3>
+<p>Since ESPResSo can be manipulated like any other Python module, it is possible
+to interact with it in a Python interpreter. Simply run the <code class="docutils literal notranslate"><span class="pre">pypresso</span></code>
+script without arguments to start a Python session:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso
+</pre></div>
+</div>
+<p>Likewise, a Jupyter console can be started with the <code class="docutils literal notranslate"><span class="pre">ipypresso</span></code> script,
+which is also located in the build directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ipypresso<span class="w"> </span>console
+</pre></div>
+</div>
+<p>The name comes from the IPython interpreter <span id="id3">[<a class="reference internal" href="bibliography.html#id102" title="Fernando Pérez and Brian E. Granger. IPython: a system for interactive scientific computing. Computing in Science &amp; Engineering, 9(3):21–29, 2007. doi:10.1109/MCSE.2007.53.">Pérez and Granger, 2007</a>]</span>,
+whose notebook feature is today known as Jupyter <span id="id4">[<a class="reference internal" href="bibliography.html#id72" title="Thomas Kluyver, Benjamin Ragan-Kelley, Fernando Pérez, Brian E Granger, Matthias Bussonnier, Jonathan Frederic, Kyle Kelley, Jessica B Hamrick, Jason Grout, Sylvain Corlay, Paul Ivanov, Damián Avila, Safia Abdalla, Carol Willing, and Jupyter Development Team. Jupyter Notebooks—a publishing format for reproducible computational workflows. In Fernando Loizides and Birgit Schmidt, editors, Positioning and Power in Academic Publishing: Players, Agents and Agendas, 87–90. IOS Press, 2016. doi:10.3233/978-1-61499-649-1-87.">Kluyver <em>et al.</em>, 2016</a>]</span>.</p>
+</section>
+<section id="interactive-notebooks">
+<h3><span class="section-number">3.1.3. </span>Interactive notebooks<a class="headerlink" href="#interactive-notebooks" title="Link to this heading">¶</a></h3>
+<p>Tutorials are available as notebooks, i.e. they consist of a <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code>
+file which contains both the source code and the corresponding explanations.
+They can be viewed, changed and run interactively. To generate the tutorials
+in the build folder, do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>tutorials
+</pre></div>
+</div>
+<p>The tutorials contain solutions hidden inside disclosure boxes.
+Click on “Show solution” to reveal them.</p>
+<p>To interact with notebooks, move to the directory containing the tutorials
+and call the <code class="docutils literal notranslate"><span class="pre">ipypresso</span></code> script to start a local Jupyter session.</p>
+<p>For JupyterLab users:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>doc/tutorials
+../../ipypresso<span class="w"> </span>lab
+</pre></div>
+</div>
+<p>For Jupyter Classic users:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>doc/tutorials
+../../ipypresso<span class="w"> </span>nbclassic
+</pre></div>
+</div>
+<p>For VS Code Jupyter users, no action is needed if <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> was set as
+the interpreter path (see details in <a class="reference internal" href="#running-inside-an-ide"><span class="std std-ref">Running inside an IDE</span></a>).</p>
+<p>You may then browse through the different tutorial folders. Files whose name
+ends with extension <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> can be opened in the browser. Click on the Run
+button to execute the current block, or use the keyboard shortcut Shift+Enter.
+If the current block is a code block, the <code class="docutils literal notranslate"><span class="pre">In</span> <span class="pre">[</span> <span class="pre">]</span></code> label to the left will
+change to <code class="docutils literal notranslate"><span class="pre">In</span> <span class="pre">[*]</span></code> while the code is being executed, and become <code class="docutils literal notranslate"><span class="pre">In</span> <span class="pre">[1]</span></code>
+once the execution has completed. The number increments itself every time a
+code cell is executed. This bookkeeping is extremely useful when modifying
+previous code cells, as it shows which cells are out-of-date. It’s also
+possible to run all cells by clicking on the “Run” drop-down menu, then on
+“Run All Below”. This will change all labels to <code class="docutils literal notranslate"><span class="pre">In</span> <span class="pre">[*]</span></code> to show that the
+first one is running, while the subsequent ones are awaiting execution.</p>
+<p>You’ll also see that many cells generate an output. When the output becomes
+very long, Jupyter will automatically put it in a box with a vertical scrollbar.
+The output may also contain static plots, dynamic plots and videos. It is also
+possible to start a 3D visualizer in a new window, however closing the window
+will exit the Python interpreter and Jupyter will notify you that the current
+Python kernel stopped. If a cell takes too long to execute, you may interrupt
+it with the stop button.</p>
+<p>Solutions cells are marked up with the code comment <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">SOLUTION</span> <span class="pre">CELL</span></code>
+(must be on the first line). In the build folder, these solution cells
+will be automatically converted to Markdown cells.</p>
+<p>To close the Jupyter session, go to the terminal where it was started and use
+the keyboard shortcut Ctrl+C twice.</p>
+<p>You can find the official JupyterLab documentation at
+<a class="reference external" href="https://jupyterlab.readthedocs.io/en/latest/user/interface.html">https://jupyterlab.readthedocs.io/en/latest/user/interface.html</a></p>
+</section>
+<section id="running-inside-an-ide">
+<span id="id5"></span><h3><span class="section-number">3.1.4. </span>Running inside an IDE<a class="headerlink" href="#running-inside-an-ide" title="Link to this heading">¶</a></h3>
+<p>You can use an integrated development environment (IDE) to develop and run ESPResSo
+scripts. Suitable IDEs are e.g. <em>Visual Studio Code</em> and <em>Spyder</em>. They can
+provide a workflow superior to that of a standard text editor as they offer
+useful features such as advanced code completion, debugging and analysis tools
+etc. The following example shows how to setup ESPResSo in <em>Visual Studio Code</em> on
+Linux (tested with version 1.46.1). The process should be similar for every
+Python IDE, namely the Python interpreter needs to be replaced.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> executable can be set as a custom Python interpreter inside VS
+Code. ESPResSo scripts can then be executed just like any other python script.
+Inside VS Code, the Python extension needs to be installed. Next, click the
+gear at the bottom left and choose <em>Settings</em>. Search for
+<code class="docutils literal notranslate"><span class="pre">Default</span> <span class="pre">Interpreter</span> <span class="pre">Path</span></code> and change the setting to the path to your
+<code class="docutils literal notranslate"><span class="pre">pypresso</span></code> executable, e.g.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>~/espresso/build/pypresso
+</pre></div>
+</div>
+<p>After that, you can open scripts and execute them with the keyboard shortcut
+Ctrl+F5.</p>
+<p>Fig. <a class="reference internal" href="#vs-code-figure"><span class="std std-ref">Visual Studio Code interface</span></a> shows the VS Code interface with the interpreter
+path set to <code class="docutils literal notranslate"><span class="pre">pypresso</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may need to set the path relative to your home directory, i.e. <code class="docutils literal notranslate"><span class="pre">~/path/to/pypresso</span></code>.</p>
+</div>
+<figure class="align-center" id="id66">
+<span id="vs-code-figure"></span><a class="reference internal image-reference" href="_images/vs-code-settings.png"><img alt="Visual Studio Code interface with the default interpreter path set to the ``pypresso`` executable" src="_images/vs-code-settings.png" style="width: 55.0%;" /></a>
+<figcaption>
+<p><span class="caption-text">Visual Studio Code interface</span><a class="headerlink" href="#id66" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="running-in-the-cloud">
+<span id="id6"></span><h3><span class="section-number">3.1.5. </span>Running in the cloud<a class="headerlink" href="#running-in-the-cloud" title="Link to this heading">¶</a></h3>
+<section id="using-binder">
+<span id="id7"></span><h4><span class="section-number">3.1.5.1. </span>Using Binder<a class="headerlink" href="#using-binder" title="Link to this heading">¶</a></h4>
+<p>A pre-compiled version of ESPResSo is available
+for the <a class="reference external" href="https://mybinder.org">Binder platform</a> <span id="id8">[<a class="reference internal" href="bibliography.html#id70" title="Project Jupyter, Matthias Bussonnier, Jessica Forde, Jeremy Freeman, Brian Granger, Tim Head, Chris Holdgraf, Kyle Kelley, Gladys Nalvarte, Andrew Osheroff, M Pacer, Yuvi Panda, Fernando Perez, Benjamin Ragan-Kelley, and Carol Willing. Binder 2.0 - reproducible, interactive, sharable environments for science at scale. In Fatih Akici, David Lippa, Dillon Niederhut, and M Pacer, editors, Proceedings of the 17th Python in Science Conference, 113–120. 2018. doi:10.25080/Majora-4af1f417-011.">Project Jupyter <em>et al.</em>, 2018</a>]</span>
+(<a class="reference external" href="https://mybinder.org/v2/gh/jngrad/espresso-binder/HEAD">direct link</a>),
+which uses the JupyterLab IDE.</p>
+</section>
+<section id="using-codespaces">
+<span id="id9"></span><h4><span class="section-number">3.1.5.2. </span>Using Codespaces<a class="headerlink" href="#using-codespaces" title="Link to this heading">¶</a></h4>
+<p>A <a class="reference external" href="https://github.com/features/codespaces">Codespaces</a> config file is provided
+to facilitate the building of ESPResSo in the default configuration (<a class="reference external" href="https://codespaces.new/espressomd/espresso">direct link</a>).
+The codepace can be accessed from the terminal via the <a class="reference external" href="https://cli.github.com/manual/gh_codespace_ssh">GitHub CLI ssh command</a>
+or from a web browser (default), which uses the VS Code IDE.
+Instructions to build ESPResSo and execute the tutorials are available
+in file <code class="file docutils literal notranslate"><span class="pre">.devcontainer/Readme.md</span></code>.</p>
+</section>
+</section>
+</section>
+<section id="parallel-computing">
+<span id="id10"></span><h2><span class="section-number">3.2. </span>Parallel computing<a class="headerlink" href="#parallel-computing" title="Link to this heading">¶</a></h2>
+<p>Many algorithms in ESPResSo are designed to work with multiple MPI ranks.
+However, not all algorithms benefit from MPI parallelization equally.
+Several algorithms only use MPI rank 0 (e.g. <a class="reference internal" href="reaction_methods.html#reaction-methods"><span class="std std-ref">Reaction methods</span></a>).
+ESPResSo should work with most MPI implementations on the market;
+see the <a class="reference internal" href="installation.html#term-MPI"><span class="xref std std-term">MPI installation requirements</span></a> for details.</p>
+<section id="general-syntax">
+<span id="id11"></span><h3><span class="section-number">3.2.1. </span>General syntax<a class="headerlink" href="#general-syntax" title="Link to this heading">¶</a></h3>
+<p>To run a simulation on several MPI ranks, for example 4, simply invoke
+the <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> script with the following syntax:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-n<span class="w"> </span><span class="m">4</span><span class="w"> </span>./pypresso<span class="w"> </span>simulation.py
+</pre></div>
+</div>
+<p>The cell system is automatically split among the MPI ranks, and data
+is automatically gathered on the main rank, which means a regular ESPResSo
+script can be executed in an MPI environment out-of-the-box. The number
+of MPI ranks can be accessed via the system <code class="docutils literal notranslate"><span class="pre">n_nodes</span></code> state property.
+The simulation box partition is controlled by the cell system
+<a class="reference internal" href="espressomd.html#espressomd.cell_system.CellSystem.node_grid" title="espressomd.cell_system.CellSystem.node_grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">node_grid</span></code></a> property.
+By default, MPI ranks are assigned in decreasing order, e.g. on 6 MPI ranks
+<code class="docutils literal notranslate"><span class="pre">node_grid</span></code> is <code class="docutils literal notranslate"><span class="pre">[3,</span> <span class="pre">2,</span> <span class="pre">1]</span></code>. It is possible to re-assign the ranks by
+changing the value of the <code class="docutils literal notranslate"><span class="pre">node_grid</span></code> property, however a few algorithms
+only work for the default partitioning scheme.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the number of ranks</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">get_state</span><span class="p">()[</span><span class="s2">&quot;n_nodes&quot;</span><span class="p">])</span>
+<span class="c1"># re-assign the ranks</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">node_grid</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">node_grid</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>There are alternative ways to invoke MPI on <code class="docutils literal notranslate"><span class="pre">pypresso</span></code>, but they share
+similar options. The number after the <code class="docutils literal notranslate"><span class="pre">-n</span></code> option is the number of ranks,
+which needs to be inferior or equal to the number of <em>physical</em> cores on the
+workstation. Command <code class="docutils literal notranslate"><span class="pre">nproc</span></code> displays the number of <em>logical</em> cores on the
+workstation. For architectures that support hyperthreading, the number of
+logical cores is an integer multiple of the number of physical cores,
+usually 2. Therefore on a hyperthreaded workstation with 32 cores,
+at most 16 cores can be used without major performance loss, unless
+extra arguments are passed to the <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code> program.</p>
+<p>On cluster computers, it might be necessary to load the MPI library with
+<code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span> <span class="pre">openmpi</span></code> or similar.</p>
+<p>On modern NUMA architectures, ESPResSo can leverage shared-memory parallelism
+(SMP) using the <a class="reference external" href="https://www.openmp.org">OpenMP</a> programming model.
+This is enabled via the CMake option <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">SHARED_MEMORY_PARALLELISM=ON</span></code>.
+To run a simulation with 4 OpenMP threads, use the following syntax:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">OMP_NUM_THREADS</span><span class="o">=</span><span class="m">4</span><span class="w"> </span><span class="nv">OMP_PROC_BIND</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>./pypresso<span class="w"> </span>simulation.py
+</pre></div>
+</div>
+<p>Not all features benefit from SMP. For example, the P3M tuning algorithm
+might choose to use only 1 thread for small enough mesh sizes.</p>
+<p>To run a simulation with <span class="math notranslate nohighlight">\(n\)</span> MPI ranks and <span class="math notranslate nohighlight">\(p\)</span> OpenMP threads
+per MPI rank, one has to specify a PE value of <span class="math notranslate nohighlight">\(p\)</span> to avoid overlaps
+between threads. This can be achieved with the following syntax:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">OMP_NUM_THREADS</span><span class="o">=</span><span class="m">4</span><span class="w"> </span><span class="nv">OMP_PROC_BIND</span><span class="o">=</span>close<span class="w"> </span><span class="nv">OMP_PLACES</span><span class="o">=</span>cores<span class="w"> </span>mpiexec<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>--map-by<span class="w"> </span>socket:PE<span class="o">=</span><span class="m">4</span><span class="w"> </span>--bind-to<span class="w"> </span>core<span class="w"> </span>./pypresso<span class="w"> </span>simulation.py
+</pre></div>
+</div>
+<p>This simulation will reserve 8 cores, but the simulation box will only be
+partitioned into 2 MPI domains. The affinity policy needs to be adjusted
+according to the hardware and simulation type.
+See next section for more details.</p>
+</section>
+<section id="performance-gain">
+<span id="id12"></span><h3><span class="section-number">3.2.2. </span>Performance gain<a class="headerlink" href="#performance-gain" title="Link to this heading">¶</a></h3>
+<p>Simulations executed in parallel with run faster, however the runtime
+won’t decrease linearly with the number of MPI ranks. MPI-parallel
+simulations introduce several sources of overhead and latency:</p>
+<ul class="simple">
+<li><p>overhead of serializing, communicating and deserializing data structures</p></li>
+<li><p>extra calculations in the LB halo</p></li>
+<li><p>extra calculations in the ghost shell
+(see section <a class="reference internal" href="under_the_hood.html#internal-particle-organization"><span class="std std-ref">Internal particle organization</span></a> for more details)</p></li>
+<li><p>latency due to blocking communication (i.e. a node remains idle
+while waiting for a message from another node)</p></li>
+<li><p>latency due to blocking data collection for GPU
+(only relevant for GPU methods)</p></li>
+<li><p>latency due to context switching</p></li>
+<li><p>latency due to memory bandwidth</p></li>
+</ul>
+<p>While good performance can be achieved up to 32 MPI ranks, allocating more
+than 32 ranks to a simulation will not always lead to significantly improved
+run times. The performance gain is highly sensitive to the algorithms used
+by the simulation, for example GPU methods rarely benefit from more than
+8 MPI ranks. Performance is also affected by the number of features enabled
+at compile time, even when these features are not used by the simulation;
+do not hesitate to remove all features not required by the
+simulation script and rebuild ESPResSo for optimal performance.</p>
+<p>Benchmarking is often the best way to determine the optimal number of MPI
+ranks for a given simulation setup. Please refer to the wiki chapter on
+<a class="reference external" href="https://github.com/espressomd/espresso/wiki/Development#Benchmarking">benchmarking</a>
+for more details.</p>
+<p>Runtime speed-up is not the only appeal of MPI parallelization. Another
+benefit is the possibility to distribute a calculation over multiple
+compute nodes in clusters and high-performance environments, and therefore
+split the data structures over multiple machines. This becomes necessary
+when running simulations with millions of particles, as the memory
+available on a single compute node would otherwise saturate.</p>
+<p>With OpenMP algorithms, the affinity policy must be chosen according
+to the hardware and algorithms.
+Setting <code class="docutils literal notranslate"><span class="pre">OMP_PROC_BIND=close</span></code> packs cores as closely as possible,
+and <code class="docutils literal notranslate"><span class="pre">OMP_PLACES=ll_caches</span></code> resp. <code class="docutils literal notranslate"><span class="pre">OMP_PLACES=numa_domain</span></code> will
+bind threads to cores that share the same L3 cache resp. NUMA domain,
+ensuring that threads can access each other’s data with minimal latency.
+Setting <code class="docutils literal notranslate"><span class="pre">OMP_PROC_BIND=spread</span></code> spreads out the cores, which can be
+beneficial in bandwidth-limited problems, for example when each GPU
+belongs to a different NUMA domain or core complex.
+When in doubt, use <code class="docutils literal notranslate"><span class="pre">lstopo</span></code> to show the CPU topology
+and <code class="docutils literal notranslate"><span class="pre">numactl</span> <span class="pre">-H</span></code> to show which GPUs belong to which NUMA domain;
+on Ubuntu these tools are provided by packages <code class="docutils literal notranslate"><span class="pre">hwloc</span></code> and <code class="docutils literal notranslate"><span class="pre">numactl</span></code>.</p>
+</section>
+<section id="communication-model">
+<span id="id13"></span><h3><span class="section-number">3.2.3. </span>Communication model<a class="headerlink" href="#communication-model" title="Link to this heading">¶</a></h3>
+<p>ESPResSo was originally designed for the “flat” model of communication:
+each MPI rank binds to a logical CPU core. This communication model
+doesn’t fully leverage shared memory on recent CPUs, such as <a class="reference external" href="https://en.wikipedia.org/wiki/Non-uniform_memory_access">NUMA
+architectures</a>.</p>
+<p>The hybrid MPI+<a class="reference external" href="https://www.openmp.org">OpenMP</a> programming model
+is supported by a few ESPResSo features. For small simulations, users will
+typically prefer running ESPResSo with <span class="math notranslate nohighlight">\(p\)</span> OpenMP threads and 1 MPI rank.
+For larger jobs that reserve more cores than a NUMA domain can provide,
+it is usually best to request one MPI rank per NUMA domain and as many
+OpenMP threads as cores in the NUMA domain.</p>
+<p>The MPI+CUDA programming model is supported, although only one GPU can be
+used for the entire simulation. As a result, a blocking <em>gather</em> operation
+is carried out to collect data from all ranks to the main rank, and a
+blocking <em>scatter</em> operation is carried out to transfer the result of the
+GPU calculation from the main rank back to all ranks. This latency limits
+GPU-acceleration to simulations running on fewer than 8 MPI ranks.
+For more details, see section <a class="reference internal" href="#gpu-acceleration"><span class="std std-ref">GPU acceleration</span></a>.
+Lattice-Boltzmann is the only algorithm that can use multiple GPUs.</p>
+<section id="the-mpi-callbacks-framework">
+<span id="id14"></span><h4><span class="section-number">3.2.3.1. </span>The MPI callbacks framework<a class="headerlink" href="#the-mpi-callbacks-framework" title="Link to this heading">¶</a></h4>
+<p>When starting a simulation with <span class="math notranslate nohighlight">\(n\)</span> MPI ranks, ESPResSo will internally
+use MPI rank <span class="math notranslate nohighlight">\(0\)</span> as the head node (also referred to as the “main rank”)
+and MPI ranks <span class="math notranslate nohighlight">\(1\)</span> to <span class="math notranslate nohighlight">\(n-1\)</span> as worker nodes. The Python interface
+interacts only with the head node, and the head node forwards the information
+to the worker nodes.</p>
+<p>To put it another way, all worker nodes are idle until the user calls
+a function that is designed to run in parallel,
+in which case the head node calls the corresponding core function
+and sends a request on the worker nodes to call the same core function.
+The request can be a simple collective call, or a collective call with a
+reduction if the function returns a value. The reduction can either:</p>
+<ul class="simple">
+<li><p>combine the <span class="math notranslate nohighlight">\(n\)</span> results via a mathematical operation
+(usually a summation or a multiplication)</p></li>
+<li><p>discard the result of the <span class="math notranslate nohighlight">\(n-1\)</span> worker nodes; this is done when
+all ranks return the same value, or when the calculation can only be
+carried out on the main rank but requires data from the other ranks</p></li>
+<li><p>return the result of one rank when the calculation can only be carried out
+by a specific rank; this is achieved by returning an <em>optional</em>, which
+contains a value on the rank that has access to the information necessary
+to carry out the calculation, while the other <span class="math notranslate nohighlight">\(n-1\)</span> ranks return
+an empty optional</p></li>
+</ul>
+<p>For more details on this framework, please refer to the Doxygen documentation
+of the the C++ core file <code class="file docutils literal notranslate"><span class="pre">MpiCallbacks.hpp</span></code>.</p>
+</section>
+</section>
+</section>
+<section id="gpu-acceleration">
+<span id="id15"></span><h2><span class="section-number">3.3. </span>GPU acceleration<a class="headerlink" href="#gpu-acceleration" title="Link to this heading">¶</a></h2>
+<section id="cuda-acceleration">
+<span id="id16"></span><h3><span class="section-number">3.3.1. </span>CUDA acceleration<a class="headerlink" href="#cuda-acceleration" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Feature <code class="docutils literal notranslate"><span class="pre">CUDA</span></code> required</p>
+</div>
+<p>ESPResSo is capable of delegating work to the GPU to speed up simulations.
+Not every simulation method profits from GPU acceleration.
+Refer to <a class="reference internal" href="introduction.html#available-simulation-methods"><span class="std std-ref">Available simulation methods</span></a>
+to check whether your desired method can be used on the GPU.
+In order to use GPU acceleration you need a NVIDIA GPU
+and it needs to have at least compute capability 2.0.
+For more details, please refer to the installation section
+<a class="reference internal" href="installation.html#nvidia-gpu-acceleration"><span class="std std-ref">Nvidia GPU acceleration</span></a>.</p>
+<section id="list-available-devices">
+<span id="id17"></span><h4><span class="section-number">3.3.1.1. </span>List available devices<a class="headerlink" href="#list-available-devices" title="Link to this heading">¶</a></h4>
+<p>To list available CUDA devices, call
+<a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle.list_devices" title="espressomd.cuda_init.CudaInitHandle.list_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.cuda_init.CudaInitHandle.list_devices()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">list_devices</span><span class="p">())</span>
+<span class="go">{0: &#39;GeForce RTX 2080&#39;, 1: &#39;GeForce GT 730&#39;}</span>
+</pre></div>
+</div>
+<p>This method returns a dictionary containing
+the device id as key and the device name as its value.</p>
+<p>To get more details on the CUDA devices for each MPI node, call
+<a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle.list_devices_properties" title="espressomd.cuda_init.CudaInitHandle.list_devices_properties"><code class="xref py py-meth docutils literal notranslate"><span class="pre">espressomd.cuda_init.CudaInitHandle.list_devices_properties()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">list_devices_properties</span><span class="p">())</span>
+<span class="go">{&#39;seraue&#39;: {0: {&#39;name&#39;: &#39;GeForce RTX 2080&#39;,</span>
+<span class="go">                &#39;compute_capability&#39;: (7, 5),</span>
+<span class="go">                &#39;cores&#39;: 46,</span>
+<span class="go">                &#39;total_memory&#39;: 8370061312},</span>
+<span class="go">            1: {&#39;name&#39;: &#39;GeForce GT 730&#39;,</span>
+<span class="go">                &#39;compute_capability&#39;: (3, 5),</span>
+<span class="go">                &#39;cores&#39;: 2,</span>
+<span class="go">                &#39;total_memory&#39;: 1014104064}}}</span>
+</pre></div>
+</div>
+</section>
+<section id="select-a-device">
+<span id="id18"></span><h4><span class="section-number">3.3.1.2. </span>Select a device<a class="headerlink" href="#select-a-device" title="Link to this heading">¶</a></h4>
+<p>When you start <code class="docutils literal notranslate"><span class="pre">pypresso</span></code>, the first GPU should be selected.
+If you wanted to use the second GPU, this can be done
+by setting <a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle.device" title="espressomd.cuda_init.CudaInitHandle.device"><code class="xref py py-attr docutils literal notranslate"><span class="pre">espressomd.cuda_init.CudaInitHandle.device</span></code></a> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">system</span><span class="o">.</span><span class="n">cuda_init_handle</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>Setting a device id outside the valid range or a device
+which does not meet the minimum requirements will raise
+an exception.</p>
+</section>
+</section>
+</section>
+<section id="instrumentation">
+<span id="id19"></span><h2><span class="section-number">3.4. </span>Instrumentation<a class="headerlink" href="#instrumentation" title="Link to this heading">¶</a></h2>
+<section id="debugging">
+<span id="id20"></span><h3><span class="section-number">3.4.1. </span>Debugging<a class="headerlink" href="#debugging" title="Link to this heading">¶</a></h3>
+<p>Exceptional situations occur in every program. If ESPResSo crashes with a
+fatal error, it is necessary to use a debugger to investigate the issue.
+The tool should be chosen depending on the nature of the bug.
+Most fatal errors fall into one of these categories:</p>
+<ul class="simple">
+<li><p>segmentation fault: typically due to uninitialized pointers, dangling
+pointers and array accesses out of bounds</p></li>
+<li><p>non-finite math: typically due to divisions by zero, square roots of
+negative numbers or logarithms of negative numbers</p></li>
+<li><p>unhandled exception: always fatal when running with multiple MPI ranks</p></li>
+</ul>
+<p>Many algorithms require parameters to be provided within valid ranges.
+Range checks are implemented to catch invalid input values and generate
+meaningful error messages, however these checks cannot always catch errors
+arising from an invalid combination of two or more features. If you encounter
+issues with a script, you can activate extra runtime checks by enabling C++
+assertions. This is achieved by updating the CMake project and rebuilding
+ESPResSo with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>.<span class="w"> </span>-D<span class="w"> </span><span class="nv">CMAKE_BUILD_TYPE</span><span class="o">=</span>RelWithAssert
+make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+./pypresso<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The resulting build will run slightly slower, but will produce an error
+message for common issues, such as divisions by zero, array access out
+of bounds, or square roots of negative numbers.</p>
+<p>If this still doesn’t help, activate debug symbols to help with instrumentation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>.<span class="w"> </span>-D<span class="w"> </span><span class="nv">CMAKE_BUILD_TYPE</span><span class="o">=</span>Debug
+make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+./pypresso<span class="w"> </span>script.py<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>c++filt
+</pre></div>
+</div>
+<p>The resulting build will be quite slow but segmentation faults will generate
+a complete backtrace, which can be parsed by <code class="docutils literal notranslate"><span class="pre">c++filt</span></code> to demangle symbol
+names. If this is not sufficient to track down the source of the error,
+a debugging tool like GDB can be attached to ESPResSo to catch the segmentation
+fault signal and generate a backtrace. See <a class="reference internal" href="#gdb"><span class="std std-ref">using GDB</span></a> for more details.</p>
+<p>If you are dealing with a segmentation fault or undefined behavior, and GDB
+doesn’t help or is too cumbersome to use (e.g. in MPI-parallel simulations),
+you can as a last resort activate sanitizers:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>.<span class="w"> </span>-D<span class="w"> </span><span class="nv">ESPRESSO_BUILD_WITH_ASAN</span><span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-D<span class="w"> </span><span class="nv">ESPRESSO_BUILD_WITH_UBSAN</span><span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>-D<span class="w"> </span><span class="nv">CMAKE_BUILD_TYPE</span><span class="o">=</span>RelWithAssert
+make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+./pypresso<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The resulting build will be around 5 times slower that a debug build,
+but it will generate valuable reports when detecting fatal exceptions.</p>
+<p>If you are dealing with non-finite math errors (infinity, NaN, etc.),
+you can interrupt code execution at the first occurence of a non-finite
+value using <a class="reference internal" href="#fpe"><span class="std std-ref">floating-point exceptions</span></a> and investigate
+the failing mathematical operation in GDB.</p>
+<p>It is possible to attach an external debugger to <code class="docutils literal notranslate"><span class="pre">pypresso</span></code>, albeit with
+a custom syntax. The <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> executable file is actually not a program
+but a script which sets the Python path appropriately and starts the Python
+interpreter with user-defined arguments. Thus it is not possible to directly
+run <code class="docutils literal notranslate"><span class="pre">pypresso</span></code> in a debugger; instead one has to use pre-defined command
+line options:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--tool<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">--tool</span></code> can be any tool from the <a class="reference internal" href="#debugging-es-with-tools"><span class="std std-ref">table below</span></a>.
+Only one tool can be used at a time. Some tools benefit from specific build
+options, as outlined in the sections that follow. Most tools accept arguments
+<code class="docutils literal notranslate"><span class="pre">&lt;args&gt;</span></code> via the following variant:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--tool<span class="o">=</span><span class="s2">&quot;&lt;args&gt;&quot;</span><span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The sequence or arguments is passed as a string, which will be split at
+whitespace characters by the shell interpreter. When the arguments need
+whitespaces or quotation marks, those need to be properly escaped. When
+no arguments are passed, sensible default values will be used instead.</p>
+<span id="debugging-es-with-tools"></span><table class="docutils align-default" id="id67">
+<caption><span class="caption-text">Tools for the Python wrapper to ESPResSo.</span><a class="headerlink" href="#id67" title="Link to this table">¶</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--gdb</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gdb</span> <span class="pre">--args</span> <span class="pre">python</span> <span class="pre">script.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--lldb</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lldb</span> <span class="pre">--</span> <span class="pre">python</span> <span class="pre">script.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--valgrind</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">valgrind</span> <span class="pre">--leak-check=full</span> <span class="pre">python</span> <span class="pre">script.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--cuda-gdb</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cuda-gdb</span> <span class="pre">--args</span> <span class="pre">python</span> <span class="pre">script.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--cuda-sanitizer</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">compute-sanitizer</span> <span class="pre">--leak-check</span> <span class="pre">full</span> <span class="pre">python</span> <span class="pre">script.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--kernprof</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">kernprof</span> <span class="pre">--line-by-line</span> <span class="pre">--view</span> <span class="pre">script.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="profiling">
+<span id="id21"></span><h3><span class="section-number">3.4.2. </span>Profiling<a class="headerlink" href="#profiling" title="Link to this heading">¶</a></h3>
+<p>ESPResSo is designed to leverage highly parallel computing environments and GPU
+accelerators. To facilitate the investigation of communication bottlenecks
+and inefficient algorithms, several profilers are natively supported,
+with annotation markers placed in performance-critical parts of the C++ core.</p>
+</section>
+<section id="gdb">
+<span id="id22"></span><h3><span class="section-number">3.4.3. </span>GDB<a class="headerlink" href="#gdb" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires a debug build, enabled with the CMake option
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=Debug</span></code>, as well as an external dependency:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>gdb
+</pre></div>
+</div>
+</div>
+<p>The GNU Debugger (GDB) <span id="id23">[<a class="reference internal" href="bibliography.html#id122" title="Richard Stallman, Roland Pesch, and Stan Shebs. Debugging with GDB: The GNU source-level debugger. GNU Press, 10th edition, 2011. ISBN 978-0-9831592-3-0.">Stallman <em>et al.</em>, 2011</a>]</span> is used to observe and control
+the execution of C++ applications. GDB can catch signals, suspend the
+program execution at user-defined break points, expose the content of
+C++ variables and run C++ functions that have no side effects.</p>
+<p>Here is a typical GDB session. Runs the failing simulation
+with the pypresso <code class="docutils literal notranslate"><span class="pre">--gdb</span></code> flag to attach the process to GDB.
+To catch a runtime error, use e.g. <code class="docutils literal notranslate"><span class="pre">catch</span> <span class="pre">throw</span> <span class="pre">std::runtime_error</span></code>.
+To catch a specific function, use <code class="docutils literal notranslate"><span class="pre">break</span></code> followed by the function name
+(answer yes to the prompt about pending the breakpoint), or alternatively
+provide the absolute filepath and line number separated by a colon symbol.
+Use <code class="docutils literal notranslate"><span class="pre">step</span></code> to execute the next line, <code class="docutils literal notranslate"><span class="pre">next</span></code> to execute the next line
+without traversing function calls, and <code class="docutils literal notranslate"><span class="pre">skip</span> <span class="pre">-gfi</span> <span class="pre">/usr/include/c++/</span></code>
+to make <code class="docutils literal notranslate"><span class="pre">step</span></code> execute the next line without traversing function calls
+of the C++ standard library. Use <code class="docutils literal notranslate"><span class="pre">print</span></code> followed by a variable name
+to show its contents. Simple expressions like pointer dereferencing
+and calling inlined pure functions are also allowed in most situations.</p>
+<p>For a segmentation fault, no action is needed since it is automatically
+caught via the SIGSEV signal; run the simulation with <code class="docutils literal notranslate"><span class="pre">run</span></code> and wait
+for GDB to suspend the program execution. At this point, use <code class="docutils literal notranslate"><span class="pre">bt</span></code> to
+show the complete backtrace, then use <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">&lt;n&gt;</span></code> with <code class="docutils literal notranslate"><span class="pre">&lt;n&gt;</span></code> the number
+of the innermost frame that is located inside the ESPResSo source directory,
+and finally use <code class="docutils literal notranslate"><span class="pre">tui</span> <span class="pre">e</span></code> to show the offending line in the source code
+(<code class="docutils literal notranslate"><span class="pre">tui</span> <span class="pre">d</span></code> to hide the source code). Use <code class="docutils literal notranslate"><span class="pre">up</span></code> and <code class="docutils literal notranslate"><span class="pre">down</span></code> to move in
+the backtrace. The value of local variables can be inspected by GDB.
+For a self-contained example, see the <a class="reference internal" href="#gdb-example"><span class="std std-ref">GDB example</span></a>.</p>
+<p>It is possible to debug an MPI-parallel simulation script with GDB.
+Keep in mind that contrary to a textbook example MPI application, where
+all ranks execute the <code class="docutils literal notranslate"><span class="pre">main</span></code> function, in ESPResSo the worker nodes are idle
+until the head node on MPI rank 0 delegates work to them. This means that
+on MPI rank &gt; 1, break points will only have an effect in code that can be
+reached from a callback function whose pointer has been registered in the
+<a class="reference internal" href="#the-mpi-callbacks-framework"><span class="std std-ref">MPI callbacks framework</span></a>.</p>
+<p>The following command runs a script with 2 MPI ranks and binds a terminal
+to each rank:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span><span class="m">2</span><span class="w"> </span>xterm<span class="w"> </span>-fa<span class="w"> </span><span class="s1">&#39;Monospace&#39;</span><span class="w"> </span>-fs<span class="w"> </span><span class="m">12</span><span class="w"> </span>-e<span class="w"> </span>./pypresso<span class="w"> </span>--gdb<span class="w"> </span>simulation.py
+</pre></div>
+</div>
+<p>It can also be done via ssh with X-window forwarding:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>-X<span class="w"> </span>username@hostname
+mpiexec<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>-x<span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DISPLAY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>xterm<span class="w"> </span>-fa<span class="w"> </span><span class="s1">&#39;Monospace&#39;</span><span class="w"> </span>-fs<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-e<span class="w"> </span>./pypresso<span class="w"> </span>--gdb<span class="w"> </span>simulation.py
+</pre></div>
+</div>
+<p>The same syntax is used for C++ unit tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span><span class="m">2</span><span class="w"> </span>xterm<span class="w"> </span>-fa<span class="w"> </span><span class="s1">&#39;Monospace&#39;</span><span class="w"> </span>-fs<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-e<span class="w"> </span>gdb<span class="w"> </span>src/core/unit_tests/EspressoSystemStandAlone_test
+</pre></div>
+</div>
+<p>GDB automatically breaks on signals and assertions.
+To break on thrown exceptions, waLBerla diagnostics and MPI fatal errors:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>breakpoint<span class="w"> </span>pending<span class="w"> </span>on
+catch<span class="w"> </span>throw<span class="w"> </span>std::runtime_error
+<span class="k">break</span><span class="w"> </span>walberla::debug::printStacktrace
+<span class="k">break</span><span class="w"> </span>MPI_Abort
+</pre></div>
+</div>
+<p id="gdb-example"><strong>GDB example</strong></p>
+<p>To recreate a typical debugging session, let’s purposefully introduce a null
+pointer dereference in the <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">integrate()</span></code> function, like so:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">integrate</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n_steps</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">reuse_forces</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Running any simulation should produce the following trace:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./pypresso ../samples/lj_liquid.py 2&gt;&amp;1 | c++filt
+*** Process received signal ***
+Signal: Segmentation fault (11)
+Signal code: Address not mapped (1)
+Failing at address: (nil)
+[ 0] /lib/x86_64-linux-gnu/libc.so.6(+0x42520)
+[ 1] /home/user/espresso/build/src/core/espresso_core.so(integrate(int, int)+0x49)
+[ 2] /home/user/espresso/build/src/core/espresso_core.so(integrate_with_signal_handler(int, int, bool)+0xaf)
+</pre></div>
+</div>
+<p>Running in GDB should automatically catch the SIGSEV signal and allow us to
+inspect the code and the state of all local variables:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ ./pypresso --gdb ../samples/lj_liquid.py
+(gdb) run
+Thread 1 &quot;python3.10&quot; received signal SIGSEGV, Segmentation fault.
+in integrate (n_steps=20, reuse_forces=-1)
+at /home/user/espresso/src/core/integrate.cpp:260
+260   int test = *std::shared_ptr&lt;int&gt;();
+(gdb) bt
+#0  in integrate (n_steps=20, reuse_forces=-1)
+    at /home/user/espresso/src/core/integrate.cpp:260
+#1  in integrate_with_signal_handler (n_steps=20, reuse_forces=-1,
+      update_accumulators=false)
+    at /home/user/espresso/src/core/integrate.cpp:484
+#2  in ScriptInterface::Integrators::SteepestDescent::integrate (
+      this=..., params=std::unordered_map with 1 element = {...})
+    at /home/user/espresso/src/script_interface/integrators/SteepestDescent.cpp:44
+(gdb) frame 0
+#0  in integrate (n_steps=20, reuse_forces=-1)
+    at /home/user/espresso/src/core/integrate.cpp:260
+260   int test = *std::shared_ptr&lt;int&gt;();
+(gdb) tui e
+┌─/home/user/espresso/src/core/integrate.cpp───────────────────────────────────┐
+│      257  }                                                                  │
+│      258                                                                     │
+│      259  int integrate(int n_steps, int reuse_forces) {                     │
+│  &gt;   260    int test = *std::shared_ptr&lt;int&gt;();                              │
+│      261                                                                     │
+│      262    // Prepare particle structure and run sanity checks              │
+│      263    on_integration_start(time_step);                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+(gdb) print n_steps
+$1 = 20
+(gdb) ptype time_step
+type = double
+</pre></div>
+</div>
+</section>
+<section id="cuda-gdb">
+<span id="id24"></span><h3><span class="section-number">3.4.4. </span>CUDA-GDB<a class="headerlink" href="#cuda-gdb" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires a CUDA debug build, enabled with the CMake options
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_CUDA=ON</span> <span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=Debug</span></code>.</p>
+</div>
+<p>The CUDA-GDB debugger <span id="id25">[<a class="reference internal" href="bibliography.html#id89" title="NVIDIA. CU-GDB. User manual Release 12.1, NVIDIA, April 2023. URL: https://docs.nvidia.com/cuda/pdf/cuda-gdb.pdf.">NVIDIA, 2023</a>]</span> is used to observe and control
+the execution of CUDA applications. CUDA-GDB can catch signals, suspend the
+program execution at user-defined break points and expose values in CUDA
+variables. When a signal is caught inside a CUDA kernel, the stack trace
+only shows device function calls. When stepping into a CUDA kernel launch,
+the stack trace shows both host and device function calls.</p>
+</section>
+<section id="asan">
+<span id="id26"></span><h3><span class="section-number">3.4.5. </span>ASAN<a class="headerlink" href="#asan" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires specific compiler and linker flags, enabled with the CMake option
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_ASAN=ON</span> <span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=RelWithAssert</span></code>.</p>
+</div>
+<p>The AddressSanitizer (ASAN) <span id="id27">[<a class="reference internal" href="bibliography.html#id115" title="Konstantin Serebryany, Derek Bruening, Alexander Potapenko, and Dmitry Vyukov. AddressSanitizer: a fast address sanity checker. In USENIX Annual Technical Conference. Berkeley, California, USA, June 2012. USENIX Association. URL: https://www.usenix.org/conference/atc12/addresssanitizer-fast-address-sanity-checker.">Serebryany <em>et al.</em>, 2012</a>]</span> is a memory error detection
+tool. It detects memory leaks and bugs caused by dangling references.</p>
+<p>For more details, please consult the tool online documentation <a class="footnote-reference brackets" href="#id60" id="id28" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a>.</p>
+<p>On some releases of the Linux kernel, ASAN fails to initialize when running
+the executable due to address space layout randomization (ASLR) <a class="footnote-reference brackets" href="#id65" id="id29" role="doc-noteref"><span class="fn-bracket">[</span>10<span class="fn-bracket">]</span></a>.
+On affected environments, one can temporarily reduce the entropy via
+<code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">sysctl</span> <span class="pre">vm.mmap_rnd_bits=28</span></code> (default is usually 32 bits)
+for the time of the ASAN analysis, and then revert back to the default value.</p>
+<p>GDB can investigate ASAN reports with break points:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>breakpoint<span class="w"> </span>pending<span class="w"> </span>on
+<span class="k">break</span><span class="w"> </span>__asan_report_error
+</pre></div>
+</div>
+</section>
+<section id="ubsan">
+<span id="id30"></span><h3><span class="section-number">3.4.6. </span>UBSAN<a class="headerlink" href="#ubsan" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires specific compiler and linker flags, enabled with the CMake option
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_UBSAN=ON</span> <span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=RelWithAssert</span></code>.</p>
+</div>
+<p>The UndefinedBehaviorSanitizer (UBSAN) <span id="id31">[<a class="reference internal" href="bibliography.html#id93" title="LLVM Developers. Undefined behavior sanitizer. 2017. URL: https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html.">LLVM Developers, 2017</a>]</span> is a detection tool
+for undefined behavior. It detects bugs caused by dangling references,
+array accesses out of bounds, signed integer overflows, etc.</p>
+<p>GDB can investigate UBSAN reports with break points:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>breakpoint<span class="w"> </span>pending<span class="w"> </span>on
+<span class="k">break</span><span class="w"> </span>__ubsan::Diag::~Diag
+</pre></div>
+</div>
+<p>Depending on the environment, GDB might be unable to add a break point.
+In that case, the application needs to run once to load all UBSAN symbols,
+then break points can be added to all UBSAN handlers except <code class="docutils literal notranslate"><span class="pre">dynamic_type_cache_miss</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>breakpoint<span class="w"> </span>pending<span class="w"> </span>on
+run
+rbreak<span class="w"> </span>^__ubsan_handle_<span class="o">[</span>^d<span class="o">]</span>
+rbreak<span class="w"> </span>^__ubsan_handle_d<span class="o">[</span>^y<span class="o">]</span>
+run
+</pre></div>
+</div>
+<p>Alternatively, one can use <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">CMAKE_CXX_FLAGS=&quot;-fsanitize-undefined-trap-on-error&quot;</span></code>
+to replace the UBSAN diagnostic report by a signal trap that GDB can capture.</p>
+<p>For more details, please consult the tool online documentation <a class="footnote-reference brackets" href="#id61" id="id32" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a>.</p>
+</section>
+<section id="fpe">
+<span id="id33"></span><h3><span class="section-number">3.4.7. </span>FPE<a class="headerlink" href="#fpe" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires specific compiler and linker flags, enabled with the CMake option
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_FPE=ON</span> <span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=Debug</span></code>.</p>
+</div>
+<p>When abnormal mathematical operations take place at runtime,
+for example divisions by zero, multiplication of infinity with zero,
+square roots and logarithms of negative numbers, overflows, underflows,
+or conversion of NaN values to integers, CPU flags may be raised.
+The flags are known as <em>CPU exceptions</em>, and can be queried to detect
+if a past operation yielded an abnormal result. They can be unmasked
+to automatically <em>trap</em>, i.e. leave the user space and enter kernel space,
+where the operating system will run a callback function, which may send
+a POSIX signal such as <code class="docutils literal notranslate"><span class="pre">SIGFPE</span></code> or <code class="docutils literal notranslate"><span class="pre">SIGILL</span></code>. Those signals can be
+captured by a user-defined <em>signal handler</em>, which takes the form of a
+C++ function with strict restrictions on which operations it can execute,
+and are typically assigning an integer into a global variable for debugging.
+Execution then resumes in user space on the exact same instruction that
+originally trapped, potentially entering an infinite loop.</p>
+<p>C libraries like GNU libc provide support for floating-point exceptions
+(FPE or FE). These can be unmasked to interrupt ESPResSo on the first occurrence
+of an abnormal floating-point operation. This is achieved by sending a signal
+that can be caught in GDB to allow inspection of the failing code.</p>
+<p>When FPE instrumentation is enabled, most script interface calls will be
+monitored for abnormal mathematical operations. One can select which subset
+of CPU exceptions will trap by explicitly providing a bitmask to the FPE
+handler constructor, like so:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Variant</span><span class="w"> </span><span class="nf">ObjectHandle::call_method</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="n">name</span><span class="p">,</span>
+<span class="w">                                  </span><span class="k">const</span><span class="w"> </span><span class="n">VariantMap</span><span class="w"> </span><span class="o">&amp;</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m_context</span><span class="p">)</span>
+<span class="w">    </span><span class="n">m_context</span><span class="o">-&gt;</span><span class="n">notify_call_method</span><span class="p">(</span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">);</span>
+
+<span class="cp">#ifdef FPE</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">trap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fe_trap</span><span class="o">::</span><span class="n">make_shared_scoped</span><span class="p">(</span><span class="n">FE_DIVBYZERO</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">FE_INVALID</span><span class="p">);</span>
+<span class="cp">#endif</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">do_call_method</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For more details, see annex F IEC 60559 “floating-point arithmetic”
+in ISO/EIC 9899 <span id="id34">[<a class="reference internal" href="bibliography.html#id67" title="International Organization for Standardization and International Electrotechnical Commission. Information technology — programming languages — C. Standard ISO/IEC 9899:1999, International Organization for Standardization, Geneva, Switzerland, December 1999. URL: https://www.iso.org/standard/29237.html.">International Organization for Standardization and International Electrotechnical Commission, 1999</a>]</span> and chapter 7
+“Exceptions and default exception handling” in
+ISO/IEC 60559:2020(E) <span id="id35">[<a class="reference internal" href="bibliography.html#id66" title="International Organization for Standardization, International Electrotechnical Commission, and Institute of Electrical and Electronics Engineers. International standard – floating-point arithmetic. Standard ISO/IEC 60559:2020(E), IEEE Std 754-2019, Institute of Electrical and Electronics Engineers, May 2020. doi:10.1109/IEEESTD.2020.9091348.">International Organization for Standardization <em>et al.</em>, 2020</a>]</span>.</p>
+</section>
+<section id="caliper">
+<span id="id36"></span><h3><span class="section-number">3.4.8. </span>Caliper<a class="headerlink" href="#caliper" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires external features <code class="docutils literal notranslate"><span class="pre">CALIPER</span></code>, enabled with the CMake option
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_CALIPER=ON</span></code>.</p>
+</div>
+<p>Caliper <a class="footnote-reference brackets" href="#id56" id="id37" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> <span id="id38">[<a class="reference internal" href="bibliography.html#id25" title="David Boehme, Todd Gamblin, David Beckingsale, Peer-Timo Bremer, Alfredo Gimenez, Matthew LeGendre, Olga Pearce, and Martin Schulz. Caliper: performance introspection for HPC software stacks. In SC '16: Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis, 550–560. IEEE Press, November 2016. LLNL-CONF-699263.">Boehme <em>et al.</em>, 2016</a>]</span> is a low-overhead annotation library for C++.
+By default, ESPResSo comes with several markers in performance-critical parts
+of the main integration loop.</p>
+<p>In the example below, a P3M simulation is profiled to reveal that the
+short-range loop (N-squared summation for Lennard-Jones and Coulomb)
+and long-range forces (FFT summation) contribute equally to the runtime:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ CALI_CONFIG=runtime-report ./pypresso ../samples/p3m.py --cpu
+Path                          Min time/rank Max time/rank Avg time/rank   Time %
+integrate                         0.13          0.13          0.13          0.52
+  Integration loop                1.49          1.49          1.49          6.03
+    calculate_forces              1.14          1.14          1.14          4.62
+      copy_particles_to_GPU       0.01          0.01          0.01          0.03
+      init_forces                 0.14          0.14          0.14          0.56
+      calc_long_range_forces      8.78          8.78          8.78         35.66
+      short_range_loop           10.77         10.77         10.77         43.76
+      copy_forces_from_GPU        0.02          0.02          0.02          0.08
+</pre></div>
+</div>
+<p>For the GPU implementation of the P3M algorithm, the long-range force
+calculation is cheaper, however the transfer of particle data to and from
+the GPU incur additional costs that are not negligible:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ CALI_CONFIG=runtime-report ./pypresso ../samples/p3m.py --gpu
+Path                          Min time/rank Max time/rank Avg time/rank   Time %
+integrate                         0.42          0.42          0.42          1.03
+  Integration loop                0.50          0.50          0.50          1.22
+    calculate_forces              0.62          0.62          0.62          1.51
+      copy_particles_to_GPU       0.27          0.27          0.27          0.66
+      init_forces                 0.09          0.09          0.09          0.22
+      calc_long_range_forces      0.60          0.60          0.60          1.46
+      short_range_loop            0.85          0.85          0.85          2.06
+      copy_forces_from_GPU        1.06          1.06          1.06          2.58
+</pre></div>
+</div>
+<p>For a more fine-grained report on GPU kernels:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ CALI_CONFIG=cuda-activity-report ./pypresso ../samples/p3m.py --gpu
+</pre></div>
+</div>
+<p>To introduce custom markers at the C++ level, add <code class="docutils literal notranslate"><span class="pre">CALI</span></code> macros inside
+performance-critical functions to register them:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">force_calculation</span><span class="p">(</span><span class="n">CellStructure</span><span class="w"> </span><span class="o">&amp;</span><span class="n">cell_structure</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">time_step</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="cp">#ifdef CALIPER</span>
+<span class="w">  </span><span class="n">CALI_CXX_MARK_FUNCTION</span><span class="p">;</span>
+<span class="cp">#endif</span>
+<span class="w">  </span><span class="cm">/* ... */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To introduce custom markers at the Python level,
+use a <a class="reference internal" href="espressomd.html#espressomd.profiler.Caliper" title="espressomd.profiler.Caliper"><code class="xref py py-class docutils literal notranslate"><span class="pre">Caliper</span></code></a> object to fence code blocks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd.profiler</span>
+<span class="n">cali</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">Caliper</span><span class="p">()</span>
+<span class="n">cali</span><span class="o">.</span><span class="n">begin_section</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;calc_energies&quot;</span><span class="p">)</span>
+<span class="n">energies</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">analysis</span><span class="o">.</span><span class="n">energy</span><span class="p">()</span>
+<span class="n">cali</span><span class="o">.</span><span class="n">end_section</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;calc_energies&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="valgrind">
+<span id="id39"></span><h3><span class="section-number">3.4.9. </span>Valgrind<a class="headerlink" href="#valgrind" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires external features <code class="docutils literal notranslate"><span class="pre">VALGRIND</span></code> and debug symbols,
+enabled with the CMake options
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_VALGRIND=ON</span> <span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=RelWithDebInfo</span></code>,
+as well as external dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>valgrind<span class="w"> </span>kcachegrind<span class="w"> </span>graphviz
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>gprof2dot
+</pre></div>
+</div>
+</div>
+<p>The Valgrind <a class="footnote-reference brackets" href="#id57" id="id40" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> <span id="id41">[<a class="reference internal" href="bibliography.html#id97" title="Nicholas Nethercote and Julian Seward. Valgrind: a program supervision framework. Electronic Notes in Theoretical Computer Science, 89(2):44–66, October 2003. doi:10.1016/S1571-0661(04)81042-9.">Nethercote and Seward, 2003</a>, <a class="reference internal" href="bibliography.html#id98" title="Nicholas Nethercote and Julian Seward. Valgrind: a framework for heavyweight dynamic binary instrumentation. In Proceedings of the 28th ACM SIGPLAN Conference on Programming Language Design and Implementation, 89–100. New York, New York, USA, June 2007. Association for Computing Machinery. doi:10.1145/1250734.1250746.">Nethercote and Seward, 2007</a>]</span> framework brings several
+tools to examine a program runtime performance.</p>
+<section id="callgrind">
+<span id="id42"></span><h4><span class="section-number">3.4.9.1. </span>Callgrind<a class="headerlink" href="#callgrind" title="Link to this heading">¶</a></h4>
+<p>The Callgrind <a class="footnote-reference brackets" href="#id58" id="id43" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a> <span id="id44">[<a class="reference internal" href="bibliography.html#id139" title="Josef Weidendorfer, Markus Kowarschik, and Carsten Trinitis. A tool suite for simulation based analysis of memory access behavior. In Marian Bubak, Geert Dick van Albada, Peter M. A. Sloot, and Jack Dongarra, editors, Computational Science - ICCS 2004, volume 3038 of Lecture Notes in Computer Science, 440–447. Berlin, Heidelberg, 2004. Springer Berlin Heidelberg. doi:10.1007/978-3-540-24688-6_58.">Weidendorfer <em>et al.</em>, 2004</a>]</span> tool generates a graph of function
+calls. This type of instrumentation has a lot of overhead, therefore the time
+spent in functions might not always be reliable, and the program execution
+is slowed down significantly. To remediate the latter, it is common to
+restrict instrumentation to a specific part of the code using markers.
+By default, ESPResSo comes with markers in the integration loop,
+which is the most performance-critical part of the core.</p>
+<p>In the following example, the P3M algorithm is profiled to generate a call
+graph that can be converted to a static graph using <code class="docutils literal notranslate"><span class="pre">gprof2dot</span></code> and <code class="docutils literal notranslate"><span class="pre">dot</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--valgrind<span class="o">=</span><span class="s2">&quot;--tool=callgrind --instr-atstart=no&quot;</span><span class="w"> </span>../samples/p3m.py<span class="w"> </span>--cpu
+<span class="nv">callgrind_out</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>-t<span class="w"> </span>-1<span class="w"> </span>callgrind.out.*<span class="o">[[</span>:digit:<span class="o">]]</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="k">)</span>
+python3<span class="w"> </span>-m<span class="w"> </span>gprof2dot<span class="w"> </span>--format<span class="o">=</span>callgrind<span class="w"> </span>--output<span class="o">=</span><span class="si">${</span><span class="nv">callgrind_out</span><span class="si">}</span>.dot<span class="w"> </span><span class="si">${</span><span class="nv">callgrind_out</span><span class="si">}</span>
+dot<span class="w"> </span>-Tpdf<span class="w"> </span><span class="si">${</span><span class="nv">callgrind_out</span><span class="si">}</span>.dot<span class="w"> </span>-o<span class="w"> </span><span class="si">${</span><span class="nv">callgrind_out</span><span class="si">}</span>.pdf
+</pre></div>
+</div>
+<p>The Valgrind output file generally follows the pattern <code class="docutils literal notranslate"><span class="pre">callgrind.out.pid</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">pid</span></code> is the actual process id. The <code class="docutils literal notranslate"><span class="pre">${callgrind_out}</span></code> variable
+is populated with the return value of a subshell command that finds the most
+recent output file that matches that pattern.</p>
+<p>It is also possible to open the output file in KCachegrind <a class="footnote-reference brackets" href="#id59" id="id45" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a> to browse
+the call graph interactively and visualize the time spent in each function:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kcachegrind<span class="w"> </span><span class="si">${</span><span class="nv">callgrind_out</span><span class="si">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="compute-sanitizer">
+<span id="id46"></span><h3><span class="section-number">3.4.10. </span>Compute Sanitizer<a class="headerlink" href="#compute-sanitizer" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires a CUDA build, enabled with the CMake options
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_CUDA=ON</span></code>.</p>
+</div>
+<p>The Compute Sanitizer <a class="footnote-reference brackets" href="#id64" id="id47" role="doc-noteref"><span class="fn-bracket">[</span>9<span class="fn-bracket">]</span></a> <span id="id48">[<a class="reference internal" href="bibliography.html#id88" title="NVIDIA. COMPUTE SANITIZER. User manual v2023.2.0, NVIDIA, June 2023. URL: https://docs.nvidia.com/compute-sanitizer/pdf/ComputeSanitizer.pdf.">NVIDIA, 2023</a>]</span> framework is similar
+to <a class="reference internal" href="#valgrind"><span class="std std-ref">Valgrind</span></a>, but for NVIDIA GPUs. The exact command line options
+differ with the CUDA version. If the command line examples below don’t work,
+please refer to the NVIDIA user guide version that corresponds to the locally
+installed CUDA toolkit.</p>
+<p>To detect memory leaks:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--cuda-sanitizer<span class="o">=</span><span class="s2">&quot;--tool memcheck --leak-check full&quot;</span><span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Add option <code class="docutils literal notranslate"><span class="pre">--error-exitcode</span> <span class="pre">1</span></code> to return an error code when issues are detected.</p>
+<p>To detect access to uninitialized data:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--cuda-sanitizer<span class="o">=</span><span class="s2">&quot;--tool initcheck&quot;</span><span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Checking for uninitialized data is quite expensive
+for the GPU and can slow down other running GPU processes.</p>
+</section>
+<section id="nsight-systems">
+<span id="id49"></span><h3><span class="section-number">3.4.11. </span>Nsight Systems<a class="headerlink" href="#nsight-systems" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires a CUDA build, enabled with the CMake options
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_CUDA=ON</span></code>.</p>
+</div>
+<p>The NVIDIA Nsight Systems profiles CUDA, MPI, OpenMP and Python applications to
+reveal bottlenecks. It uses <a class="reference internal" href="#perf"><span class="std std-ref">perf</span></a> under the hood to collect CPU information,
+and therefore requires the same kernel settings change explained in <a class="reference internal" href="#perf"><span class="std std-ref">perf</span></a>.</p>
+<p>Command line usage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsys<span class="w"> </span>profile<span class="w"> </span>--trace<span class="o">=</span>cuda<span class="w"> </span>-o<span class="w"> </span>./report-nsys-nbody<span class="w"> </span>--force-overwrite<span class="o">=</span><span class="nb">true</span><span class="w"> </span>src/walberla_bridge/tests/PoissonSolver_test
+nsys<span class="w"> </span>analyze<span class="w"> </span>./report-nsys-nbody.nsys-rep
+</pre></div>
+</div>
+<p>Graphical interface usage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nsys-ui
+</pre></div>
+</div>
+<p>In the UI, create a new project. Under section “Target application”,
+paste <code class="docutils literal notranslate"><span class="pre">./pypresso</span> <span class="pre">../testsuite/python/ek_fluctuations.py</span> <span class="pre">EKFluctuationsGPU</span></code>
+in the “Command line” field and provide the absolute path of the build directory
+in the “Working directory” field. Under section “Environment variables”,
+set any relevant variables, such as OpenMP-specific variables when applicable.
+Enable OpenMP tracing, when applicable. Enable CUDA tracing.
+Under section “Network profiling options”, enable MPI tracing and choose
+the correct MPI vendor for the target environment, and enable UCX if the
+MPI library was configured with UCX support.
+Under section “Python profiling options”, enable Python backtrace samples.
+Finally, click on the Start button to collect samples.
+Once inside the report, open “Timeline View” and unroll all “CUDA HW” timelines
+to display the performance profile of the application.</p>
+</section>
+<section id="perf">
+<span id="id50"></span><h3><span class="section-number">3.4.12. </span>perf<a class="headerlink" href="#perf" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires debug symbols, enabled with the CMake option
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">CMAKE_BUILD_TYPE=DebugOptimized</span></code>,
+as well as external dependencies. On Ubuntu:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>linux-tools-generic
+</pre></div>
+</div>
+<p>On Debian:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>linux-perf
+</pre></div>
+</div>
+<p>On Fedora:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>perf
+</pre></div>
+</div>
+</div>
+<p>The perf <a class="footnote-reference brackets" href="#id62" id="id51" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a> <span id="id52">[<a class="reference internal" href="bibliography.html#id92" title="Linus Torvalds. perf: Linux profiling with performance counters. 2009. URL: https://perf.wiki.kernel.org/index.php/Main_Page.">Torvalds, 2009</a>]</span> tool generates a graph of function calls
+with time measurements.
+It requires privileges that can only be set as root.</p>
+<p>In the following example, the P3M algorithm is profiled to generate a call
+graph in a file called <code class="docutils literal notranslate"><span class="pre">perf.data</span></code>, which is then read to generate a report:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">original_value</span><span class="o">=</span><span class="k">$(</span>sysctl<span class="w"> </span>-n<span class="w"> </span>kernel.perf_event_paranoid<span class="k">)</span>
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>kernel.perf_event_paranoid<span class="o">=</span><span class="m">3</span>
+perf<span class="w"> </span>record<span class="w"> </span>--call-graph<span class="w"> </span>dwarf<span class="w"> </span>./pypresso<span class="w"> </span>../samples/p3m.py<span class="w"> </span>--cpu
+sudo<span class="w"> </span>sysctl<span class="w"> </span>-w<span class="w"> </span>kernel.perf_event_paranoid<span class="o">=</span><span class="si">${</span><span class="nv">original_value</span><span class="si">}</span>
+perf<span class="w"> </span>report<span class="w"> </span>--call-graph
+</pre></div>
+</div>
+<p>When inside the report, press <code class="docutils literal notranslate"><span class="pre">/</span></code> to search for a function name,
+e.g. <code class="docutils literal notranslate"><span class="pre">integrate</span></code>, then highlight the symbol and press <code class="docutils literal notranslate"><span class="pre">+</span></code> to expand
+its call graph. Press <code class="docutils literal notranslate"><span class="pre">q</span></code> to exit the program, or close open tabs.</p>
+<p>A large amount of data will be written to disk during the recording step,
+typically several hundred megabytes. If the hard drive write latency
+is too high, the following warning will be emitted:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Warning:
+Processed 17655 events and lost 7 chunks!
+Check IO/CPU overload!
+</pre></div>
+</div>
+<p>Using a tmpfs drive, perf can write the file directly to RAM
+(mounted as a filesystem), which has better latency.
+To get a list of mounted tmpfs drives and their capacity:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ mount | grep &quot;tmpfs&quot;
+tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
+$ df -h /dev/shm/
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs            32G  320K   32G   1% /dev/shm
+</pre></div>
+</div>
+<p>To use a tmpfs drive as storage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>perf<span class="w"> </span>record<span class="w"> </span>--call-graph<span class="w"> </span>dwarf<span class="w"> </span>-o<span class="w"> </span>/dev/shm/perf.data<span class="w"> </span>../samples/p3m.py<span class="w"> </span>--cpu
+perf<span class="w"> </span>report<span class="w"> </span>--call-graph<span class="w"> </span>-i<span class="w"> </span>/dev/shm/perf.data
+rm<span class="w"> </span>/dev/shm/perf.data
+</pre></div>
+</div>
+</section>
+<section id="kernprof">
+<span id="id53"></span><h3><span class="section-number">3.4.13. </span>kernprof<a class="headerlink" href="#kernprof" title="Link to this heading">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires an external dependency:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>line_profiler
+</pre></div>
+</div>
+</div>
+<p>kernprof <a class="footnote-reference brackets" href="#id63" id="id54" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a> <span id="id55">[<a class="reference internal" href="bibliography.html#id91" title="Robert Kern, Jon Crall, Brett Olsen, and OpenPyUtils community contributors. line_profiler and kernprof. 2008. URL: https://github.com/pyutils/line_profiler.">Kern <em>et al.</em>, 2008</a>]</span> is a low-overhead Python profiler.
+It supports two instrumentation modes: <code class="docutils literal notranslate"><span class="pre">line_profile</span></code> and <code class="docutils literal notranslate"><span class="pre">cProfile</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">--builtin</span></code> option injects a <code class="docutils literal notranslate"><span class="pre">LineProfiler</span></code> object and a <code class="docutils literal notranslate"><span class="pre">profile</span></code>
+function in the global namespace of the instrumented script.
+The latter can be used as a decorator (<code class="docutils literal notranslate"><span class="pre">&#64;profile</span></code>),
+as a context manager (<code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">profile:</span></code>), or
+as begin/end markers (<code class="docutils literal notranslate"><span class="pre">profile.enable()</span></code>, <code class="docutils literal notranslate"><span class="pre">profile.disable()</span></code>)
+to select the regions of code to instrument,
+although the <code class="docutils literal notranslate"><span class="pre">line_profile</span></code> mode only supports the decorator behavior.
+The <code class="docutils literal notranslate"><span class="pre">line_profile</span></code> mode cannot instrument code from imported modules,
+whereas the <code class="docutils literal notranslate"><span class="pre">cProfile</span></code> mode can.</p>
+<p>To make the instrumented script executable with and without kernprof
+when using decorators, add the following code at the top of the script:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;line_profiler&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+</pre></div>
+</div>
+<p>To run kernprof in <code class="docutils literal notranslate"><span class="pre">line_profile</span></code> mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--kernprof<span class="o">=</span><span class="s2">&quot;--line-by-line --view&quot;</span><span class="w"> </span>../samples/p3m.py<span class="w"> </span>--cpu
+</pre></div>
+</div>
+<p>To later view the results again:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>line_profiler<span class="w"> </span>p3m.py.lprof
+</pre></div>
+</div>
+<p>To run kernprof in <code class="docutils literal notranslate"><span class="pre">cProfile</span></code> mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./pypresso<span class="w"> </span>--kernprof<span class="o">=</span><span class="s2">&quot;&quot;</span><span class="w"> </span>../samples/p3m.py<span class="w"> </span>--cpu
+</pre></div>
+</div>
+<p>To interactively read the data:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>python3 -m pstats p3m.py.prof
+p3m.py.prof% sort time
+p3m.py.prof% reverse
+p3m.py.prof% stats
+  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       2  1.090    0.545    1.090    0.545   /opt/espressomd/integrate.py:156(run)
+       1  1.817    1.817    1.817    1.817   /opt/espressomd/electrostatics.py:71(_activate)
+      10  2.619    0.262    2.619    0.262   /opt/espressomd/integrate.py:101(run)
+p3m.py.prof% quit
+</pre></div>
+</div>
+<hr class="docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id56" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id37">1</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://software.llnl.gov/Caliper/">https://software.llnl.gov/Caliper/</a></p>
+</aside>
+<aside class="footnote brackets" id="id57" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id40">2</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://valgrind.org/docs/manual/">https://valgrind.org/docs/manual/</a></p>
+</aside>
+<aside class="footnote brackets" id="id58" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id43">3</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://valgrind.org/docs/manual/cl-manual.html">https://valgrind.org/docs/manual/cl-manual.html</a></p>
+</aside>
+<aside class="footnote brackets" id="id59" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id45">4</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://kcachegrind.github.io/html/Home.html">https://kcachegrind.github.io/html/Home.html</a></p>
+</aside>
+<aside class="footnote brackets" id="id60" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id28">5</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://github.com/google/sanitizers/wiki/AddressSanitizer">https://github.com/google/sanitizers/wiki/AddressSanitizer</a></p>
+</aside>
+<aside class="footnote brackets" id="id61" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id32">6</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html</a></p>
+</aside>
+<aside class="footnote brackets" id="id62" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id51">7</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://perf.wiki.kernel.org/index.php/Main_Page">https://perf.wiki.kernel.org/index.php/Main_Page</a></p>
+</aside>
+<aside class="footnote brackets" id="id63" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id54">8</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://github.com/pyutils/line_profiler">https://github.com/pyutils/line_profiler</a></p>
+</aside>
+<aside class="footnote brackets" id="id64" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id47">9</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/index.html">https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/index.html</a></p>
+</aside>
+<aside class="footnote brackets" id="id65" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id29">10</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://github.com/google/sanitizers/issues/1614">https://github.com/google/sanitizers/issues/1614</a></p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">3. Running a simulation</a><ul>
+<li><a class="reference internal" href="#running-es">3.1. Running ESPResSo</a><ul>
+<li><a class="reference internal" href="#running-a-script">3.1.1. Running a script</a></li>
+<li><a class="reference internal" href="#using-the-console">3.1.2. Using the console</a></li>
+<li><a class="reference internal" href="#interactive-notebooks">3.1.3. Interactive notebooks</a></li>
+<li><a class="reference internal" href="#running-inside-an-ide">3.1.4. Running inside an IDE</a></li>
+<li><a class="reference internal" href="#running-in-the-cloud">3.1.5. Running in the cloud</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#parallel-computing">3.2. Parallel computing</a><ul>
+<li><a class="reference internal" href="#general-syntax">3.2.1. General syntax</a></li>
+<li><a class="reference internal" href="#performance-gain">3.2.2. Performance gain</a></li>
+<li><a class="reference internal" href="#communication-model">3.2.3. Communication model</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gpu-acceleration">3.3. GPU acceleration</a><ul>
+<li><a class="reference internal" href="#cuda-acceleration">3.3.1. CUDA acceleration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#instrumentation">3.4. Instrumentation</a><ul>
+<li><a class="reference internal" href="#debugging">3.4.1. Debugging</a></li>
+<li><a class="reference internal" href="#profiling">3.4.2. Profiling</a></li>
+<li><a class="reference internal" href="#gdb">3.4.3. GDB</a></li>
+<li><a class="reference internal" href="#cuda-gdb">3.4.4. CUDA-GDB</a></li>
+<li><a class="reference internal" href="#asan">3.4.5. ASAN</a></li>
+<li><a class="reference internal" href="#ubsan">3.4.6. UBSAN</a></li>
+<li><a class="reference internal" href="#fpe">3.4.7. FPE</a></li>
+<li><a class="reference internal" href="#caliper">3.4.8. Caliper</a></li>
+<li><a class="reference internal" href="#valgrind">3.4.9. Valgrind</a></li>
+<li><a class="reference internal" href="#compute-sanitizer">3.4.10. Compute Sanitizer</a></li>
+<li><a class="reference internal" href="#nsight-systems">3.4.11. Nsight Systems</a></li>
+<li><a class="reference internal" href="#perf">3.4.12. perf</a></li>
+<li><a class="reference internal" href="#kernprof">3.4.13. kernprof</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,26 @@
+var structDipolarP3MHeffte =
+[
+    [ "DipolarP3MStateClass", "structDipolarP3MHeffte.html#af8a5cb0737673e4779a36632a76e19bb", null ],
+    [ "~DipolarP3MHeffte", "structDipolarP3MHeffte.html#a7bd1804f56b06ffb2062e32532d5a919", null ],
+    [ "DipolarP3MHeffte", "structDipolarP3MHeffte.html#a1d940df6e7b2dfceb521871842fe5a0d", null ],
+    [ "add_long_range_forces", "structDipolarP3MHeffte.html#ac076c340c9ccccb03bf3d1d7c84d82e7", null ],
+    [ "calc_average_self_energy_k_space", "structDipolarP3MHeffte.html#ad164d12cf02a3d18b8bb77332c625501", null ],
+    [ "calc_energy_correction", "structDipolarP3MHeffte.html#aed5ab850d0d1d03b30e4600980d00d5d", null ],
+    [ "calc_influence_function_energy", "structDipolarP3MHeffte.html#a9d92fd9a43a5259f50d8c6d7443315ef", null ],
+    [ "calc_influence_function_force", "structDipolarP3MHeffte.html#aa0b2a09397f861426977c7397707af4a", null ],
+    [ "calc_surface_term", "structDipolarP3MHeffte.html#a051b56231feb72e63b4d58ddc19db384", null ],
+    [ "count_magnetic_particles", "structDipolarP3MHeffte.html#aa626618fb85e74bfab4ce738bf102db3", null ],
+    [ "dipole_assign", "structDipolarP3MHeffte.html#a5600dbe6c760c1e92d75c547e1f5a3ec", null ],
+    [ "init", "structDipolarP3MHeffte.html#a2c9b2c7f208246d9754f49579ca44eeb", null ],
+    [ "init_cpu_kernels", "structDipolarP3MHeffte.html#ae9228f1c037434a5792554a314cbd51b", null ],
+    [ "is_double_precision", "structDipolarP3MHeffte.html#a1372581aca397c05ceabfde797072ea4", null ],
+    [ "is_gpu", "structDipolarP3MHeffte.html#af46d0d9969d347f427ccc25489f0b770", null ],
+    [ "is_tuned", "structDipolarP3MHeffte.html#af4d48f77636395cec948bc09a5a284e5", null ],
+    [ "long_range_energy", "structDipolarP3MHeffte.html#adabe3e206438333553bbbc48587f168b", null ],
+    [ "long_range_kernel", "structDipolarP3MHeffte.html#acdbdf3744ecd3416d8c09aed85516288", null ],
+    [ "npt_add_virial_contribution", "structDipolarP3MHeffte.html#a1bc5fb1b584a9d3cd0b8caaa08a8e3ca", null ],
+    [ "on_activation", "structDipolarP3MHeffte.html#acff65d57acc6263966bf611b3cd8983f", null ],
+    [ "scaleby_box_l", "structDipolarP3MHeffte.html#aa05a0a7dd955ab0cb546d2f63abc18a3", null ],
+    [ "tune", "structDipolarP3MHeffte.html#abd38332eaa5b33005f402cd222372554", null ],
+    [ "dp3m", "structDipolarP3MHeffte.html#aac9ecdadd5b6ff751870d31206f61ea6", null ]
+];

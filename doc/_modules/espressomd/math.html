@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.math &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.math</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2010-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="CylindricalTransformationParameters">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.math.CylindricalTransformationParameters">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CylindricalTransformationParameters</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to hold and validate the parameters needed for a cylindrical transformation.</span>
+<span class="sd">    The three parameters are available as attributes but are read-only.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    center : (3,) array_like of :obj:`float`, default = [0, 0, 0]</span>
+<span class="sd">        Position of the origin of the cylindrical coordinate system.</span>
+<span class="sd">    axis : (3,) array_like of :obj:`float`, default = [0, 0, 1]</span>
+<span class="sd">        Orientation vector of the ``z``-axis of the cylindrical coordinate system.</span>
+<span class="sd">    orientation: (3,) array_like of :obj:`float`, default = [1, 0, 0]</span>
+<span class="sd">        The axis on which ``phi = 0``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If you provide no arguments, the defaults above are set.</span>
+<span class="sd">    If you provide only a ``center`` and an ``axis``, an ``orientation``</span>
+<span class="sd">    will be automatically generated that is orthogonal to ``axis``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Math::CylindricalTransformationParameters&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="calc_quaternions_from_angles">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.math.calc_quaternions_from_angles">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_quaternions_from_angles</span><span class="p">(</span><span class="n">polar_angle</span><span class="p">,</span> <span class="n">azimuthal_angle</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the spherical coordinate representation of a vector</span>
+<span class="sd">    to a quaternion that corresponds to that direction.</span>
+<span class="sd">    Note that this quaternion is not unique, as the third degree of freedom</span>
+<span class="sd">    (rotation around the given vector) is not specified.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    polar_angle : :obj:`float`</span>
+<span class="sd">        The polar angle (angle with the z-axis) in the range [0, pi].</span>
+<span class="sd">    azimuthal_angle : :obj:`float`</span>
+<span class="sd">        The azimuthal angle (angle with the x-axis) in the range [0, 2 pi).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    quaternion : (4,) list of :obj:`float`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">q1w</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">polar_angle</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">q1x</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">q1y</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">polar_angle</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">q1z</span> <span class="o">=</span> <span class="mf">0.</span>
+
+    <span class="n">q2w</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">azimuthal_angle</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">q2x</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">q2y</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">q2z</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">azimuthal_angle</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+
+    <span class="n">q3w</span> <span class="o">=</span> <span class="n">q1w</span> <span class="o">*</span> <span class="n">q2w</span> <span class="o">-</span> <span class="n">q1x</span> <span class="o">*</span> <span class="n">q2x</span> <span class="o">-</span> <span class="n">q1y</span> <span class="o">*</span> <span class="n">q2y</span> <span class="o">-</span> <span class="n">q1z</span> <span class="o">*</span> <span class="n">q2z</span>
+    <span class="n">q3x</span> <span class="o">=</span> <span class="n">q1w</span> <span class="o">*</span> <span class="n">q2x</span> <span class="o">+</span> <span class="n">q1x</span> <span class="o">*</span> <span class="n">q2w</span> <span class="o">-</span> <span class="n">q1y</span> <span class="o">*</span> <span class="n">q2z</span> <span class="o">+</span> <span class="n">q1z</span> <span class="o">*</span> <span class="n">q2y</span>
+    <span class="n">q3y</span> <span class="o">=</span> <span class="n">q1w</span> <span class="o">*</span> <span class="n">q2y</span> <span class="o">+</span> <span class="n">q1x</span> <span class="o">*</span> <span class="n">q2z</span> <span class="o">+</span> <span class="n">q1y</span> <span class="o">*</span> <span class="n">q2w</span> <span class="o">-</span> <span class="n">q1z</span> <span class="o">*</span> <span class="n">q2x</span>
+    <span class="n">q3z</span> <span class="o">=</span> <span class="n">q1w</span> <span class="o">*</span> <span class="n">q2z</span> <span class="o">-</span> <span class="n">q1x</span> <span class="o">*</span> <span class="n">q2y</span> <span class="o">+</span> <span class="n">q1y</span> <span class="o">*</span> <span class="n">q2x</span> <span class="o">+</span> <span class="n">q1z</span> <span class="o">*</span> <span class="n">q2w</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">q3w</span><span class="p">,</span> <span class="n">q3x</span><span class="p">,</span> <span class="n">q3y</span><span class="p">,</span> <span class="n">q3z</span><span class="p">]</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

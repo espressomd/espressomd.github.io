@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>15. Electrokinetics &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="16. Analysis" href="analysis.html" />
+    <link rel="prev" title="14. Lattice-Boltzmann" href="lb.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="electrokinetics">
+<span id="id1"></span><h1><span class="section-number">15. </span>Electrokinetics<a class="headerlink" href="#electrokinetics" title="Link to this heading">¶</a></h1>
+<p>The electrokinetics setup in ESPResSo allows for the description of
+electro-hydrodynamic systems on the level of ion density distributions
+coupled to a lattice-Boltzmann (LB) fluid. The ion density distributions
+may also interact with explicit charged particles, which are
+interpolated on the LB grid. In the following paragraph we briefly
+explain the electrokinetic model implemented in ESPResSo, before we come to the
+description of the interface.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please cite <span id="id2">Godenschwager <em>et al.</em> [<a class="reference internal" href="bibliography.html#id57" title="Christian Godenschwager, Florian Schornbaum, Martin Bauer, Harald Köstler, and Ulrich Rüde. A framework for hybrid parallel flow simulations with a trillion cells in complex geometries. In Proceedings of the International Conference on High Performance Computing, Networking, Storage and Analysis. New York, 2013. Association for Computing Machinery. doi:10.1145/2503210.2503273.">2013</a>]</span> and <span id="id3">Bauer <em>et al.</em> [<a class="reference internal" href="bibliography.html#id22" title="Martin Bauer, Sebastian Eibl, Christian Godenschwager, Nils Kohl, Michael Kuron, Christoph Rettinger, Florian Schornbaum, Christoph Schwarzmeier, Dominik Thönnes, Harald Köstler, and Ulrich Rüde. waLBerla: a block-structured high-performance framework for multiphysics simulations. Computers &amp; Mathematics with Applications, 81:478–501, 2021. doi:10.1016/j.camwa.2020.01.007.">2021</a>]</span> (BibTeX keys
+<code class="docutils literal notranslate"><span class="pre">godenschwager13a</span></code> and <code class="docutils literal notranslate"><span class="pre">bauer21a</span></code> in <code class="file docutils literal notranslate"><span class="pre">doc/bibliography.bib</span></code>) if
+you use the LB fluid. When generating your own kernels with pystencils and
+lbmpy, please also cite <span id="id4">Bauer <em>et al.</em> [<a class="reference internal" href="bibliography.html#id21" title="Martin Bauer, Johannes Hötzer, Dominik Ernst, Julian Hammer, Marco Seiz, Henrik Hierl, Jan Hönig, Harald Köstler, Gerhard Wellein, Britta Nestler, and Ulrich Rüde. Code generation for massively parallel phase-field simulations. In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis. New York, New York, USA, November 2019. Association for Computing Machinery. doi:10.1145/3295500.3356186.">2019</a>]</span> and <span id="id5">Bauer <em>et al.</em> [<a class="reference internal" href="bibliography.html#id23" title="Martin Bauer, Harald Köstler, and Ulrich Rüde. lbmpy: automatic code generation for efficient parallel lattice Boltzmann methods. Journal of Computational Science, 49:101269, 2021. doi:10.1016/j.jocs.2020.101269.">2021</a>]</span> (BibTeX
+key <code class="docutils literal notranslate"><span class="pre">bauer19a</span></code> resp. <code class="docutils literal notranslate"><span class="pre">bauer21b</span></code> in <code class="file docutils literal notranslate"><span class="pre">doc/bibliography.bib</span></code>).</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires external features <code class="docutils literal notranslate"><span class="pre">WALBERLA</span></code> and optionally <code class="docutils literal notranslate"><span class="pre">FFTW</span></code>
+(for the FFT-based Poisson solver), enabled with the CMake options
+<code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_WALBERLA=ON</span> <span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_FFTW=ON</span></code>.</p>
+</div>
+<section id="electrokinetic-equations">
+<span id="id6"></span><h2><span class="section-number">15.1. </span>Electrokinetic equations<a class="headerlink" href="#electrokinetic-equations" title="Link to this heading">¶</a></h2>
+<p>In the electrokinetics code we solve the following system of coupled
+continuity, diffusion-advection, Poisson, and Navier-Stokes equations:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\label{eq:ek-model-continuity} \frac{\partial n_k}{\partial t} &amp; = &amp; -\, \nabla \cdot \vec{j}_k \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+\label{eq:ek-model-fluxes} \vec{j}_{k} &amp; = &amp; -D_k \nabla n_k - \nu_k \, q_k n_k\, \nabla \Phi + n_k \vec{v}_{\mathrm{fl}} \vphantom{\left(\frac{\partial}{\partial}\right)} + \sqrt{n_k}\vec{\mathcal{W}}_k; \\
+\label{eq:ek-model-poisson} \Delta \Phi &amp; = &amp; -4 \pi \, {l_\mathrm{B}}\, {k_\mathrm{B}T}\sum_k q_k n_k \vphantom{\left(\frac{\partial}{\partial}\right)}; \\
+\nonumber \left(\frac{\partial \vec{v}_{\mathrm{fl}}}{\partial t} + \vec{v}_{\mathrm{fl}} \cdot \nabla \vec{v}_{\mathrm{fl}} \right) \rho_\mathrm{fl} &amp; = &amp; -{k_\mathrm{B}T}\, \nabla \rho_\mathrm{fl} - q_k n_k \nabla \Phi \\
+\label{eq:ek-model-velocity} &amp; &amp; +\, \eta \Delta \vec{v}_{\mathrm{fl}} + (\eta / 3 + \eta_{\text{b}}) \nabla (\nabla \cdot \vec{v}_{\mathrm{fl}}) \vphantom{\left(\frac{\partial}{\partial}\right)} ; \\
+\label{eq:ek-model-continuity-fl} \frac{\partial \rho_\mathrm{fl}}{\partial t} &amp; = &amp; -\,\nabla\cdot\left( \rho_\mathrm{fl} \vec{v}_{\mathrm{fl}} \right) \vphantom{\left(\frac{\partial}{\partial}\right)} , \end{aligned}\end{split}\]</div>
+<p>which define relations between the following observables</p>
+<dl class="simple">
+<dt><span class="math notranslate nohighlight">\(n_k\)</span></dt><dd><p>the number density of the particles of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{j}_k\)</span></dt><dd><p>the number density flux of the particles of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\Phi\)</span></dt><dd><p>the electrostatic potential,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\rho_{\mathrm{fl}}\)</span></dt><dd><p>the mass density of the fluid,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{v}_{\mathrm{fl}}\)</span></dt><dd><p>the advective velocity of the fluid,</p>
+</dd>
+</dl>
+<p>and input parameters</p>
+<dl>
+<dt><span class="math notranslate nohighlight">\(D_k\)</span></dt><dd><p>the diffusion constant of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\nu_k\)</span></dt><dd><p>the mobility of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\vec{\mathcal{W}}_k\)</span></dt><dd><p>the white-noise term for the fluctuations of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(q_k\)</span></dt><dd><p>the charge of a single particle of species <span class="math notranslate nohighlight">\(k\)</span>,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\({l_\mathrm{B}}\)</span></dt><dd><p>the Bjerrum length,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\({k_\mathrm{B}T}\)</span></dt><dd><div class="line-block">
+<div class="line">the thermal energy given by the product of Boltzmann’s constant
+<span class="math notranslate nohighlight">\(k_\text{B}\)</span></div>
+<div class="line">and the temperature <span class="math notranslate nohighlight">\(T\)</span>,</div>
+</div>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\eta\)</span></dt><dd><p>the dynamic viscosity of the fluid,</p>
+</dd>
+<dt><span class="math notranslate nohighlight">\(\eta_{\text{b}}\)</span></dt><dd><p>the bulk viscosity of the fluid.</p>
+</dd>
+</dl>
+<p>The temperature <span class="math notranslate nohighlight">\(T\)</span>, and diffusion constants <span class="math notranslate nohighlight">\(D_k\)</span> and
+mobilities <span class="math notranslate nohighlight">\(\nu_k\)</span> of individual species are linked through the
+Einstein-Smoluchowski relation <span class="math notranslate nohighlight">\(D_k /
+\nu_k = {k_\mathrm{B}T}\)</span>. This system of equations
+combining diffusion-advection, electrostatics, and hydrodynamics is
+conventionally referred to as the <em>Electrokinetic Equations</em>.</p>
+<p>The electrokinetic equations have the following properties:</p>
+<ul>
+<li><p>On the coarse time and length scale of the model, the dynamics of the
+particle species can be described in terms of smooth density
+distributions and potentials as opposed to the microscale where
+highly localized densities cause singularities in the potential.</p>
+<p>In most situations, this restricts the application of the model to
+species of monovalent ions, since ions of higher valency typically
+show strong condensation and correlation effects – the localization
+of individual ions in local potential minima and the subsequent
+correlated motion with the charges causing this minima.</p>
+</li>
+<li><p>Only the entropy of an ideal gas and electrostatic interactions are
+accounted for. In particular, there is no excluded volume.</p>
+<p>This restricts the application of the model to monovalent ions and
+moderate charge densities. At higher valencies or densities,
+overcharging and layering effects can occur, which lead to
+non-monotonic charge densities and potentials, that can not be
+covered by a mean-field model such as Poisson–Boltzmann or this one.</p>
+<p>Even in salt free systems containing only counter ions, the
+counter-ion densities close to highly charged objects can be
+overestimated when neglecting excluded volume effects. Decades of the
+application of Poisson–Boltzmann theory to systems of electrolytic
+solutions, however, show that those conditions are fulfilled for
+monovalent salt ions (such as sodium chloride or potassium chloride)
+at experimentally realizable concentrations.</p>
+</li>
+<li><p>Electrodynamic and magnetic effects play no role. Electrolytic
+solutions fulfill those conditions as long as they don’t contain
+magnetic particles.</p></li>
+<li><p>The diffusion coefficient is a scalar, which means there can not be
+any cross-diffusion. Additionally, the diffusive behavior has been
+deduced using a formalism relying on the notion of a local
+equilibrium. The resulting diffusion equation, however, is known to
+be valid also far from equilibrium.</p></li>
+<li><p>The temperature is constant throughout the system.</p></li>
+<li><p>The density fluxes instantaneously relax to their local equilibrium
+values. Obviously one can not extract information about processes on
+length and time scales not covered by the model, such as dielectric
+spectra at frequencies, high enough that they correspond to times
+faster than the diffusive time scales of the charged species.</p></li>
+</ul>
+</section>
+<section id="setup">
+<span id="ek-setup"></span><h2><span class="section-number">15.2. </span>Setup<a class="headerlink" href="#setup" title="Link to this heading">¶</a></h2>
+<section id="initialization">
+<span id="ek-initialization"></span><h3><span class="section-number">15.2.1. </span>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">¶</a></h3>
+<p>Here is a minimal working example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.electrokinetics</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="mi">3</span> <span class="o">*</span> <span class="p">[</span><span class="mf">6.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="n">lattice</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Lattice</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ek_solver</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKNone</span><span class="p">(</span><span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKContainer</span><span class="p">(</span>
+    <span class="n">solver</span><span class="o">=</span><span class="n">ek_solver</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">system.ekcontainer</span></code> is the EK system, <code class="docutils literal notranslate"><span class="pre">ek_solver</span></code> is the Poisson
+solver (here <code class="docutils literal notranslate"><span class="pre">EKNone</span></code> doesn’t actually solve the electrostatic field, but
+instead imposes a zero field), and <code class="docutils literal notranslate"><span class="pre">lattice</span></code> contains the grid parameters.
+In this setup, the EK system doesn’t contain any species. The following
+sections will show how to add species that can diffuse, advect, react and/or
+electrostatically interact. An EK system can be set up at the same time as a
+LB system.</p>
+<p>To detach an EK system, use the following syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</section>
+<section id="diffusive-species">
+<span id="id7"></span><h3><span class="section-number">15.2.2. </span>Diffusive species<a class="headerlink" href="#diffusive-species" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek_species</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKSpecies</span><span class="p">(</span>
+    <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+    <span class="n">single_precision</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">kT</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">tau</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span>
+    <span class="n">density</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span>
+    <span class="n">valency</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">diffusion</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">advection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">friction_coupling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">ext_efield</span><span class="o">=</span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKSpecies" title="espressomd.electrokinetics.EKSpecies"><code class="xref py py-class docutils literal notranslate"><span class="pre">EKSpecies</span></code></a> is used to initialize a diffusive
+species. Here the options specify: the electrokinetic <em>number densities</em>
+<code class="docutils literal notranslate"><span class="pre">density</span></code> (independent from the LB <code class="docutils literal notranslate"><span class="pre">density</span></code>), the diffusion coefficient
+<code class="docutils literal notranslate"><span class="pre">diffusion</span></code>, the valency of the particles of that species <code class="docutils literal notranslate"><span class="pre">valency</span></code>,
+the optional external (electric) force <code class="docutils literal notranslate"><span class="pre">ext_efield</span></code> which is applied to
+the diffusive species, the thermal energy <code class="docutils literal notranslate"><span class="pre">kT</span></code> for thermal fluctuations,
+<code class="docutils literal notranslate"><span class="pre">friction_coupling</span></code> to enable coupling of the diffusive species to the
+LB fluid force and <code class="docutils literal notranslate"><span class="pre">advection</span></code> to add an advective contribution to the
+diffusive species’ fluxes from the LB fluid.
+Multiple species can be added to the EK system.</p>
+<p>To add species to the EK system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek_species</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To remove species from the EK system:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ek_species</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Individual nodes and slices of the species lattice can be accessed and
+modified using the syntax outlined in <a class="reference internal" href="lb.html#reading-and-setting-properties-of-single-lattice-nodes"><span class="std std-ref">Reading and setting properties of single lattice nodes</span></a>.</p>
+<p>As mentioned before, the LB density is completely decoupled from the
+electrokinetic densities. This has the advantage that greater freedom can
+be achieved in matching the internal parameters to an experimental system.
+Moreover, it is possible to choose parameters for which the LB is more stable.</p>
+</section>
+<section id="performance-considerations">
+<h3><span class="section-number">15.2.3. </span>Performance considerations<a class="headerlink" href="#performance-considerations" title="Link to this heading">¶</a></h3>
+<p>The CPU implementation of the EK has an extra flag <code class="docutils literal notranslate"><span class="pre">single_precision</span></code> to
+use single-precision floating point values. These are approximately 10%
+faster than double-precision, at the cost of a small loss in precision.</p>
+</section>
+</section>
+<section id="checkpointing">
+<span id="checkpointing-ek"></span><h2><span class="section-number">15.3. </span>Checkpointing<a class="headerlink" href="#checkpointing" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ek_species</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">binary</span><span class="p">)</span>
+<span class="n">ek_species</span><span class="o">.</span><span class="n">ekcontainer</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">binary</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first command saves all of the EK nodes’ properties to an ASCII
+(<code class="docutils literal notranslate"><span class="pre">binary=False</span></code>) or binary (<code class="docutils literal notranslate"><span class="pre">binary=True</span></code>) format respectively.
+The second command loads the EK nodes’ properties.
+In both cases <code class="docutils literal notranslate"><span class="pre">path</span></code> specifies the location of the
+checkpoint file. This is useful for restarting a simulation either on the same
+machine or a different machine. Some care should be taken when using the binary
+format as the format of doubles can depend on both the computer being used as
+well as the compiler.</p>
+</section>
+<section id="vtk-output">
+<span id="ek-vtk-output"></span><h2><span class="section-number">15.4. </span>VTK output<a class="headerlink" href="#vtk-output" title="Link to this heading">¶</a></h2>
+<p>The waLBerla library implements a globally-accessible VTK registry.
+A VTK stream can be attached to an EK actor to periodically write
+one or multiple fluid field data into a single file using
+<a class="reference internal" href="espressomd.html#espressomd.electrokinetics.VTKOutput" title="espressomd.electrokinetics.VTKOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">VTKOutput</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vtk_obs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;density&quot;</span><span class="p">]</span>
+<span class="c1"># create a VTK callback that automatically writes every 10 EK steps</span>
+<span class="n">ek_vtk</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">VTKOutput</span><span class="p">(</span>
+    <span class="n">identifier</span><span class="o">=</span><span class="s2">&quot;ek_vtk_automatic&quot;</span><span class="p">,</span> <span class="n">observables</span><span class="o">=</span><span class="n">vtk_obs</span><span class="p">,</span> <span class="n">delta_N</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ek_species</span><span class="o">.</span><span class="n">add_vtk_writer</span><span class="p">(</span><span class="n">vtk</span><span class="o">=</span><span class="n">ek_vtk</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="c1"># can be deactivated</span>
+<span class="n">ek_vtk</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ek_vtk</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
+<span class="c1"># create a VTK callback that writes only when explicitly called</span>
+<span class="n">ek_vtk_on_demand</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">VTKOutput</span><span class="p">(</span>
+    <span class="n">identifier</span><span class="o">=</span><span class="s2">&quot;ek_vtk_now&quot;</span><span class="p">,</span> <span class="n">observables</span><span class="o">=</span><span class="n">vtk_obs</span><span class="p">)</span>
+<span class="n">ek_species</span><span class="o">.</span><span class="n">add_vtk_writer</span><span class="p">(</span><span class="n">vtk</span><span class="o">=</span><span class="n">ek_vtk_on_demand</span><span class="p">)</span>
+<span class="n">ek_vtk_on_demand</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Currently only supports the species density.
+By default, the properties of the current state
+of the species are written to disk on demand. To add a stream that writes
+to disk continuously, use the optional argument <code class="docutils literal notranslate"><span class="pre">delta_N</span></code> to indicate
+the level of subsampling. Such a stream can be deactivated.</p>
+<p>The VTK format is readable by visualization software such as ParaView <a class="footnote-reference brackets" href="#id11" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a>
+or Mayavi2 <a class="footnote-reference brackets" href="#id12" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a>, as well as in ESPResSo (see <a class="reference internal" href="io.html#reading-vtk-files"><span class="std std-ref">Reading VTK files</span></a>).
+If you plan to use ParaView for visualization, note that also the particle
+positions can be exported using the VTK format
+(see <a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList.writevtk" title="espressomd.particle_data.ParticleList.writevtk"><code class="xref py py-meth docutils literal notranslate"><span class="pre">writevtk()</span></code></a>).</p>
+<p>Important: these VTK files are written in multi-piece format, i.e. each MPI
+rank writes its local domain to a new piece in the VTK uniform grid to avoid
+a MPI reduction. ParaView can handle the topology reconstruction natively.
+However, when reading the multi-piece file with the Python <code class="docutils literal notranslate"><span class="pre">vtk</span></code> package,
+the topology must be manually reconstructed. In particular, calling the XML
+reader <code class="docutils literal notranslate"><span class="pre">GetOutput()</span></code> method directly after the update step will erase all
+topology information. While this is not an issue for VTK files obtained from
+simulations that ran with 1 MPI rank, for parallel simulations this will lead
+to 3D grids with incorrectly ordered data. Automatic topology reconstruction
+is available through <a class="reference internal" href="espressomd.io.html#espressomd.io.vtk.VTKReader" title="espressomd.io.vtk.VTKReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">VTKReader</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.electrokinetics</span>
+<span class="kn">import</span> <span class="nn">espressomd.io.vtk</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">12.</span><span class="p">,</span> <span class="mf">14.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="n">lattice</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Lattice</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ek_solver</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKNone</span><span class="p">(</span><span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">)</span>
+<span class="n">ek_species</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKSpecies</span><span class="p">(</span>
+    <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">kT</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">diffusion</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">valency</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+    <span class="n">advection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">friction_coupling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKContainer</span><span class="p">(</span>
+    <span class="n">solver</span><span class="o">=</span><span class="n">ek_solver</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">ek_species</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek_species</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">vtk_reader</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">vtk</span><span class="o">.</span><span class="n">VTKReader</span><span class="p">()</span>
+<span class="n">label_density</span> <span class="o">=</span> <span class="s2">&quot;density&quot;</span>
+
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_directory</span><span class="p">:</span>
+    <span class="n">path_vtk_root</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_directory</span><span class="p">)</span>
+    <span class="n">label_vtk</span> <span class="o">=</span> <span class="s2">&quot;ek_vtk&quot;</span>
+    <span class="n">path_vtk</span> <span class="o">=</span> <span class="n">path_vtk_root</span> <span class="o">/</span> <span class="n">label_vtk</span> <span class="o">/</span> <span class="s2">&quot;simulation_step_0.vtu&quot;</span>
+
+    <span class="c1"># write VTK file</span>
+    <span class="n">ek_vtk</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">VTKOutput</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">label_vtk</span><span class="p">,</span> <span class="n">delta_N</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">observables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;density&quot;</span><span class="p">],</span>
+        <span class="n">base_folder</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">path_vtk_root</span><span class="p">))</span>
+    <span class="n">ek_species</span><span class="o">.</span><span class="n">add_vtk_writer</span><span class="p">(</span><span class="n">vtk</span><span class="o">=</span><span class="n">ek_vtk</span><span class="p">)</span>
+    <span class="n">ek_vtk</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+    <span class="c1"># read VTK file</span>
+    <span class="n">vtk_grids</span> <span class="o">=</span> <span class="n">vtk_reader</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path_vtk</span><span class="p">)</span>
+    <span class="n">vtk_density</span> <span class="o">=</span> <span class="n">vtk_grids</span><span class="p">[</span><span class="n">label_density</span><span class="p">]</span>
+
+    <span class="c1"># check VTK values match node values</span>
+    <span class="n">ek_density</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">ek_species</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">density</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">vtk_density</span><span class="p">,</span> <span class="n">ek_density</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Poisson grid can be written to a file in either unstructured (<code class="docutils literal notranslate"><span class="pre">.vtu</span></code>) or
+structured (<code class="docutils literal notranslate"><span class="pre">.vti</span></code>) grid format. The latter doesn’t require topology reconstruction.
+Both file formats can be read by <a class="reference internal" href="espressomd.io.html#espressomd.io.vtk.VTKReader" title="espressomd.io.vtk.VTKReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">VTKReader</span></code></a>.
+To enforce unstructured grid format, pass parameter <code class="docutils literal notranslate"><span class="pre">force_pvtu=True</span></code>.</p>
+</section>
+<section id="setting-up-boundary-conditions">
+<span id="setting-up-ek-boundary-conditions"></span><h2><span class="section-number">15.5. </span>Setting up boundary conditions<a class="headerlink" href="#setting-up-boundary-conditions" title="Link to this heading">¶</a></h2>
+<p>It is possible to impose a fixed density and a fixed flux on EK species.</p>
+<p>Under the hood, a boundary field is added to the blockforest, which contains
+pre-calculated information for the streaming operations.</p>
+<section id="per-node-boundary-conditions">
+<span id="per-node-ek-boundary-conditions"></span><h3><span class="section-number">15.5.1. </span>Per-node boundary conditions<a class="headerlink" href="#per-node-boundary-conditions" title="Link to this heading">¶</a></h3>
+<p>One can set (or update) the boundary conditions of individual nodes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.electrokinetics</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">lattice</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Lattice</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ek_solver</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKNone</span><span class="p">(</span><span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">)</span>
+<span class="n">ek_species</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKSpecies</span><span class="p">(</span>
+    <span class="n">kT</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">valency</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">diffusion</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">advection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">friction_coupling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKContainer</span><span class="p">(</span>
+    <span class="n">solver</span><span class="o">=</span><span class="n">ek_solver</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">ek_species</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek_species</span><span class="p">)</span>
+<span class="c1"># set node fixed density boundary conditions</span>
+<span class="n">ek_species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">boundary</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">DensityBoundary</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+<span class="c1"># update node fixed density boundary conditions</span>
+<span class="n">ek_species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">boundary</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">DensityBoundary</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span>
+<span class="c1"># remove node boundary conditions</span>
+<span class="n">ek_species</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">boundary</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</section>
+<section id="shape-based-boundary-conditions">
+<span id="shape-based-ek-boundary-conditions"></span><h3><span class="section-number">15.5.2. </span>Shape-based boundary conditions<a class="headerlink" href="#shape-based-boundary-conditions" title="Link to this heading">¶</a></h3>
+<p>Adding a shape-based boundary is straightforward:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.electrokinetics</span>
+<span class="kn">import</span> <span class="nn">espressomd.shapes</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">skin</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">lattice</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">Lattice</span><span class="p">(</span><span class="n">agrid</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ek_solver</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKNone</span><span class="p">(</span><span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">)</span>
+<span class="n">ek_species</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKSpecies</span><span class="p">(</span>
+    <span class="n">kT</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">valency</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">diffusion</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">advection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">friction_coupling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">system</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">EKContainer</span><span class="p">(</span>
+    <span class="n">solver</span><span class="o">=</span><span class="n">ek_solver</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="n">ek_species</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
+<span class="n">system</span><span class="o">.</span><span class="n">ekcontainer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ek_species</span><span class="p">)</span>
+<span class="c1"># set fixed density boundary conditions</span>
+<span class="n">wall</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">Wall</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="n">dist</span><span class="o">=</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="n">ek_species</span><span class="o">.</span><span class="n">add_boundary_from_shape</span><span class="p">(</span>
+    <span class="n">shape</span><span class="o">=</span><span class="n">wall</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">boundary_type</span><span class="o">=</span><span class="n">espressomd</span><span class="o">.</span><span class="n">electrokinetics</span><span class="o">.</span><span class="n">DensityBoundary</span><span class="p">)</span>
+<span class="c1"># clear fixed density boundary conditions</span>
+<span class="n">ek_species</span><span class="o">.</span><span class="n">clear_density_boundaries</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>For a position-dependent flux, the argument to <code class="docutils literal notranslate"><span class="pre">value</span></code> must be a 4D grid
+(the first three dimensions must match the EK grid shape, the fourth
+dimension has size 3 for the flux).</p>
+<p>For a complete description of all available shapes, refer to
+<a class="reference internal" href="espressomd.html#module-espressomd.shapes" title="espressomd.shapes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">espressomd.shapes</span></code></a>.</p>
+</section>
+</section>
+<section id="prototyping-new-ek-methods">
+<span id="id10"></span><h2><span class="section-number">15.6. </span>Prototyping new EK methods<a class="headerlink" href="#prototyping-new-ek-methods" title="Link to this heading">¶</a></h2>
+<p>Start by installing the code generator dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>requirements.txt<span class="w"> </span>numpy<span class="w"> </span>sympy<span class="w"> </span>lbmpy<span class="w"> </span>pystencils<span class="w"> </span>islpy
+</pre></div>
+</div>
+<p>Next, edit the code generator script to configure new kernels, then execute it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>maintainer/walberla_kernels/generate_lb_kernels.py
+</pre></div>
+</div>
+<p>The script takes optional arguments to control the CPU or GPU architecture,
+as well as the floating-point precision. The generated source code files need
+to be written to <code class="file docutils literal notranslate"><span class="pre">src/walberla_bridge/src/electrokinetics/generated_kernels/</span></code>
+and <code class="file docutils literal notranslate"><span class="pre">src/walberla_bridge/src/electrokinetics/reactions/generated_kernels/</span></code>.
+These steps can be automated with the convenience shell functions documented in
+<code class="file docutils literal notranslate"><span class="pre">maintainer/walberla_kernels/Readme.md</span></code>.
+Edit the <code class="file docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file in the destination folders to include the
+new kernels in the build system.
+Then, adapt <code class="file docutils literal notranslate"><span class="pre">src/walberla_bridge/src/electrokinetics/EKinWalberlaImpl.hpp</span></code>
+to use the new EK kernels.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id11" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">5</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="https://www.paraview.org/">https://www.paraview.org/</a></p>
+</aside>
+<aside class="footnote brackets" id="id12" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">6</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="http://code.enthought.com/projects/mayavi/">http://code.enthought.com/projects/mayavi/</a></p>
+</aside>
+</aside>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">15. Electrokinetics</a><ul>
+<li><a class="reference internal" href="#electrokinetic-equations">15.1. Electrokinetic equations</a></li>
+<li><a class="reference internal" href="#setup">15.2. Setup</a><ul>
+<li><a class="reference internal" href="#initialization">15.2.1. Initialization</a></li>
+<li><a class="reference internal" href="#diffusive-species">15.2.2. Diffusive species</a></li>
+<li><a class="reference internal" href="#performance-considerations">15.2.3. Performance considerations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#checkpointing">15.3. Checkpointing</a></li>
+<li><a class="reference internal" href="#vtk-output">15.4. VTK output</a></li>
+<li><a class="reference internal" href="#setting-up-boundary-conditions">15.5. Setting up boundary conditions</a><ul>
+<li><a class="reference internal" href="#per-node-boundary-conditions">15.5.1. Per-node boundary conditions</a></li>
+<li><a class="reference internal" href="#shape-based-boundary-conditions">15.5.2. Shape-based boundary conditions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prototyping-new-ek-methods">15.6. Prototyping new EK methods</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

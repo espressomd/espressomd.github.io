@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.particle_data &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.particle_data</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">from</span> <span class="nn">.interactions</span> <span class="kn">import</span> <span class="n">BondedInteraction</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">nesting_level</span><span class="p">,</span> <span class="n">array_locked</span><span class="p">,</span> <span class="n">is_valid_type</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">check_type_or_throw_except</span>
+<span class="kn">from</span> <span class="nn">.code_features</span> <span class="kn">import</span> <span class="n">assert_features</span><span class="p">,</span> <span class="n">has_features</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">script_interface_register</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">fast_tiling</span>
+<span class="kn">from</span> <span class="nn">.propagation</span> <span class="kn">import</span> <span class="n">Propagation</span>
+
+
+<div class="viewcode-block" id="ParticleHandle">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleHandle</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id: :obj:`int`</span>
+<span class="sd">        Particle identifier.</span>
+
+<span class="sd">    type: :obj:`int`</span>
+<span class="sd">        The particle type for non-bonded interactions.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           The value of ``type`` has to be an integer &gt;= 0.</span>
+
+<span class="sd">    mol_id: :obj:`int`</span>
+<span class="sd">        The molecule id of the particle.</span>
+
+<span class="sd">        The particle ``mol_id`` is used to differentiate between</span>
+<span class="sd">        particles belonging to different molecules, e.g. when virtual</span>
+<span class="sd">        sites are used, or object-in-fluid cells. The default</span>
+<span class="sd">        ``mol_id`` for all particles is 0.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           The value of ``mol_id`` has to be an integer &gt;= 0.</span>
+
+<span class="sd">    pos: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The unwrapped (not folded into central box) particle position.</span>
+
+<span class="sd">    pos_folded: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The wrapped (folded into central box) position vector of a particle.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           Setting the folded position is ambiguous and is thus not possible,</span>
+<span class="sd">           please use ``pos`` instead.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=[10, 10, 10])</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=(5, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=(10, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=(25, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; for p in system.part:</span>
+<span class="sd">        ...     print(p.pos)</span>
+<span class="sd">        [ 5.  0.  0.]</span>
+<span class="sd">        [ 10.   0.   0.]</span>
+<span class="sd">        [ 25.   0.   0.]</span>
+<span class="sd">        &gt;&gt;&gt; for p in system.part:</span>
+<span class="sd">        ...     print(p.pos_folded)</span>
+<span class="sd">        [5.0, 0.0, 0.0]</span>
+<span class="sd">        [0.0, 0.0, 0.0]</span>
+<span class="sd">        [5.0, 0.0, 0.0]</span>
+
+<span class="sd">    image_box: (3,) array_like of :obj:`int`</span>
+<span class="sd">        The image box the particles is in.</span>
+
+<span class="sd">        This is the number of times the particle position has been folded by</span>
+<span class="sd">        the box length in each direction.</span>
+
+<span class="sd">    lees_edwards_offset: :obj:`float`</span>
+<span class="sd">        The accumulated Lees-Edwards offset.</span>
+<span class="sd">        Can be used to reconstruct continuous trajectories.</span>
+
+<span class="sd">    lees_edwards_flag: :obj:`int`</span>
+<span class="sd">        The Lees-Edwards flag that indicate if the particle crossed</span>
+<span class="sd">        the upper or lower boundary.</span>
+
+<span class="sd">    v: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle velocity in the lab frame.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           The velocity will be updated during integration.</span>
+
+<span class="sd">    f: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The instantaneous force acting on this particle.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           The force is recomputed during the integration step and any force</span>
+<span class="sd">           set in this way is immediately lost at the next integration step.</span>
+
+<span class="sd">    node: (3,) array_like of :obj:`int`</span>
+<span class="sd">        The node the particle is on, identified by its MPI rank.</span>
+
+<span class="sd">    mass: :obj:`float`</span>
+<span class="sd">        Particle mass.</span>
+
+<span class="sd">    omega_lab: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle angular velocity the lab frame.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``ROTATION``.</span>
+
+<span class="sd">           If you set the angular velocity of the particle in the lab</span>
+<span class="sd">           frame, the orientation of the particle</span>
+<span class="sd">           (:attr:`~espressomd.particle_data.ParticleHandle.quat`) must be</span>
+<span class="sd">           set before setting ``omega_lab``, otherwise the conversion from</span>
+<span class="sd">           lab to body frame will not be handled properly.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ---------</span>
+<span class="sd">        :attr:`~espressomd.particle_data.ParticleHandle.omega_body`</span>
+
+<span class="sd">    quat: (4,) array_like of :obj:`float`</span>
+<span class="sd">        Quaternion representation of the particle rotational position.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``ROTATION``.</span>
+
+<span class="sd">    director: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle director.</span>
+
+<span class="sd">        The ``director`` defines the the z-axis in the body-fixed frame.</span>
+<span class="sd">        If particle rotations happen, the director, i.e., the body-fixed</span>
+<span class="sd">        coordinate system co-rotates. Properties such as the angular</span>
+<span class="sd">        velocity :attr:`espressomd.particle_data.ParticleHandle.omega_body`</span>
+<span class="sd">        are evaluated in this body-fixed coordinate system.</span>
+<span class="sd">        When using particle dipoles, the dipole moment is co-aligned with</span>
+<span class="sd">        the particle director. Setting the director thus modifies the</span>
+<span class="sd">        dipole moment orientation (:attr:`espressomd.particle_data.ParticleHandle.dip`)</span>
+<span class="sd">        and vice versa.</span>
+<span class="sd">        See also :ref:`Rotational degrees of freedom and particle anisotropy`.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``ROTATION``.</span>
+
+<span class="sd">    omega_body: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle angular velocity in body frame.</span>
+
+<span class="sd">        This property sets the angular momentum of this particle in the</span>
+<span class="sd">        particles co-rotating frame (or body frame).</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``ROTATION``.</span>
+
+<span class="sd">    torque_lab: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle torque in the lab frame.</span>
+
+<span class="sd">        This property defines the torque of this particle</span>
+<span class="sd">        in the fixed frame (or laboratory frame).</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           The orientation of the particle</span>
+<span class="sd">           (:attr:`~espressomd.particle_data.ParticleHandle.quat`) must be</span>
+<span class="sd">           set before setting this property, otherwise the conversion from</span>
+<span class="sd">           lab to body frame will not be handled properly.</span>
+
+<span class="sd">    rinertia: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle rotational inertia.</span>
+
+<span class="sd">        Sets the diagonal elements of this particle&#39;s rotational inertia</span>
+<span class="sd">        tensor. These correspond with the inertial moments along the</span>
+<span class="sd">        coordinate axes in the particle&#39;s co-rotating coordinate system.</span>
+<span class="sd">        When the particle&#39;s quaternions are set to ``[1, 0, 0, 0,]``, the</span>
+<span class="sd">        co-rotating and the fixed (lab) frames are co-aligned.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``ROTATIONAL_INERTIA``.</span>
+
+<span class="sd">    q: :obj:`float`</span>
+<span class="sd">        Particle charge.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``ELECTROSTATICS``.</span>
+
+<span class="sd">    mu_E: :obj:`float`</span>
+<span class="sd">        Particle electrophoretic velocity.</span>
+
+<span class="sd">        This effectively acts as a velocity offset between</span>
+<span class="sd">        a lattice-Boltzmann fluid and the particle. Has only</span>
+<span class="sd">        an effect if LB is turned on.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``LB_ELECTROHYDRODYNAMICS``.</span>
+
+<span class="sd">    virtual: :obj:`bool`</span>
+<span class="sd">        Virtual flag.</span>
+
+<span class="sd">        Declares the particles as virtual (``True``) or non-virtual</span>
+<span class="sd">        (``False``, default).</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``VIRTUAL_SITES``</span>
+
+<span class="sd">    vs_quat: (4,) array_like of :obj:`float`</span>
+<span class="sd">        Virtual site quaternion.</span>
+
+<span class="sd">        This quaternion describes the virtual particles orientation in the</span>
+<span class="sd">        body fixed frame of the related real particle.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``VIRTUAL_SITES_RELATIVE``.</span>
+
+<span class="sd">    vs_relative: :obj:`tuple`</span>
+<span class="sd">        Virtual sites relative parameters.</span>
+
+<span class="sd">        Allows for manual access to the attributes of virtual sites in the</span>
+<span class="sd">        &quot;relative&quot; implementation. Format: ``(PID, distance, quaternion)``.</span>
+<span class="sd">        PID denotes the id of the particle to which this virtual site is</span>
+<span class="sd">        related and distance the distance between non-virtual and virtual particle.</span>
+<span class="sd">        The relative orientation is specified as a quaternion.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``VIRTUAL_SITES_RELATIVE``</span>
+
+<span class="sd">    dip: (3,) array_like of :obj:`float`</span>
+<span class="sd">        The orientation of the dipole axis.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``DIPOLES``.</span>
+
+<span class="sd">    dipm: :obj:`float`</span>
+<span class="sd">        The magnitude of the dipole moment.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``DIPOLES``.</span>
+
+<span class="sd">    dip_fld: (3,) array_like of :obj:`float`</span>
+<span class="sd">        Total dipole field value at the position of the particle.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``DIPOLE_FIELD_TRACKING``.</span>
+
+<span class="sd">    ext_force: (3,) array_like of :obj:`float`</span>
+<span class="sd">        An additional external force applied to the particle.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``EXTERNAL_FORCES``.</span>
+
+<span class="sd">    fix: (3,) array_like of :obj:`bool`</span>
+<span class="sd">        Fixes the particle in space. It is possible to fix motion in the</span>
+<span class="sd">        x-, y-, or z-direction independently. For example::</span>
+
+<span class="sd">            part.by_id(1).fix = [False, False, True]</span>
+
+<span class="sd">        will fix motion for particle with index 1 only in the z-direction.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``EXTERNAL_FORCES``.</span>
+
+<span class="sd">    ext_torque: (3,) array_like of :obj:`float`</span>
+<span class="sd">        An additional external torque is applied to the particle.</span>
+
+<span class="sd">        ..  note::</span>
+<span class="sd">            * This torque is specified in the laboratory frame!</span>
+<span class="sd">            * This needs features ``EXTERNAL_FORCES`` and ``ROTATION``.</span>
+
+<span class="sd">    gamma: :obj:`float` or (3,) array_like of :obj:`float`</span>
+<span class="sd">        The translational frictional coefficient used in the Langevin,</span>
+<span class="sd">        Brownian and LB thermostats.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This needs feature ``THERMOSTAT_PER_PARTICLE`` and</span>
+<span class="sd">            optionally ``PARTICLE_ANISOTROPY``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ----------</span>
+<span class="sd">        :meth:`espressomd.thermostat.Thermostat.set_langevin` : Setting the parameters of the Langevin thermostat</span>
+
+<span class="sd">    gamma_rot: :obj:`float` or (3,) array_like of :obj:`float`</span>
+<span class="sd">        The particle rotational frictional coefficient used in</span>
+<span class="sd">        the Langevin and Brownian thermostats.</span>
+
+<span class="sd">        gamma_rot : :obj:`float` or (3,) array_like of :obj:`float`</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This needs features ``THERMOSTAT_PER_PARTICLE``, ``ROTATION`` and</span>
+<span class="sd">            optionally ``PARTICLE_ANISOTROPY``.</span>
+
+<span class="sd">    rotation: (3,) array_like of :obj:`bool`</span>
+<span class="sd">        Switches the particle&#39;s rotational degrees of freedom in the</span>
+<span class="sd">        Cartesian axes in the body-fixed frame. The content of the torque</span>
+<span class="sd">        and omega variables are meaningless for the co-ordinates for which</span>
+<span class="sd">        rotation is disabled.</span>
+
+<span class="sd">        The default is not to integrate any rotational degrees of freedom.</span>
+
+<span class="sd">        rotation : (3,) array_like of :obj:`bool`</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This needs the feature ``ROTATION``.</span>
+
+<span class="sd">    swimming:</span>
+<span class="sd">        Set swimming parameters.</span>
+
+<span class="sd">        This property takes a dictionary with a different number of entries</span>
+<span class="sd">        depending whether there is an implicit fluid (i.e. with the Langevin</span>
+<span class="sd">        thermostat) of an explicit fluid (with lattice-Boltzmann).</span>
+
+<span class="sd">        Swimming enables particle self-propulsion in the direction</span>
+<span class="sd">        determined by its quaternion. For setting the quaternion of the</span>
+<span class="sd">        particle see :attr:`~espressomd.particle_data.ParticleHandle.quat`.</span>
+<span class="sd">        Self-propulsion is achieved by imposing a constant force term</span>
+<span class="sd">        ``f_swim`` along the particle direction. The steady-state propulsion</span>
+<span class="sd">        speed (``v_swim``) can be calculated from the friction (``gamma``)</span>
+<span class="sd">        of a thermostat: ``v_swim = f_swim / gamma``.</span>
+<span class="sd">        When resolving hydrodynamics via lattice-Boltzmann, the swimming</span>
+<span class="sd">        attribute can be used to create the typical dipolar flowfield of</span>
+<span class="sd">        self-propelled particles: setting ``is_engine_force_on_fluid``</span>
+<span class="sd">        to ``True`` will make the particle not experience any friction</span>
+<span class="sd">        or noise, but instead apply the swim force ``f_swim`` to the fluid.</span>
+<span class="sd">        Use :func:`espressomd.swimmer_helpers.add_dipole_particle`</span>
+<span class="sd">        to automate such a setup.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f_swim : :obj:`float`</span>
+<span class="sd">            Magnitude of the self-propulsion force.</span>
+<span class="sd">        is_engine_force_on_fluid : :obj:`bool`</span>
+<span class="sd">            Default: ``False``.</span>
+<span class="sd">            If ``True``, the particle will apply the swimming force to the fluid</span>
+<span class="sd">            instead of experiencing drag.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This needs feature ``ENGINE``, and optionally ``VIRTUAL_SITES_RELATIVE``</span>
+<span class="sd">        to add the propulsion force on a lattice-Boltzmann fluid.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd</span>
+<span class="sd">        &gt;&gt;&gt; # swimming without hydrodynamics</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=[10, 10, 10])</span>
+<span class="sd">        &gt;&gt;&gt; partcl = system.part.add(pos=[1, 0, 0], swimming={&#39;f_swim&#39;: 0.03})</span>
+<span class="sd">        &gt;&gt;&gt; # swimming with hydrodynamics</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd.swimmer_helpers.add_dipole_particle as add_dip</span>
+<span class="sd">        &gt;&gt;&gt; dipole_partcl = add_dip(system, partcl, 2., 0)</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    delete_all_bonds()</span>
+<span class="sd">        Delete all bonds from the particle.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ----------</span>
+<span class="sd">        delete_bond : Delete an unverified bond held by the particle.</span>
+<span class="sd">        bonds : ``Particle`` property containing a list of all current bonds held by ``Particle``.</span>
+
+<span class="sd">    is_virtual()</span>
+<span class="sd">        Whether the particle is a virtual site.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Particles::ParticleHandle&quot;</span>
+    <span class="n">_so_checkpointable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;delete_all_bonds&quot;</span><span class="p">,</span> <span class="s2">&quot;is_virtual&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># here we must redefine the script interface setters</span>
+
+<div class="viewcode-block" id="ParticleHandle.set_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.set_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.set_parameter">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.set_parameter">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;propagation&quot;</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_param_parallel&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.remove">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.remove">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete the particle.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        espressomd.particle_data.ParticleList.add</span>
+<span class="sd">        espressomd.particle_data.ParticleList.clear</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;remove_particle&quot;</span><span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.to_dict">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the particle&#39;s attributes as a dictionary.</span>
+
+<span class="sd">        It includes the content of ``particle_attributes``, minus a few exceptions:</span>
+
+<span class="sd">        - :attr:`~ParticleHandle.dip`, :attr:`~ParticleHandle.director`:</span>
+<span class="sd">          Setting only the director will overwrite the orientation of the</span>
+<span class="sd">          particle around the axis parallel to dipole moment/director.</span>
+<span class="sd">          Quaternions contain the full info.</span>
+<span class="sd">        - :attr:`~ParticleHandle.image_box`, :attr:`~ParticleHandle.node`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">pdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;director&quot;</span><span class="p">,</span> <span class="s2">&quot;dip&quot;</span><span class="p">,</span> <span class="s2">&quot;pos_folded&quot;</span><span class="p">,</span>
+                  <span class="s2">&quot;image_box&quot;</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">,</span> <span class="s2">&quot;lees_edwards_flag&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">pdict</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">):</span>
+            <span class="n">pdict</span><span class="p">[</span><span class="s2">&quot;exclusions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span>
+        <span class="n">pdict</span><span class="p">[</span><span class="s2">&quot;propagation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagation</span>
+        <span class="n">pdict</span><span class="p">[</span><span class="s2">&quot;bonds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span>
+        <span class="k">return</span> <span class="n">pdict</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Id and pos first, then the rest</span>
+        <span class="n">res</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">res</span><span class="p">[</span><span class="s2">&quot;pos&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">particle_attributes</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+            <span class="c1"># Remove array type names from output</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">array_locked</span><span class="p">):</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">res</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+<div class="viewcode-block" id="ParticleHandle.add_exclusion">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.add_exclusion">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partner</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exclude non-bonded interactions with the given partner.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This needs the feature ``EXCLUSIONS``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        partner : :class:`~espressomd.particle_data.ParticleHandle` or :obj:`int`</span>
+<span class="sd">            Particle to exclude.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">partner</span><span class="p">,</span> <span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="n">p_id</span> <span class="o">=</span> <span class="n">partner</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p_id</span> <span class="o">=</span> <span class="n">partner</span>
+        <span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">p_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;Argument &#39;partner&#39; has to be a ParticleHandle or int.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;has_exclusion&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">p_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Particle with id </span><span class="si">{</span><span class="n">p_id</span><span class="si">}</span><span class="s2"> is already in exclusion list of particle with id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add_exclusion&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">p_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.delete_exclusion">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.delete_exclusion">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partner</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove exclusion of non-bonded interactions with the given partner.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This needs the feature ``EXCLUSIONS``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        partner : :class:`~espressomd.particle_data.ParticleHandle` or :obj:`int`</span>
+<span class="sd">            Particle to remove from exclusions.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">partner</span><span class="p">,</span> <span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="n">p_id</span> <span class="o">=</span> <span class="n">partner</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p_id</span> <span class="o">=</span> <span class="n">partner</span>
+        <span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">p_id</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;Argument &#39;partner&#39; has to be a ParticleHandle or int.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;has_exclusion&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">p_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Particle with id </span><span class="si">{</span><span class="n">p_id</span><span class="si">}</span><span class="s2"> is not in exclusion list of particle with id </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;del_exclusion&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">p_id</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The bonds stored by this particle. Note that bonds are only stored by</span>
+<span class="sd">        one partner. You need to define a bonded interaction.</span>
+
+<span class="sd">        A bond tuple is specified as a bond identifier associated with</span>
+<span class="sd">        a particle ``(bond_ID, (*part_ID,))``. A single particle may contain</span>
+<span class="sd">        multiple bonds.</span>
+
+<span class="sd">        Type: Ragged array.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           Bond ids have to be an integer &gt;= 0.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        espressomd.particle_data.ParticleHandle.add_bond : Method to add bonds to a ``Particle``</span>
+<span class="sd">        espressomd.particle_data.ParticleHandle.delete_bond : Method to remove bonds from a ``Particle``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bonds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">bond_id</span><span class="p">,</span> <span class="o">*</span><span class="n">partner_ids</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_bonds_view&quot;</span><span class="p">):</span>
+            <span class="n">bond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_bond_by_id&quot;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">)</span>
+            <span class="n">bond</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="n">bond_id</span>
+            <span class="n">bonds</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">bond</span><span class="p">,</span> <span class="o">*</span><span class="n">partner_ids</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
+
+    <span class="nd">@bonds</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bonds</span><span class="p">):</span>
+        <span class="c1"># Assigning to the bond property means replacing the existing value</span>
+        <span class="c1"># i.e., we delete all existing bonds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_all_bonds</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">bonds</span><span class="p">:</span>
+            <span class="n">nlvl</span> <span class="o">=</span> <span class="n">nesting_level</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">bonds</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_bond</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Bonds have to specified as lists of tuples/lists or a single list.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The exclusion list of particles where non-bonded interactions are ignored.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            This needs the feature ``EXCLUSIONS``.</span>
+
+<span class="sd">        Type: (N,) array_like of :obj:`int`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array_locked</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_exclusions&quot;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">))</span>
+
+    <span class="nd">@exclusions</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_ids</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_exclusions&quot;</span><span class="p">,</span> <span class="n">p_ids</span><span class="o">=</span><span class="n">p_ids</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Propagation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">&quot;propagation&quot;</span><span class="p">))</span>
+
+    <span class="nd">@propagation</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_parameter</span><span class="p">(</span><span class="s2">&quot;propagation&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ParticleHandle.vs_auto_relate_to">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.vs_auto_relate_to">[docs]</a>
+    <span class="k">def</span> <span class="nf">vs_auto_relate_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_to</span><span class="p">,</span> <span class="n">override_cutoff_check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                          <span class="n">couple_to_lb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">couple_to_langevin</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setup this particle as virtual site relative to the particle</span>
+<span class="sd">        in argument ``rel_to``. A particle cannot relate to itself.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        rel_to : :obj:`int` or :obj:`ParticleHandle`</span>
+<span class="sd">            Particle to relate to (either particle id or particle object).</span>
+<span class="sd">        override_cutoff_check : :obj:`bool`</span>
+<span class="sd">            If True, does not check whether the cell system cutoffs</span>
+<span class="sd">            are consistent with the distance between virtual and</span>
+<span class="sd">            non-virtual particles.</span>
+<span class="sd">        couple_to_lb : :obj:`bool`</span>
+<span class="sd">            If True, the virtual site is coupled to LB friction and noise.</span>
+<span class="sd">        couple_to_langevin : :obj:`bool`</span>
+<span class="sd">            If True, the virtual site is coupled to Langevin friction</span>
+<span class="sd">            and noise. If ``couple_to_lb`` is also True, propagate LB&#39;s</span>
+<span class="sd">            equations of motion and Langevin&#39;s equations of rotation.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rel_to</span><span class="p">,</span> <span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="n">rel_to</span> <span class="o">=</span> <span class="n">rel_to</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">check_type_or_throw_except</span><span class="p">(</span>
+                <span class="n">rel_to</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;Argument of &#39;vs_auto_relate_to&#39; has to be of type ParticleHandle or int&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;vs_auto_relate_to&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="o">=</span><span class="n">rel_to</span><span class="p">,</span>
+                         <span class="n">override_cutoff_check</span><span class="o">=</span><span class="n">override_cutoff_check</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagation</span> <span class="o">!=</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">couple_to_lb</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">propagation</span> <span class="o">|=</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">TRANS_LB_MOMENTUM_EXCHANGE</span>
+            <span class="k">if</span> <span class="n">couple_to_langevin</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">couple_to_lb</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">propagation</span> <span class="o">|=</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">ROT_LANGEVIN</span> <span class="o">|</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">TRANS_LANGEVIN</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">propagation</span> <span class="o">|=</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">ROT_LANGEVIN</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.vs_com_relate_to">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.vs_com_relate_to">[docs]</a>
+    <span class="k">def</span> <span class="nf">vs_com_relate_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rel_to</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setup this particle as virtual site tracking the center of mass of the</span>
+<span class="sd">        particles constituting the molecule in argument ``rel_to``.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">           This needs the feature ``VIRTUAL_SITES_CENTER_OF_MASS``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        rel_to : :obj:`int` or :obj:`ParticleHandle`</span>
+<span class="sd">            Molecule to relate to (either molecule id or particle object from that molecule).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rel_to</span><span class="p">,</span> <span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="n">rel_to</span> <span class="o">=</span> <span class="n">rel_to</span><span class="o">.</span><span class="n">mol_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">check_type_or_throw_except</span><span class="p">(</span>
+                <span class="n">rel_to</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;Argument of &#39;vs_com_relate_to&#39; has to be of type ParticleHandle or int&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;vs_com_relate_to&quot;</span><span class="p">,</span> <span class="n">molid</span><span class="o">=</span><span class="n">rel_to</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_bond_sanity_checks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Bond partners </span><span class="si">{</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> include the particle </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2"> itself&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot add duplicate bond partners </span><span class="si">{</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> to particle </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleHandle.add_verified_bond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.add_verified_bond">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_verified_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a bond, the validity of which has already been verified.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        add_bond : Add an unverified bond to the ``Particle``.</span>
+<span class="sd">        bonds : ``Particle`` property containing a list of all current bonds held by ``Particle``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bond_sanity_checks</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add_bond&quot;</span><span class="p">,</span>
+                         <span class="n">bond_id</span><span class="o">=</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">,</span>
+                         <span class="n">part_id</span><span class="o">=</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.delete_verified_bond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.delete_verified_bond">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_verified_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete a single bond from the particle. The validity of which has already been verified.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bond : :obj:`tuple`</span>
+<span class="sd">            tuple where the first element is either a bond ID of a bond type,</span>
+<span class="sd">            and the last element is the ID of the partner particle to be bonded</span>
+<span class="sd">            to.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        delete_bond : Delete an unverified bond held by the ``Particle``.</span>
+<span class="sd">        bonds : ``Particle`` property containing a list of all current bonds held by ``Particle``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;del_bond&quot;</span><span class="p">,</span>
+                         <span class="n">bond_id</span><span class="o">=</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">,</span>
+                         <span class="n">part_id</span><span class="o">=</span><span class="n">bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.normalize_and_check_bond_or_throw_exception">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.normalize_and_check_bond_or_throw_exception">[docs]</a>
+    <span class="k">def</span> <span class="nf">normalize_and_check_bond_or_throw_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the validity of the given bond:</span>
+
+<span class="sd">        - If the bondtype is given as an object or a numerical id</span>
+<span class="sd">        - If all partners are of type :obj:`int`</span>
+<span class="sd">        - If the number of partners satisfies the bond</span>
+<span class="sd">        - If the bond type used exists (is lower than ``n_bonded_ia``)</span>
+<span class="sd">        - If the number of bond partners fits the bond type</span>
+
+<span class="sd">        Throws an exception if any of these are not met.</span>
+
+<span class="sd">        Normalize the bond, i.e. replace bond ids by bond objects and particle</span>
+<span class="sd">        objects by particle ids.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Has it []-access</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bond</span><span class="p">,</span> <span class="s2">&quot;__getitem__&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Bond needs to be a tuple or list containing bond type and partners.&quot;</span><span class="p">)</span>
+
+        <span class="n">bond</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+        <span class="c1"># Bond type or numerical bond id</span>
+        <span class="k">if</span> <span class="n">is_valid_type</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">bond_id</span> <span class="o">=</span> <span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_bond_by_id&quot;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">)</span>
+            <span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="n">bond_id</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">BondedInteraction</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;1st element of Bond has to be of type BondedInteraction or int, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Check the bond is in the list of active bonded interactions</span>
+        <span class="k">if</span> <span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;The bonded interaction has not yet been added to the list of active bonds in ESPResSo&quot;</span><span class="p">)</span>
+        <span class="c1"># Validity of the numeric id</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;is_valid_bond_id&quot;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The bond type </span><span class="si">{</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span><span class="p">)</span>
+        <span class="c1"># Number of partners</span>
+        <span class="n">expected_num_partners</span> <span class="o">=</span> <span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_num_partners&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">!=</span> <span class="n">expected_num_partners</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Bond </span><span class="si">{</span><span class="n">bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> needs </span><span class="si">{</span><span class="n">expected_num_partners</span><span class="si">}</span><span class="s2"> partners&quot;</span><span class="p">)</span>
+        <span class="c1"># Type check on partners</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bond</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ParticleHandle</span><span class="p">):</span>
+                <span class="c1"># Put the particle id instead of the particle handle</span>
+                <span class="n">bond</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">bond</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_valid_type</span><span class="p">(</span><span class="n">bond</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Bond partners have to be of type integer or ParticleHandle.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.add_bond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.add_bond">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a single bond to the particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bond : :obj:`tuple`</span>
+<span class="sd">            tuple where the first element is either a bond ID or a bond object,</span>
+<span class="sd">            and the next elements are particle ids or particle objects to be</span>
+<span class="sd">            bonded to.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        bonds : ``Particle`` property containing a list of all current bonds held by ``Particle``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import espressomd.interactions</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=3 * [10])</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # define a harmonic potential and add it to the system</span>
+<span class="sd">        &gt;&gt;&gt; harm_bond = espressomd.interactions.HarmonicBond(r_0=1, k=5)</span>
+<span class="sd">        &gt;&gt;&gt; system.bonded_inter.add(harm_bond)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # add two particles</span>
+<span class="sd">        &gt;&gt;&gt; p1 = system.part.add(pos=(1, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; p2 = system.part.add(pos=(2, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # bond them via the bond type</span>
+<span class="sd">        &gt;&gt;&gt; p1.add_bond((harm_bond, p2))</span>
+<span class="sd">        &gt;&gt;&gt; # or via the bond index (zero in this case since it is the first one added)</span>
+<span class="sd">        &gt;&gt;&gt; p1.add_bond((0, p2))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_bond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_and_check_bond_or_throw_exception</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_bond</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Bond </span><span class="si">{</span><span class="n">_bond</span><span class="si">}</span><span class="s2"> already exists on particle </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_verified_bond</span><span class="p">(</span><span class="n">_bond</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.delete_bond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.delete_bond">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete a single bond from the particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bond : :obj:`tuple`</span>
+<span class="sd">            tuple where the first element is either a bond ID or a bond object,</span>
+<span class="sd">            and the next elements are particle ids or particle objects that are</span>
+<span class="sd">            bonded to.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        bonds : ``Particle`` property containing a list of all bonds currently held by ``Particle``.</span>
+
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; import espressomd.interactions</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=3 * [10])</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # define a harmonic potential and add it to the system</span>
+<span class="sd">        &gt;&gt;&gt; harm_bond = espressomd.interactions.HarmonicBond(r_0=1, k=5)</span>
+<span class="sd">        &gt;&gt;&gt; system.bonded_inter.add(harm_bond)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # bond two particles to the first one</span>
+<span class="sd">        &gt;&gt;&gt; p0 = system.part.add(pos=(1, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; p1 = system.part.add(pos=(2, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; p2 = system.part.add(pos=(1, 1, 0))</span>
+<span class="sd">        &gt;&gt;&gt; p0.add_bond((harm_bond, p1))</span>
+<span class="sd">        &gt;&gt;&gt; p0.add_bond((harm_bond, p2))</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; print(p0.bonds)</span>
+<span class="sd">        ((HarmonicBond(0): {&#39;r_0&#39;: 1.0, &#39;k&#39;: 5.0, &#39;r_cut&#39;: 0.0}, 1),</span>
+<span class="sd">         (HarmonicBond(0): {&#39;r_0&#39;: 1.0, &#39;k&#39;: 5.0, &#39;r_cut&#39;: 0.0}, 2))</span>
+<span class="sd">        &gt;&gt;&gt; # delete the first bond</span>
+<span class="sd">        &gt;&gt;&gt; p0.delete_bond(p0.bonds[0])</span>
+<span class="sd">        &gt;&gt;&gt; print(p0.bonds)</span>
+<span class="sd">        ((HarmonicBond(0): {&#39;r_0&#39;: 1.0, &#39;k&#39;: 5.0, &#39;r_cut&#39;: 0.0}, 2),)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_bond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_and_check_bond_or_throw_exception</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_bond</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bonds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Bond </span><span class="si">{</span><span class="n">_bond</span><span class="si">}</span><span class="s2"> doesn&#39;t exist on particle </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_verified_bond</span><span class="p">(</span><span class="n">_bond</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.update">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_properties</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update properties of a particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_properties : :obj:`dict`</span>
+<span class="sd">            New particle properties. All properties except</span>
+<span class="sd">            for the particle id can be changed.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; import espressomd</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=[10, 10, 10])</span>
+<span class="sd">        &gt;&gt;&gt; p = system.part.add(pos=[1, 2, 3], q=1, virtual=True)</span>
+<span class="sd">        &gt;&gt;&gt; print(p.pos, p.q, p.virtual)</span>
+<span class="sd">        [1. 2. 3.] 1.0 True</span>
+<span class="sd">        &gt;&gt;&gt; p.update({&#39;pos&#39;: [4, 5, 6], &#39;virtual&#39;: False, &#39;q&#39;: 0})</span>
+<span class="sd">        &gt;&gt;&gt; print(p.pos, p.q, p.virtual)</span>
+<span class="sd">        [4. 5. 6.] 0.0 False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">overrides</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">new_properties</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot change particle id.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;propagation&quot;</span> <span class="ow">in</span> <span class="n">new_properties</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">overrides</span><span class="p">[</span><span class="s2">&quot;propagation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">new_properties</span><span class="p">[</span><span class="s2">&quot;propagation&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;bonds&quot;</span> <span class="ow">in</span> <span class="n">new_properties</span><span class="p">:</span>
+            <span class="n">bonds_ids</span><span class="p">,</span> <span class="n">bonds_parts</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">bonds</span> <span class="o">=</span> <span class="n">new_properties</span><span class="p">[</span><span class="s2">&quot;bonds&quot;</span><span class="p">]</span>
+            <span class="n">nlvl</span> <span class="o">=</span> <span class="n">nesting_level</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nlvl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Bonds have to specified as lists of tuples/lists or a single list&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">bonds</span> <span class="o">=</span> <span class="p">[</span><span class="n">bonds</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">bonds</span><span class="p">:</span>
+                <span class="n">_bond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_and_check_bond_or_throw_exception</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_bond_sanity_checks</span><span class="p">(</span><span class="n">_bond</span><span class="p">)</span>
+                <span class="n">bonds_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">)</span>
+                <span class="n">bonds_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">overrides</span><span class="p">[</span><span class="s2">&quot;bonds_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bonds_ids</span>
+            <span class="n">overrides</span><span class="p">[</span><span class="s2">&quot;bonds_parts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bonds_parts</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;update_params&quot;</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">new_properties</span> <span class="o">|</span> <span class="n">overrides</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.convert_vector_body_to_space">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.convert_vector_body_to_space">[docs]</a>
+    <span class="k">def</span> <span class="nf">convert_vector_body_to_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the given vector from the particle&#39;s body frame to the space frame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;ROTATION&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;convert_vector_body_to_space&quot;</span><span class="p">,</span> <span class="n">vec</span><span class="o">=</span><span class="n">vec</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.convert_vector_space_to_body">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.convert_vector_space_to_body">[docs]</a>
+    <span class="k">def</span> <span class="nf">convert_vector_space_to_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the given vector from the space frame to the particle&#39;s body frame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;ROTATION&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;convert_vector_space_to_body&quot;</span><span class="p">,</span> <span class="n">vec</span><span class="o">=</span><span class="n">vec</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleHandle.rotate">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleHandle.rotate">[docs]</a>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rotate the particle around the given axis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        axis : (3,) array_like of :obj:`float`</span>
+
+<span class="sd">        angle : :obj:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;ROTATION&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;rotate_particle&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="n">angle</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">particle_attributes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ParticleHandle</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">_valid_parameters</span><span class="p">())</span>
+<span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">):</span>
+    <span class="n">particle_attributes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;exclusions&quot;</span><span class="p">)</span>
+<span class="n">particle_attributes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;bonds&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ParticleSlice">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleSlice</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle slice inputs. Set values for selected slices or</span>
+<span class="sd">    return values as a single list.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Particles::ParticleSlice&quot;</span>
+    <span class="n">_so_checkpointable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_particle_cache_size</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># size of the particle cache for slices</span>
+    <span class="n">_particle_attributes_trivially_serializable</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">particle_attributes</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">ParticleHandle</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_id_gen</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_particle_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_particle&quot;</span><span class="p">,</span> <span class="n">p_id</span><span class="o">=</span><span class="n">p_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_id_gen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generator for chunked and prefetched iteration of particles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;prefetch_particle_data&quot;</span><span class="p">,</span> <span class="n">chunk</span><span class="o">=</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleSlice.chunks">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.chunks">[docs]</a>
+    <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generator returning chunks of length n from l.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span>
+            <span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_particle_cache_size</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_particle_impl</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleSlice.add_exclusion">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.add_exclusion">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_partner</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">([</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span><span class="o">.</span><span class="n">add_exclusion</span><span class="p">(</span><span class="n">_partner</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleSlice.delete_exclusion">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.delete_exclusion">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_partner</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">([</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">delete_exclusion</span><span class="p">(</span><span class="n">_partner</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;ParticleSlice([&quot;</span> <span class="o">+</span> \
+            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">))</span>
+                      <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;])&quot;</span>
+
+<div class="viewcode-block" id="ParticleSlice.update">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_properties</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">new_properties</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cannot change particle id.&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_properties</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Bond related methods</span>
+<div class="viewcode-block" id="ParticleSlice.add_bond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.add_bond">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a single bond to the particles.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span><span class="o">.</span><span class="n">add_bond</span><span class="p">(</span><span class="n">_bond</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleSlice.delete_bond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.delete_bond">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_bond</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete a single bond from the particles.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span><span class="o">.</span><span class="n">delete_bond</span><span class="p">(</span><span class="n">_bond</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleSlice.delete_all_bonds">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.delete_all_bonds">[docs]</a>
+    <span class="k">def</span> <span class="nf">delete_all_bonds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span><span class="o">.</span><span class="n">delete_all_bonds</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ParticleSlice.remove">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.remove">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete the particles.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :meth:`espressomd.particle_data.ParticleList.add`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_selection</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;chunk_size&quot;</span> <span class="ow">and</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;id_selection&quot;</span> <span class="ow">and</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;_get_particle&quot;</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particle_attributes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;ParticleHandle does not have the attribute </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleSlice.to_dict">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleSlice.to_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the particles attributes as a dictionary.</span>
+
+<span class="sd">        It can be used to save the particle data and recover it by using</span>
+
+<span class="sd">        &gt;&gt;&gt; p = system.part.add(...)</span>
+<span class="sd">        &gt;&gt;&gt; particle_dict = p.to_dict()</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(particle_dict)</span>
+
+<span class="sd">        It includes the content of ``particle_attributes``, minus a few exceptions:</span>
+
+<span class="sd">        - :attr:`~ParticleHandle.dip`, :attr:`~ParticleHandle.director`:</span>
+<span class="sd">          Setting only the director will overwrite the orientation of the</span>
+<span class="sd">          particle around the axis parallel to dipole moment/director.</span>
+<span class="sd">          Quaternions contain the full info.</span>
+<span class="sd">        - :attr:`~ParticleHandle.image_box`, :attr:`~ParticleHandle.node`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">odict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">pdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">p_key</span><span class="p">,</span> <span class="n">p_value</span> <span class="ow">in</span> <span class="n">pdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">p_key</span> <span class="ow">in</span> <span class="n">odict</span><span class="p">:</span>
+                    <span class="n">odict</span><span class="p">[</span><span class="n">p_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">odict</span><span class="p">[</span><span class="n">p_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p_value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">odict</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ParticleList">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ParticleList</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides access to the particles.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    clear()</span>
+<span class="sd">        Remove all particles.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :meth:`espressomd.particle_data.ParticleHandle.remove`</span>
+
+<span class="sd">    auto_exclusions()</span>
+<span class="sd">        Add exclusions between particles that are connected by pair bonds,</span>
+<span class="sd">        including virtual bonds. Angle and dihedral bonds are ignored. The most</span>
+<span class="sd">        common use case for this method is to auto-exclude virtual sites.</span>
+
+<span class="sd">        Another use case is to exclude 1-2, 1-3 and optionally 1-4 non-nonded</span>
+<span class="sd">        interactions on polymer chains. This technique is commonly used in</span>
+<span class="sd">        atomistic molecular dynamics engines such as NAMD, AMBER or GROMACS,</span>
+<span class="sd">        where the short-range part of the potential energy surface is better</span>
+<span class="sd">        approximated with Fourier sums (using dihedral bonds) than with pair</span>
+<span class="sd">        potentials. Linear, branched and circular topologies are supported.</span>
+
+<span class="sd">        Requires feature ``EXCLUSIONS``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        distance : :obj:`int`</span>
+<span class="sd">            Maximal length of a chain in unit of bonds. The topology</span>
+<span class="sd">            will be traversed recursively until the bond chain either</span>
+<span class="sd">            terminates or reaches that distance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Particles::ParticleList&quot;</span>
+    <span class="n">_so_checkpointable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;clear&quot;</span><span class="p">,</span> <span class="s2">&quot;auto_exclusions&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleList.by_id">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.by_id">[docs]</a>
+    <span class="k">def</span> <span class="nf">by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Access a particle by its integer id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;by_id&quot;</span><span class="p">,</span> <span class="n">p_id</span><span class="o">=</span><span class="n">p_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleList.by_ids">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.by_ids">[docs]</a>
+    <span class="k">def</span> <span class="nf">by_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a slice of particles by their integer ids.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;by_ids&quot;</span><span class="p">,</span> <span class="n">id_selection</span><span class="o">=</span><span class="n">ids</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParticleList.all">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.all">[docs]</a>
+    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a slice containing all particles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_particle_ids&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">by_ids</span><span class="p">(</span><span class="n">all_ids</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_n_part&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">highest_particle_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Largest particle id.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_highest_particle_id&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleList.add">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.add">[docs]</a>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds one or several particles to the system</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Either a dictionary or a bunch of keyword args.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Returns an instance of :class:`espressomd.particle_data.ParticleHandle` for each added particle.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :meth:`espressomd.particle_data.ParticleHandle.remove`</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; import espressomd</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=[10, 10, 10])</span>
+<span class="sd">        &gt;&gt;&gt; # add two particles</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(id=0, pos=(1, 0, 0))</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(id=1, pos=(2, 0, 0))</span>
+
+<span class="sd">        ``pos`` is mandatory, ``id`` can be omitted, in which case it is assigned automatically.</span>
+<span class="sd">        Several particles can be added by passing one value per particle to each property::</span>
+
+<span class="sd">            system.part.add(pos=((1, 2, 3), (4, 5, 6)), q=(1, -1))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Did we get a dictionary</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">)):</span>
+            <span class="n">particles_dict</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">particles_dict</span> <span class="o">=</span> <span class="n">kwargs</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;add() takes either a dictionary or a bunch of keyword args.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check for presence of pos attribute</span>
+        <span class="k">if</span> <span class="s2">&quot;pos&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles_dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;pos attribute must be specified for new particle&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">particles_dict</span><span class="p">[</span><span class="s2">&quot;pos&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_place_new_particles</span><span class="p">(</span><span class="n">particles_dict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_place_new_particle</span><span class="p">(</span><span class="n">particles_dict</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_place_new_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_dict</span><span class="p">):</span>
+        <span class="n">bonds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="s2">&quot;propagation&quot;</span> <span class="ow">in</span> <span class="n">p_dict</span><span class="p">:</span>
+            <span class="n">p_dict</span><span class="p">[</span><span class="s2">&quot;propagation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p_dict</span><span class="p">[</span><span class="s2">&quot;propagation&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;bonds&quot;</span> <span class="ow">in</span> <span class="n">p_dict</span><span class="p">:</span>
+            <span class="n">bonds</span> <span class="o">=</span> <span class="n">p_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;bonds&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nesting_level</span><span class="p">(</span><span class="n">bonds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">bonds</span> <span class="o">=</span> <span class="p">[</span><span class="n">bonds</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add_particle&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">p_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">bonds</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bond</span><span class="p">):</span>
+                <span class="n">bond</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">normalize_and_check_bond_or_throw_exception</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">add_verified_bond</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="k">def</span> <span class="nf">_place_new_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_list_dict</span><span class="p">):</span>
+        <span class="c1"># Check if all entries have the same length</span>
+        <span class="n">n_parts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p_list_dict</span><span class="p">[</span><span class="s2">&quot;pos&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span>
+                   <span class="n">n_parts</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">p_list_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;When adding several particles at once, all lists of attributes have to have the same size&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If particle ids haven&#39;t been provided, use free ones</span>
+        <span class="c1"># beyond the highest existing one</span>
+        <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p_list_dict</span><span class="p">:</span>
+            <span class="n">first_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">highest_particle_id</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">p_list_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">first_id</span><span class="p">,</span> <span class="n">first_id</span> <span class="o">+</span> <span class="n">n_parts</span><span class="p">)</span>
+
+        <span class="c1"># Place the particles</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_parts</span><span class="p">):</span>
+            <span class="n">p_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">p_list_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_place_new_particle</span><span class="p">(</span><span class="n">p_dict</span><span class="p">)</span>
+
+        <span class="c1"># Return slice of added particles</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">by_ids</span><span class="p">(</span><span class="n">p_list_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Iteration over all existing particles</span>
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_particle_ids&quot;</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">by_id</span><span class="p">(</span><span class="n">p_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParticleList.exists">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.exists">[docs]</a>
+    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_valid_type</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;particle_exists&quot;</span><span class="p">,</span> <span class="n">p_id</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">tf_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)):</span>
+                <span class="n">tf_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;particle_exists&quot;</span><span class="p">,</span> <span class="n">p_id</span><span class="o">=</span><span class="n">idx</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">tf_array</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;ParticleList([&quot;</span> <span class="o">+</span> \
+            <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_particle_ids&quot;</span><span class="p">)))</span> <span class="o">+</span> <span class="s2">&quot;])&quot;</span>
+
+<div class="viewcode-block" id="ParticleList.writevtk">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.writevtk">[docs]</a>
+    <span class="k">def</span> <span class="nf">writevtk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the positions and velocities of particles with specified</span>
+<span class="sd">        types to a VTK file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fname: :obj:`str`</span>
+<span class="sd">            Filename of the target output file</span>
+<span class="sd">        types: list of :obj:`int` or the string &#39;all&#39;, optional (default: &#39;all&#39;)</span>
+<span class="sd">            A list of particle types which should be output to &#39;fname&#39;</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; import espressomd</span>
+<span class="sd">        &gt;&gt;&gt; system = espressomd.System(box_l=[10, 10, 10])</span>
+<span class="sd">        &gt;&gt;&gt; # add several particles</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=0.5 * system.box_l, v=[1, 0, 0], type=0)</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=0.4 * system.box_l, v=[0, 2, 0], type=1)</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=0.7 * system.box_l, v=[2, 0, 1], type=1)</span>
+<span class="sd">        &gt;&gt;&gt; system.part.add(pos=0.1 * system.box_l, v=[0, 0, 1], type=2)</span>
+<span class="sd">        &gt;&gt;&gt; # write to VTK</span>
+<span class="sd">        &gt;&gt;&gt; system.part.writevtk(&quot;part_type_0_1.vtk&quot;, types=[0, 1])</span>
+<span class="sd">        &gt;&gt;&gt; system.part.writevtk(&quot;part_type_2.vtk&quot;, types=[2])</span>
+<span class="sd">        &gt;&gt;&gt; system.part.writevtk(&quot;part_all.vtk&quot;)</span>
+
+<span class="sd">        .. todo:: move to ``./io/writer/``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">types</span><span class="p">]</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">types</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">vtk</span><span class="p">:</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# vtk DataFile Version 2.0</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;particles</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;ASCII</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;DATASET UNSTRUCTURED_GRID</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;POINTS </span><span class="si">{}</span><span class="s2"> floats</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">types</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+                    <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pos_folded</span><span class="p">)))</span>
+
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;POINT_DATA </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;SCALARS velocity float 3</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;LOOKUP_TABLE default</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">types</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+                    <span class="n">vtk</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="o">.</span><span class="n">v</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ParticleList.pairs">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.pairs">[docs]</a>
+    <span class="k">def</span> <span class="nf">pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate all pairs of particles.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_particle_ids&quot;</span><span class="p">)</span>
+        <span class="n">id_pairs</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">id_pair</span> <span class="ow">in</span> <span class="n">id_pairs</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">by_id</span><span class="p">(</span><span class="n">id_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">by_id</span><span class="p">(</span><span class="n">id_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="ParticleList.select">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.ParticleList.select">[docs]</a>
+    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a particle slice by filtering particles via a user-defined</span>
+<span class="sd">        criterion.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">        Either: a keyword arguments in which the keys are names of particle</span>
+<span class="sd">        properties and the values are the values to filter for. E.g.,::</span>
+
+<span class="sd">            system.part.select(type=0, q=1)</span>
+
+<span class="sd">        Or: a function taking a ParticleHandle as argument and returning True if</span>
+<span class="sd">        the particle is to be filtered for. E.g.,::</span>
+
+<span class="sd">            system.part.select(lambda p: p.pos[0] &lt; 0.5)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`ParticleSlice` :</span>
+<span class="sd">            An instance of :class:`ParticleSlice` containing the selected particles</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Ids of the selected particles</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Did we get a function as argument?</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># Go over all particles and pass them to the user-provided function</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">p</span><span class="p">):</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;by_ids&quot;</span><span class="p">,</span> <span class="n">id_selection</span><span class="o">=</span><span class="n">ids</span><span class="p">)</span>
+
+        <span class="c1"># Did we get a set of keyword args?</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">select</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># Check, if the particle fails any required criteria</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                    <span class="c1"># Fetch user-provided value and value in particle</span>
+                    <span class="n">val1</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    <span class="n">val2</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                    <span class="c1"># Get tolerance from numerical accuracy limits</span>
+                    <span class="n">tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">spacing</span><span class="p">(</span><span class="n">val1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">spacing</span><span class="p">(</span><span class="n">val2</span><span class="p">)))</span>
+
+                    <span class="c1"># Compare</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">):</span>
+                        <span class="n">select</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">select</span><span class="p">:</span>
+                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;by_ids&quot;</span><span class="p">,</span> <span class="n">id_selection</span><span class="o">=</span><span class="n">ids</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;select() takes either selection function as positional argument or a set of keyword arguments.&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="set_slice_one_for_all">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.set_slice_one_for_all">[docs]</a>
+<span class="k">def</span> <span class="nf">set_slice_one_for_all</span><span class="p">(</span><span class="n">p_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">set_slice_one_for_each</span><span class="p">(</span>
+        <span class="n">p_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">fast_tiling</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">p_slice</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="set_slice_one_for_each">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.particle_data.set_slice_one_for_each">[docs]</a>
+<span class="k">def</span> <span class="nf">set_slice_one_for_each</span><span class="p">(</span><span class="n">p_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s2">&quot;bonds&quot;</span><span class="p">:</span>
+        <span class="n">all_bonds_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">all_bonds_partner_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bonds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p_slice</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">p_slice</span><span class="o">.</span><span class="n">id_selection</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">bonds_ids</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">bonds_partner_ids</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">bonds</span><span class="p">:</span>
+                <span class="n">_bond</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">normalize_and_check_bond_or_throw_exception</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">_bond_sanity_checks</span><span class="p">(</span><span class="n">_bond</span><span class="p">)</span>
+                <span class="n">bonds_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_bond</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_bond_id</span><span class="p">)</span>
+                <span class="n">bonds_partner_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_bond</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">all_bonds_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bonds_ids</span><span class="p">)</span>
+            <span class="n">all_bonds_partner_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bonds_partner_ids</span><span class="p">)</span>
+        <span class="n">p_slice</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_param_parallel&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attribute</span><span class="p">,</span>
+                            <span class="n">all_bonds_ids</span><span class="o">=</span><span class="n">all_bonds_ids</span><span class="p">,</span>
+                            <span class="n">all_bonds_partner_ids</span><span class="o">=</span><span class="n">all_bonds_partner_ids</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p_slice</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_param_parallel&quot;</span><span class="p">,</span>
+                            <span class="n">name</span><span class="o">=</span><span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_add_particle_slice_properties</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Automatically add all of ParticleHandle&#39;s properties to ParticleSlice.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">set_attribute</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setter function that sets attribute on every member of particle_slice.</span>
+<span class="sd">        If values contains only one element, all members are set to it. If it</span>
+<span class="sd">        contains as many elements as there are members, each of them gets set</span>
+<span class="sd">        to the corresponding one. For attributes that are lists of various length,</span>
+<span class="sd">        (bonds, exclusions) the nesting level decides if it is one-for-all or one-for-each.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">particle_slice</span><span class="o">.</span><span class="n">id_selection</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot set properties of an empty ParticleSlice&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Special attributes</span>
+        <span class="k">if</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s2">&quot;bonds&quot;</span><span class="p">:</span>
+            <span class="n">nlvl</span> <span class="o">=</span> <span class="n">nesting_level</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">]</span>
+                <span class="n">set_slice_one_for_all</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">set_slice_one_for_all</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                <span class="n">set_slice_one_for_each</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Failed to set bonds for particle slice.&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">elif</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s2">&quot;exclusions&quot;</span><span class="p">:</span>
+            <span class="n">nlvl</span> <span class="o">=</span> <span class="n">nesting_level</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">set_slice_one_for_all</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                <span class="n">set_slice_one_for_each</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Failed to set exclusions for particle slice.&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">elif</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s2">&quot;vs_relative&quot;</span><span class="p">:</span>
+            <span class="n">nlvl</span> <span class="o">=</span> <span class="n">nesting_level</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nlvl</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+                <span class="n">set_slice_one_for_all</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nlvl</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                <span class="n">set_slice_one_for_each</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to set vs_relative for particle slice.&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+                <span class="n">particle_slice</span><span class="o">.</span><span class="n">_get_particle</span><span class="p">(</span><span class="n">particle_slice</span><span class="o">.</span><span class="n">id_selection</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">attribute</span><span class="p">)</span>
+            <span class="n">target_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">target_shape</span><span class="p">:</span>  <span class="c1"># scalar quantity</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                    <span class="n">set_slice_one_for_all</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                    <span class="n">set_slice_one_for_each</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Value shape </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not broadcast to attribute shape </span><span class="si">{</span><span class="n">target_shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="k">return</span>
+
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># fixed length vector quantity</span>
+                <span class="k">if</span> <span class="n">target_shape</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                    <span class="n">set_slice_one_for_all</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">target_shape</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                    <span class="n">set_slice_one_for_each</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Value shape </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not broadcast to attribute shape </span><span class="si">{</span><span class="n">target_shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">get_attribute</span><span class="p">(</span><span class="n">particle_slice</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Getter function that copies attribute from every member of</span>
+<span class="sd">        particle_slice into an array (if possible).</span>
+<span class="sd">        For special properties, a tuple of tuples is used.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">particle_slice</span><span class="o">.</span><span class="n">id_selection</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;exclusions&quot;</span><span class="p">,</span> <span class="s2">&quot;bonds&quot;</span><span class="p">,</span> <span class="s2">&quot;vs_relative&quot;</span><span class="p">,</span> <span class="s2">&quot;swimming&quot;</span><span class="p">]:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">particle_slice</span><span class="o">.</span><span class="n">_id_gen</span><span class="p">():</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">values</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">particle_slice</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;get_param_parallel&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attribute</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s2">&quot;propagation&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Propagation</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">values</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">particle_attributes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">ParticleSlice</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># synthesize a new property</span>
+        <span class="n">new_property</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span>
+            <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">get_attribute</span><span class="p">,</span> <span class="n">attribute</span><span class="o">=</span><span class="n">attribute_name</span><span class="p">),</span>
+            <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">set_attribute</span><span class="p">,</span> <span class="n">attribute</span><span class="o">=</span><span class="n">attribute_name</span><span class="p">),</span>
+            <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="c1"># attach the property to ParticleSlice</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">ParticleSlice</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">new_property</span><span class="p">)</span>
+
+
+<span class="n">_add_particle_slice_properties</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

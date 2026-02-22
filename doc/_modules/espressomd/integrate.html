@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.integrate &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.integrate</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2022 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+<span class="kn">from</span> <span class="nn">.code_features</span> <span class="kn">import</span> <span class="n">assert_features</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+
+
+<div class="viewcode-block" id="IntegratorHandle">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">IntegratorHandle</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provide access to the currently active integrator.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::IntegratorHandle&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">)&#39;</span>  <span class="c1"># nopep8</span>
+
+<div class="viewcode-block" id="IntegratorHandle.run">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the integrator.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_steepest_descent">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_steepest_descent">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_steepest_descent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to steepest descent</span>
+<span class="sd">        (:class:`SteepestDescent`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">SteepestDescent</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_vv">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_vv">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_vv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to velocity Verlet, which is suitable for</span>
+<span class="sd">        simulations in the NVT ensemble (:class:`VelocityVerlet`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">VelocityVerlet</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_symplectic_euler">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_symplectic_euler">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_symplectic_euler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to symplectic Euler, which is suitable for</span>
+<span class="sd">        simulations where exact energy conservation is important</span>
+<span class="sd">        (:class:`SymplecticEuler`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">SymplecticEuler</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_nvt">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_nvt">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_nvt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to velocity Verlet, which is suitable for</span>
+<span class="sd">        simulations in the NVT ensemble (:class:`VelocityVerlet`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">VelocityVerlet</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_isotropic_npt">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_isotropic_npt">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_isotropic_npt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to a modified velocity Verlet designed for</span>
+<span class="sd">        simulations in the NpT ensemble (:class:`VelocityVerletIsotropicNPT`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">VelocityVerletIsotropicNPT</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_brownian_dynamics">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_brownian_dynamics">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_brownian_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to BD.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">BrownianDynamics</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="IntegratorHandle.set_stokesian_dynamics">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.IntegratorHandle.set_stokesian_dynamics">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_stokesian_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the integration method to Stokesian Dynamics (:class:`StokesianDynamics`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">StokesianDynamics</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Integrator">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.Integrator">[docs]</a>
+<span class="k">class</span> <span class="nc">Integrator</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrator class.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Integrator.run">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.Integrator.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">recalc_forces</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reuse_forces</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the integrator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        steps : :obj:`int`</span>
+<span class="sd">            Number of time steps to integrate.</span>
+<span class="sd">        recalc_forces : :obj:`bool`, optional</span>
+<span class="sd">            Recalculate the forces regardless of whether they are reusable.</span>
+<span class="sd">        reuse_forces : :obj:`bool`, optional</span>
+<span class="sd">            Reuse the forces from previous time step.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;integrate&quot;</span><span class="p">,</span>
+            <span class="n">with_nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+            <span class="n">recalc_forces</span><span class="o">=</span><span class="n">recalc_forces</span><span class="p">,</span>
+            <span class="n">reuse_forces</span><span class="o">=</span><span class="n">reuse_forces</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle_sigint</span><span class="p">(</span><span class="n">status</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Integrator.handle_sigint">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.Integrator.handle_sigint">[docs]</a>
+    <span class="k">def</span> <span class="nf">handle_sigint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_code</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">signal</span><span class="o">.</span><span class="n">raise_signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SteepestDescent">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.SteepestDescent">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SteepestDescent</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Steepest descent algorithm for energy minimization.</span>
+
+<span class="sd">    Particles located at :math:`\\vec{r}_i` at integration step :math:`i` and</span>
+<span class="sd">    experiencing a potential :math:`\\mathcal{H}(\\vec{r}_i)` are displaced</span>
+<span class="sd">    according to the equation:</span>
+
+<span class="sd">    :math:`\\vec{r}_{i+1} = \\vec{r}_i - \\gamma\\nabla\\mathcal{H}(\\vec{r}_i)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f_max : :obj:`float`</span>
+<span class="sd">        Convergence criterion. Minimization stops when the maximal force on</span>
+<span class="sd">        particles in the system is lower than this threshold. Set this to 0</span>
+<span class="sd">        when running minimization in a loop that stops when a custom</span>
+<span class="sd">        convergence criterion is met.</span>
+<span class="sd">    gamma : :obj:`float`</span>
+<span class="sd">        Dampening constant.</span>
+<span class="sd">    max_displacement : :obj:`float`</span>
+<span class="sd">        Maximal allowed displacement per step. Typical values for a LJ liquid</span>
+<span class="sd">        are in the range of 0.1% to 10% of the particle sigma.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::SteepestDescent&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="SteepestDescent.run">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.SteepestDescent.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the steepest descent.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        steps : :obj:`int`</span>
+<span class="sd">            Maximal number of time steps to integrate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`int`</span>
+<span class="sd">            Number of integrated steps.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">integrated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;integrate&quot;</span><span class="p">,</span> <span class="n">with_nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="n">steps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handle_sigint</span><span class="p">(</span><span class="n">integrated</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">integrated</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SymplecticEuler">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.SymplecticEuler">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SymplecticEuler</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Symplectic Euler integrator, suitable for simulations where exact energy</span>
+<span class="sd">    conservation is important.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::SymplecticEuler&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="VelocityVerlet">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.VelocityVerlet">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">VelocityVerlet</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Velocity Verlet integrator, suitable for simulations in the NVT ensemble.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::VelocityVerlet&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="VelocityVerletIsotropicNPT">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.VelocityVerletIsotropicNPT">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">VelocityVerletIsotropicNPT</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modified velocity Verlet integrator, suitable for simulations in the</span>
+<span class="sd">    NpT ensemble with isotropic rescaling. Requires the NpT thermostat,</span>
+<span class="sd">    activated with :meth:`espressomd.thermostat.Thermostat.set_npt`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ext_pressure : :obj:`float`</span>
+<span class="sd">        The external pressure.</span>
+<span class="sd">    piston : :obj:`float`</span>
+<span class="sd">        The mass of the applied piston.</span>
+<span class="sd">    direction : (3,) array_like of :obj:`bool`, optional</span>
+<span class="sd">        Select which dimensions are allowed to fluctuate by assigning</span>
+<span class="sd">        them to ``True``. Default is all ``True``.</span>
+<span class="sd">    cubic_box : :obj:`bool`, optional</span>
+<span class="sd">        If ``True``, a cubic box is assumed and the value of ``direction``</span>
+<span class="sd">        will be ignored when rescaling the box. This is required e.g. for</span>
+<span class="sd">        electrostatics and magnetostatics. Default is ``False``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::VelocityVerletIsoNPT&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;NPT&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BrownianDynamics">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.BrownianDynamics">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BrownianDynamics</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Brownian Dynamics integrator.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::BrownianDynamics&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="StokesianDynamics">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.integrate.StokesianDynamics">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">StokesianDynamics</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stokesian Dynamics integrator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    viscosity : :obj:`float`</span>
+<span class="sd">        Bulk viscosity.</span>
+<span class="sd">    radii : :obj:`dict`</span>
+<span class="sd">        Dictionary that maps particle types to radii.</span>
+<span class="sd">    approximation_method : :obj:`str`, optional, {&#39;ft&#39;, &#39;fts&#39;}</span>
+<span class="sd">        Chooses the method of the mobility approximation.</span>
+<span class="sd">        ``&#39;fts&#39;`` is more accurate. Default is ``&#39;fts&#39;``.</span>
+<span class="sd">    self_mobility : :obj:`bool`, optional</span>
+<span class="sd">        Switches off or on the mobility terms for single particles. Default</span>
+<span class="sd">        is ``True``.</span>
+<span class="sd">    pair_mobility : :obj:`bool`, optional</span>
+<span class="sd">        Switches off or on the hydrodynamic interactions between particles.</span>
+<span class="sd">        Default is ``True``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Integrators::StokesianDynamics&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;STOKESIAN_DYNAMICS&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lubrication&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Stokesian Dynamics lubrication is not available yet&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

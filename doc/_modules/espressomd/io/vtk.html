@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.io.vtk &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.io.vtk</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2023-2025 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">vtk</span>
+<span class="kn">import</span> <span class="nn">vtk.util.numpy_support</span>
+
+<span class="n">IMAGE_DATA_TYPE</span> <span class="o">=</span> <span class="s2">&quot;ImageData&quot;</span>
+<span class="n">UNSTRUCTURED_GRID_TYPE</span> <span class="o">=</span> <span class="s2">&quot;UnstructuredGrid&quot;</span>
+
+
+<div class="viewcode-block" id="VTKReader">
+<a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.vtk.VTKReader">[docs]</a>
+<span class="k">class</span> <span class="nc">VTKReader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reader for VTK multi-piece uniform grids written in XML format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">error_tolerance</span> <span class="o">=</span> <span class="mf">1e-5</span>  <span class="c1"># VTK data is written with 1e-7 precision</span>
+    <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">IMAGE_DATA_TYPE</span><span class="p">:</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkXMLImageDataReader</span><span class="p">(),</span>
+        <span class="n">UNSTRUCTURED_GRID_TYPE</span><span class="p">:</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkXMLUnstructuredGridReader</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="VTKReader.get_file_format">
+<a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.vtk.VTKReader.get_file_format">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_file_format</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&lt;VTKFile&quot;</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&lt;VTKFile&quot;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;type=&quot;</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2"> is not a compliant XML file&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VTKReader.get_array_names">
+<a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.vtk.VTKReader.get_array_names">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_array_names</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">type_name</span><span class="p">):</span>
+        <span class="n">array_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">type_name</span> <span class="o">==</span> <span class="n">UNSTRUCTURED_GRID_TYPE</span><span class="p">:</span>
+            <span class="n">n_ghost_layers</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetUpdateGhostLevel</span><span class="p">()</span>
+            <span class="n">n_pieces</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetNumberOfPieces</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">piece_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_pieces</span><span class="p">):</span>
+                <span class="n">reader</span><span class="o">.</span><span class="n">UpdatePiece</span><span class="p">(</span><span class="n">piece_index</span><span class="p">,</span> <span class="n">n_pieces</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="p">)</span>
+                <span class="n">piece</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetOutput</span><span class="p">()</span>
+                <span class="n">cell</span> <span class="o">=</span> <span class="n">piece</span><span class="o">.</span><span class="n">GetCellData</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">GetNumberOfArrays</span><span class="p">()):</span>
+                    <span class="n">array_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">GetArrayName</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">type_name</span> <span class="o">==</span> <span class="n">IMAGE_DATA_TYPE</span><span class="p">:</span>
+            <span class="n">n_cells</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetNumberOfCellArrays</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_cells</span><span class="p">):</span>
+                <span class="n">array_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">GetCellArrayName</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">array_names</span></div>
+
+
+<div class="viewcode-block" id="VTKReader.get_piece_topology">
+<a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.vtk.VTKReader.get_piece_topology">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_piece_topology</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span> <span class="n">piece</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">bounding_box_lower</span><span class="p">,</span> <span class="n">bounding_box_upper</span><span class="p">):</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">piece</span><span class="o">.</span><span class="n">GetBounds</span><span class="p">())</span>
+        <span class="n">box_l</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">n_grid_points</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">GetNumberOfTuples</span><span class="p">()</span>
+        <span class="n">shape_float</span> <span class="o">=</span> <span class="n">box_l</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">box_l</span><span class="p">)</span>
+        <span class="n">shape_float</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">cbrt</span><span class="p">(</span><span class="n">n_grid_points</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape_float</span><span class="p">))</span>
+        <span class="n">shape_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">shape_float</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">shape_int</span> <span class="o">-</span> <span class="n">shape_float</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">error_tolerance</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+            <span class="n">shape_int</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_grid_points</span><span class="p">,</span> <span class="s2">&quot;only cubic grids are supported&quot;</span>
+        <span class="n">agrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">box_l</span> <span class="o">/</span> <span class="n">shape_float</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape_int</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">lower_corner</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]))</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">bounding_box_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">bounding_box_lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">start</span><span class="p">)</span>
+            <span class="n">bounding_box_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">bounding_box_upper</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">stop</span><span class="p">)</span>
+            <span class="n">lower_corner</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">agrid</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">lower_corner</span></div>
+
+
+<div class="viewcode-block" id="VTKReader.reconstruct_array">
+<a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.vtk.VTKReader.reconstruct_array">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reconstruct_array</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">reader</span><span class="p">,</span> <span class="n">array_name</span><span class="p">):</span>
+        <span class="n">n_pieces</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetNumberOfPieces</span><span class="p">()</span>
+        <span class="n">n_ghost_layers</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetUpdateGhostLevel</span><span class="p">()</span>
+        <span class="c1"># get bounding box</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">agrids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bounding_box_lower</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)]</span>
+        <span class="n">bounding_box_upper</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">[</span><span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">piece_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_pieces</span><span class="p">):</span>
+            <span class="n">reader</span><span class="o">.</span><span class="n">UpdatePiece</span><span class="p">(</span><span class="n">piece_index</span><span class="p">,</span> <span class="n">n_pieces</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="p">)</span>
+            <span class="n">piece</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetOutput</span><span class="p">()</span>
+            <span class="n">cell</span> <span class="o">=</span> <span class="n">piece</span><span class="o">.</span><span class="n">GetCellData</span><span class="p">()</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">GetArray</span><span class="p">(</span><span class="n">array_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">agrid</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">lower_corner</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_piece_topology</span><span class="p">(</span>
+                    <span class="n">piece</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">bounding_box_lower</span><span class="p">,</span> <span class="n">bounding_box_upper</span><span class="p">)</span>
+                <span class="n">agrids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agrid</span><span class="p">)</span>
+                <span class="n">info</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">piece_index</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">lower_corner</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">info</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># get array type and size</span>
+        <span class="k">assert</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bounding_box_lower</span>
+        <span class="k">assert</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bounding_box_upper</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">agrids</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">agrids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">error_tolerance</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;VTK non-uniform grids are not supported (got agrid = </span><span class="si">{</span><span class="n">agrids</span><span class="si">}</span><span class="s2"> when parsing array &#39;</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&#39;)&quot;</span><span class="p">)</span>
+        <span class="n">data_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bounding_box_upper</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bounding_box_lower</span><span class="p">)</span>
+        <span class="n">piece_index</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">reader</span><span class="o">.</span><span class="n">UpdatePiece</span><span class="p">(</span><span class="n">piece_index</span><span class="p">,</span> <span class="n">n_pieces</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="p">)</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetOutput</span><span class="p">()</span><span class="o">.</span><span class="n">GetCellData</span><span class="p">()</span><span class="o">.</span><span class="n">GetArray</span><span class="p">(</span><span class="n">array_name</span><span class="p">)</span>
+        <span class="n">vector_length</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">GetNumberOfComponents</span><span class="p">()</span>
+        <span class="n">val_dims</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">vector_length</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">[</span><span class="n">vector_length</span><span class="p">]</span>
+        <span class="n">data_type</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">GetDataTypeAsString</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span>
+        <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unknown VTK data type &#39;</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&#39; (when parsing array &#39;</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&#39;)&quot;</span><span class="p">)</span>
+
+        <span class="c1"># get data</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">data_dims</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">val_dims</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">piece_index</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">lower_corner</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
+            <span class="n">reader</span><span class="o">.</span><span class="n">UpdatePiece</span><span class="p">(</span><span class="n">piece_index</span><span class="p">,</span> <span class="n">n_pieces</span><span class="p">,</span> <span class="n">n_ghost_layers</span><span class="p">)</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetOutput</span><span class="p">()</span><span class="o">.</span><span class="n">GetCellData</span><span class="p">()</span><span class="o">.</span><span class="n">GetArray</span><span class="p">(</span><span class="n">array_name</span><span class="p">)</span>
+            <span class="n">subset</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">lower_corner</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">subset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+            <span class="n">data</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">subset</span><span class="p">)]</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">numpy_support</span><span class="o">.</span><span class="n">vtk_to_numpy</span><span class="p">(</span>
+                <span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="n">val_dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="VTKReader.parse">
+<a class="viewcode-back" href="../../../espressomd.io.html#espressomd.io.vtk.VTKReader.parse">[docs]</a>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="n">type_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_format</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">type_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unknown VTK file format &#39;</span><span class="si">{</span><span class="n">type_name</span><span class="si">}</span><span class="s2">&#39; (supported &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;file formats: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_map</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span>
+        <span class="n">reader</span><span class="o">.</span><span class="n">SetFileName</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
+        <span class="n">reader</span><span class="o">.</span><span class="n">Update</span><span class="p">()</span>
+
+        <span class="n">arrays</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">array_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_array_names</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">array_name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">array_names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">type_name</span> <span class="o">==</span> <span class="n">UNSTRUCTURED_GRID_TYPE</span><span class="p">:</span>
+                <span class="n">arrays</span><span class="p">[</span><span class="n">array_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct_array</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">array_name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">type_name</span> <span class="o">==</span> <span class="n">IMAGE_DATA_TYPE</span><span class="p">:</span>
+                <span class="n">array</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetOutput</span><span class="p">()</span><span class="o">.</span><span class="n">GetCellData</span><span class="p">()</span><span class="o">.</span><span class="n">GetArray</span><span class="p">(</span><span class="n">array_name</span><span class="p">)</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">GetOutput</span><span class="p">()</span><span class="o">.</span><span class="n">GetDimensions</span><span class="p">()</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">arrays</span><span class="p">[</span><span class="n">array_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">numpy_support</span><span class="o">.</span><span class="n">vtk_to_numpy</span><span class="p">(</span>
+                    <span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">arrays</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

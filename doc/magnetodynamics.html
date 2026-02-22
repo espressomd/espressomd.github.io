@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>11. Magnetodynamics &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="12. System manipulation" href="system_manipulation.html" />
+    <link rel="prev" title="10. Magnetostatics" href="magnetostatics.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="magnetodynamics">
+<span id="id1"></span><h1><span class="section-number">11. </span>Magnetodynamics<a class="headerlink" href="#magnetodynamics" title="Link to this heading">¶</a></h1>
+<p>ESPResSo contains methods to simulate the internal magnetisation dynamics
+of magnetic particles and the interactions between point dipoles.
+The default behaviour in ESPResSo is that, once a dipole moment is assigned
+to a particle, it will strictly follow the rotation of the particle’s quaternion.
+This is called the <strong>fixed point dipole</strong> model.
+This model is predominantly used to simulate magnetic soft matter.</p>
+<p>However, this approximation does not always represent realistic behaviour
+of a single-domain magnetic nanoparticle — it only holds in the limit of
+infinitely high magnetic anisotropy energy.
+In reality, several <strong>internal relaxation mechanisms</strong> exist,
+so the dipole moment is not necessarily co-aligned with the particle quaternion,
+nor does it perfectly follow its motion.</p>
+<p>To incorporate this phenomenology in simulations, ESPResSo offers several models, listed below.</p>
+<section id="thermal-stonerwohlfarth">
+<span id="thermal-stoner-wohlfarth"></span><h2><span class="section-number">11.1. </span>Thermal Stoner–Wohlfarth<a class="headerlink" href="#thermal-stonerwohlfarth" title="Link to this heading">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires feature <code class="docutils literal notranslate"><span class="pre">THERMAL_STONER_WOHLFARTH</span></code> and
+optionally feature <code class="docutils literal notranslate"><span class="pre">DIPOLE_FIELD_TRACKING</span></code>, as well as
+external feature <code class="docutils literal notranslate"><span class="pre">NLOPT</span></code>,
+enabled with <code class="docutils literal notranslate"><span class="pre">-D</span> <span class="pre">ESPRESSO_BUILD_WITH_NLOPT=ON</span></code>.</p>
+</div>
+<p>The <strong>thermal Stoner–Wohlfarth (SW)</strong> model includes Néel relaxation in simulations
+of single-domain magnetic nanoparticles.
+This is an implementation of the algorithm originally presented in <span id="id2">[<a class="reference internal" href="bibliography.html#id96" title="Deniz Mostarac, Andrey A. Kuznetsov, Santiago Helbig, Claas Abert, Pedro A. Sánchez, Dieter Suess, and Sofia S. Kantorovich. Thermal Stoner–Wohlfarth model for magnetodynamics of single domain nanoparticles: implementation and validation. Physical Review B, 111(1):014438, January 2025. doi:10.1103/PhysRevB.111.014438.">Mostarac <em>et al.</em>, 2025</a>]</span>.
+If you use this method in your work, please cite the original publication, in addition to ESPResSo.</p>
+<p>In interacting systems, the method relies on the <code class="docutils literal notranslate"><span class="pre">DIPOLE_FIELD_TRACKING</span></code> feature.
+Make sure you use magnetostatics actors that support this feature.</p>
+<p>—</p>
+<p>The magnetic energy of a Stoner–Wohlfarth particle (at <span class="math notranslate nohighlight">\(T=0\)</span>) is given by</p>
+<div class="math notranslate nohighlight">
+\[U = - \mu_0 \mu (\vec{e} \cdot \vec{H}) - K V (\vec{e} \cdot \vec{n})^2\]</div>
+<p>The algorithm can be logically separated into three steps:</p>
+<p><strong>Step 1 — Critical Field and Energy Minima</strong></p>
+<p>First, the <strong>critical field</strong> <span class="math notranslate nohighlight">\(h_\mathrm{cr}\)</span> is calculated based on
+the current angle <span class="math notranslate nohighlight">\(\phi\)</span> between the magnetic field vector <span class="math notranslate nohighlight">\(\vec{h}\)</span>
+and the particle’s anisotropy axis.</p>
+<p>For a given <span class="math notranslate nohighlight">\(\phi\)</span>, the algorithm finds the angle <span class="math notranslate nohighlight">\(\theta'_\mathrm{min}\)</span>
+that minimizes the total magnetic energy and is closest to the previous dipole-moment state.
+This is ensured by initializing the minimizer with the previous particle state.</p>
+<p>If the field acting on the particle is less than <span class="math notranslate nohighlight">\(h_\mathrm{cr}\)</span>,
+the algorithm proceeds to find the angles <span class="math notranslate nohighlight">\(\theta'_\mathrm{max}\)</span> and
+<span class="math notranslate nohighlight">\(\theta''_\mathrm{max}\)</span> that maximize the total magnetic energy on
+both sides of <span class="math notranslate nohighlight">\(\theta'_\mathrm{min}\)</span>.</p>
+<p><strong>Step 2 — Energy Barrier and Néel Relaxation</strong></p>
+<p>Using these extrema, the algorithm calculates the <strong>energy barriers</strong>
+on both sides of <span class="math notranslate nohighlight">\(\theta'_\mathrm{min}\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\Delta E'  &amp;= \frac{1}{K V} \left| U(\phi, \theta'_\mathrm{max})  - U(\phi, \theta'_\mathrm{min}) \right|, \\
+\Delta E'' &amp;= \frac{1}{K V} \left| U(\phi, \theta''_\mathrm{max}) - U(\phi, \theta'_\mathrm{min}) \right|.
+\end{aligned}\end{split}\]</div>
+<p>The smaller of the two barriers is chosen:</p>
+<div class="math notranslate nohighlight">
+\[\Delta E = \min(\Delta E', \Delta E'').\]</div>
+<p>This barrier is used to estimate a <strong>characteristic timescale</strong> for the Néel relaxation process:</p>
+<div class="math notranslate nohighlight">
+\[\tau_N = \frac{\tau_D}{2\sigma} \sqrt{\frac{\pi}{\sigma}} e^{\Delta E \sigma},\]</div>
+<p>and the <strong>transition probability</strong> (neglecting back-switching) is</p>
+<div class="math notranslate nohighlight">
+\[p = 1 - e^{-\delta t / \tau_N},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\delta t\)</span> is the integration time step.</p>
+<p><strong>Step 3 — Trial Move and Dipole Update</strong></p>
+<p>A <strong>trial move</strong> is made by drawing a random number and comparing it with
+the transition probability, similar to a Metropolis Monte Carlo step.</p>
+<ul class="simple">
+<li><p>If the trial move is <strong>successful</strong>, the algorithm finds a new minimum
+<span class="math notranslate nohighlight">\(\theta''_\mathrm{min}\)</span> and aligns the dipole moment accordingly.</p></li>
+<li><p>Otherwise, the dipole moment remains aligned with <span class="math notranslate nohighlight">\(\theta'_\mathrm{min}\)</span>.</p></li>
+</ul>
+<p>For more details, particularly if you are unsure about the physical quantities involved,
+please refer to the original publication.</p>
+<p>The example below shows how to set up and parametrise a particle to be used by
+the <strong>thermal Stoner-Wohlfarth</strong> solver. Note that <code class="docutils literal notranslate"><span class="pre">is_enabled</span></code> needs to be set
+to <code class="docutils literal notranslate"><span class="pre">True</span></code> explicitly on the virtual site.
+Moreover, the virtual sites that are tagged for magnetodynamics must be set
+to use the <code class="docutils literal notranslate"><span class="pre">Propagation.ROT_VS_INDEPENDENT</span></code> propagation mode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">espressomd</span>
+<span class="kn">import</span> <span class="nn">espressomd.propagation</span>
+<span class="n">Propagation</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">propagation</span><span class="o">.</span><span class="n">Propagation</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">box_l</span><span class="o">=</span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="n">system</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="mf">0.001</span>  <span class="c1"># MD time step in simulation units</span>
+<span class="n">system</span><span class="o">.</span><span class="n">thermostat</span><span class="o">.</span><span class="n">set_langevin</span><span class="p">(</span><span class="n">kT</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">75.</span><span class="p">,</span> <span class="n">gamma_rotation</span><span class="o">=</span><span class="mf">25.</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># One particle with thermal Stoner-Wohlfarth enabled</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">director</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># easy axis direction</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">rotation</span> <span class="o">=</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># allow particle rotation</span>
+
+<span class="n">p2</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">p1</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">dip</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.75</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># set dipole moment for the virtual particle in reduced units</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">rotation</span> <span class="o">=</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1"># disable rotations of the virtual site</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">magnetodynamics</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;is_enabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+  <span class="s1">&#39;anisotropy_field_inv&#39;</span><span class="p">:</span> <span class="mf">0.175</span><span class="p">,</span> <span class="c1"># inverse anisotropy field (1/H_k) in reduced units</span>
+  <span class="s1">&#39;sat_mag&#39;</span><span class="p">:</span> <span class="mf">1.75</span><span class="p">,</span> <span class="c1"># saturation magnetisation in reduced units</span>
+  <span class="s1">&#39;anisotropy_energy&#39;</span><span class="p">:</span> <span class="mf">5.</span><span class="p">,</span> <span class="c1"># anisotropy energy K * V in reduced units</span>
+  <span class="s1">&#39;sw_dt_incr&#39;</span><span class="p">:</span> <span class="mf">1.0e-10</span><span class="p">,</span> <span class="c1"># kinetic Monte Carlo time increment [s]</span>
+  <span class="s1">&#39;sw_tau0_inv&#39;</span><span class="p">:</span> <span class="mf">1.0e9</span>  <span class="c1"># inverse attempt time (1/tau_0) [1/s]</span>
+  <span class="p">}</span>
+<span class="c1"># make virtual and set the proper propagation mode for magnetodynamics</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">vs_auto_relate_to</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+<span class="n">p2</span><span class="o">.</span><span class="n">propagation</span> <span class="o">=</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">TRANS_VS_RELATIVE</span> <span class="o">|</span> <span class="n">Propagation</span><span class="o">.</span><span class="n">ROT_VS_INDEPENDENT</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">11. Magnetodynamics</a><ul>
+<li><a class="reference internal" href="#thermal-stonerwohlfarth">11.1. Thermal Stoner–Wohlfarth</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

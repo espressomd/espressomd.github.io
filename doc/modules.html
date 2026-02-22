@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>espressomd &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="espressomd package" href="espressomd.html" />
+    <link rel="prev" title="25. Bibliography" href="bibliography.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="espressomd">
+<h1>espressomd<a class="headerlink" href="#espressomd" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="espressomd.html">espressomd package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.detail.html">espressomd.detail package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.detail.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.detail.html#module-espressomd.detail.walberla">espressomd.detail.walberla module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.detail.html#module-espressomd.detail">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.io.html">espressomd.io package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.io.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.io.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.io.html#module-espressomd.io.mpiio">espressomd.io.mpiio module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.io.html#module-espressomd.io.vtk">espressomd.io.vtk module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.io.html#module-espressomd.io">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.plugins.html">espressomd.plugins package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.plugins.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.plugins.html#module-espressomd.plugins.ase">espressomd.plugins.ase module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="espressomd.plugins.html#module-espressomd.plugins">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.accumulators">espressomd.accumulators module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.accumulators.AutoUpdateAccumulators"><code class="docutils literal notranslate"><span class="pre">AutoUpdateAccumulators</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.accumulators.ContactTimes"><code class="docutils literal notranslate"><span class="pre">ContactTimes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.accumulators.Correlator"><code class="docutils literal notranslate"><span class="pre">Correlator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.accumulators.MeanVarianceCalculator"><code class="docutils literal notranslate"><span class="pre">MeanVarianceCalculator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.accumulators.TimeSeries"><code class="docutils literal notranslate"><span class="pre">TimeSeries</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.analyze">espressomd.analyze module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.analyze.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.analyze.autocorrelation"><code class="docutils literal notranslate"><span class="pre">autocorrelation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.bond_breakage">espressomd.bond_breakage module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.bond_breakage.BreakageSpec"><code class="docutils literal notranslate"><span class="pre">BreakageSpec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.bond_breakage.BreakageSpecs"><code class="docutils literal notranslate"><span class="pre">BreakageSpecs</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.cell_system">espressomd.cell_system module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.cell_system.CellSystem"><code class="docutils literal notranslate"><span class="pre">CellSystem</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.checkpointing">espressomd.checkpointing module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.checkpointing.Checkpoint"><code class="docutils literal notranslate"><span class="pre">Checkpoint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.checkpointing.CheckpointerContext"><code class="docutils literal notranslate"><span class="pre">CheckpointerContext</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.cluster_analysis">espressomd.cluster_analysis module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.Cluster"><code class="docutils literal notranslate"><span class="pre">Cluster</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.ClusterStructure"><code class="docutils literal notranslate"><span class="pre">ClusterStructure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.cluster_analysis.Clusters"><code class="docutils literal notranslate"><span class="pre">Clusters</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.code_features">espressomd.code_features module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_features.FeaturesError"><code class="docutils literal notranslate"><span class="pre">FeaturesError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_features.assert_features"><code class="docutils literal notranslate"><span class="pre">assert_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_features.has_features"><code class="docutils literal notranslate"><span class="pre">has_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_features.missing_features"><code class="docutils literal notranslate"><span class="pre">missing_features()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.code_info">espressomd.code_info module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_info.all_features"><code class="docutils literal notranslate"><span class="pre">all_features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_info.build_type"><code class="docutils literal notranslate"><span class="pre">build_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_info.features"><code class="docutils literal notranslate"><span class="pre">features()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.code_info.scafacos_methods"><code class="docutils literal notranslate"><span class="pre">scafacos_methods()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.collision_detection">espressomd.collision_detection module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.collision_detection.BindAtPointOfCollision"><code class="docutils literal notranslate"><span class="pre">BindAtPointOfCollision</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.collision_detection.BindCenters"><code class="docutils literal notranslate"><span class="pre">BindCenters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.collision_detection.CollisionDetection"><code class="docutils literal notranslate"><span class="pre">CollisionDetection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.collision_detection.GlueToSurface"><code class="docutils literal notranslate"><span class="pre">GlueToSurface</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.collision_detection.Off"><code class="docutils literal notranslate"><span class="pre">Off</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.comfixed">espressomd.comfixed module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.comfixed.ComFixed"><code class="docutils literal notranslate"><span class="pre">ComFixed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.constraints">espressomd.constraints module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.Constraints"><code class="docutils literal notranslate"><span class="pre">Constraints</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.ElectricPlaneWave"><code class="docutils literal notranslate"><span class="pre">ElectricPlaneWave</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.ElectricPotential"><code class="docutils literal notranslate"><span class="pre">ElectricPotential</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.FlowField"><code class="docutils literal notranslate"><span class="pre">FlowField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.ForceField"><code class="docutils literal notranslate"><span class="pre">ForceField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.Gravity"><code class="docutils literal notranslate"><span class="pre">Gravity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.HomogeneousFlowField"><code class="docutils literal notranslate"><span class="pre">HomogeneousFlowField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.HomogeneousMagneticField"><code class="docutils literal notranslate"><span class="pre">HomogeneousMagneticField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.LinearElectricPotential"><code class="docutils literal notranslate"><span class="pre">LinearElectricPotential</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.PotentialField"><code class="docutils literal notranslate"><span class="pre">PotentialField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.constraints.ShapeBasedConstraint"><code class="docutils literal notranslate"><span class="pre">ShapeBasedConstraint</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.cuda_init">espressomd.cuda_init module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.cuda_init.CudaInitHandle"><code class="docutils literal notranslate"><span class="pre">CudaInitHandle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.cuda_init.gpu_available"><code class="docutils literal notranslate"><span class="pre">gpu_available()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.drude_helpers">espressomd.drude_helpers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.drude_helpers.DrudeHelpers"><code class="docutils literal notranslate"><span class="pre">DrudeHelpers</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.electrokinetics">espressomd.electrokinetics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.DensityBoundary"><code class="docutils literal notranslate"><span class="pre">DensityBoundary</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKBulkReaction"><code class="docutils literal notranslate"><span class="pre">EKBulkReaction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKContainer"><code class="docutils literal notranslate"><span class="pre">EKContainer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKFFT"><code class="docutils literal notranslate"><span class="pre">EKFFT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKIndexedReaction"><code class="docutils literal notranslate"><span class="pre">EKIndexedReaction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKNone"><code class="docutils literal notranslate"><span class="pre">EKNone</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKPoissonSolverNode"><code class="docutils literal notranslate"><span class="pre">EKPoissonSolverNode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKPoissonSolverSlice"><code class="docutils literal notranslate"><span class="pre">EKPoissonSolverSlice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKReactant"><code class="docutils literal notranslate"><span class="pre">EKReactant</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKReactions"><code class="docutils literal notranslate"><span class="pre">EKReactions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKSpecies"><code class="docutils literal notranslate"><span class="pre">EKSpecies</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKSpeciesNode"><code class="docutils literal notranslate"><span class="pre">EKSpeciesNode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.EKSpeciesSlice"><code class="docutils literal notranslate"><span class="pre">EKSpeciesSlice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.FluxBoundary"><code class="docutils literal notranslate"><span class="pre">FluxBoundary</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.VTKOutput"><code class="docutils literal notranslate"><span class="pre">VTKOutput</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrokinetics.VTKPoissonOutput"><code class="docutils literal notranslate"><span class="pre">VTKPoissonOutput</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.electrostatic_extensions">espressomd.electrostatic_extensions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatic_extensions.ElectrostaticExtensions"><code class="docutils literal notranslate"><span class="pre">ElectrostaticExtensions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatic_extensions.ICC"><code class="docutils literal notranslate"><span class="pre">ICC</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.electrostatics">espressomd.electrostatics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.Container"><code class="docutils literal notranslate"><span class="pre">Container</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.DH"><code class="docutils literal notranslate"><span class="pre">DH</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.ELC"><code class="docutils literal notranslate"><span class="pre">ELC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.ElectrostaticInteraction"><code class="docutils literal notranslate"><span class="pre">ElectrostaticInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.MMM1D"><code class="docutils literal notranslate"><span class="pre">MMM1D</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.P3M"><code class="docutils literal notranslate"><span class="pre">P3M</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.ReactionField"><code class="docutils literal notranslate"><span class="pre">ReactionField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.electrostatics.Scafacos"><code class="docutils literal notranslate"><span class="pre">Scafacos</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.galilei">espressomd.galilei module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.galilei.GalileiTransform"><code class="docutils literal notranslate"><span class="pre">GalileiTransform</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.highlander">espressomd.highlander module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.highlander.ThereCanOnlyBeOne"><code class="docutils literal notranslate"><span class="pre">ThereCanOnlyBeOne</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.highlander.highlander"><code class="docutils literal notranslate"><span class="pre">highlander()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.integrate">espressomd.integrate module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.BrownianDynamics"><code class="docutils literal notranslate"><span class="pre">BrownianDynamics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.Integrator"><code class="docutils literal notranslate"><span class="pre">Integrator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.IntegratorHandle"><code class="docutils literal notranslate"><span class="pre">IntegratorHandle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.SteepestDescent"><code class="docutils literal notranslate"><span class="pre">SteepestDescent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.StokesianDynamics"><code class="docutils literal notranslate"><span class="pre">StokesianDynamics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.SymplecticEuler"><code class="docutils literal notranslate"><span class="pre">SymplecticEuler</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.VelocityVerlet"><code class="docutils literal notranslate"><span class="pre">VelocityVerlet</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.integrate.VelocityVerletIsotropicNPT"><code class="docutils literal notranslate"><span class="pre">VelocityVerletIsotropicNPT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.interactions">espressomd.interactions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.AngleCosine"><code class="docutils literal notranslate"><span class="pre">AngleCosine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.AngleCossquare"><code class="docutils literal notranslate"><span class="pre">AngleCossquare</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.AngleHarmonic"><code class="docutils literal notranslate"><span class="pre">AngleHarmonic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BMHTFInteraction"><code class="docutils literal notranslate"><span class="pre">BMHTFInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BONDED_IA"><code class="docutils literal notranslate"><span class="pre">BONDED_IA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BondedCoulomb"><code class="docutils literal notranslate"><span class="pre">BondedCoulomb</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BondedCoulombSRBond"><code class="docutils literal notranslate"><span class="pre">BondedCoulombSRBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BondedInteraction"><code class="docutils literal notranslate"><span class="pre">BondedInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BondedInteractions"><code class="docutils literal notranslate"><span class="pre">BondedInteractions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.BuckinghamInteraction"><code class="docutils literal notranslate"><span class="pre">BuckinghamInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.DPDInteraction"><code class="docutils literal notranslate"><span class="pre">DPDInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.Dihedral"><code class="docutils literal notranslate"><span class="pre">Dihedral</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.FeneBond"><code class="docutils literal notranslate"><span class="pre">FeneBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.GaussianInteraction"><code class="docutils literal notranslate"><span class="pre">GaussianInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.GayBerneInteraction"><code class="docutils literal notranslate"><span class="pre">GayBerneInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.GenericLennardJonesInteraction"><code class="docutils literal notranslate"><span class="pre">GenericLennardJonesInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.HarmonicBond"><code class="docutils literal notranslate"><span class="pre">HarmonicBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.HatInteraction"><code class="docutils literal notranslate"><span class="pre">HatInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.HertzianInteraction"><code class="docutils literal notranslate"><span class="pre">HertzianInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_Tribend"><code class="docutils literal notranslate"><span class="pre">IBM_Tribend</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_Triel"><code class="docutils literal notranslate"><span class="pre">IBM_Triel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.IBM_VolCons"><code class="docutils literal notranslate"><span class="pre">IBM_VolCons</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesCos2Interaction"><code class="docutils literal notranslate"><span class="pre">LennardJonesCos2Interaction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesCosInteraction"><code class="docutils literal notranslate"><span class="pre">LennardJonesCosInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.LennardJonesInteraction"><code class="docutils literal notranslate"><span class="pre">LennardJonesInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.MorseInteraction"><code class="docutils literal notranslate"><span class="pre">MorseInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.NonBondedInteraction"><code class="docutils literal notranslate"><span class="pre">NonBondedInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.NonBondedInteractionHandle"><code class="docutils literal notranslate"><span class="pre">NonBondedInteractionHandle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.NonBondedInteractions"><code class="docutils literal notranslate"><span class="pre">NonBondedInteractions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.OifGlobalForces"><code class="docutils literal notranslate"><span class="pre">OifGlobalForces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.OifLocalForces"><code class="docutils literal notranslate"><span class="pre">OifLocalForces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.QuarticBond"><code class="docutils literal notranslate"><span class="pre">QuarticBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.RigidBond"><code class="docutils literal notranslate"><span class="pre">RigidBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.SmoothStepInteraction"><code class="docutils literal notranslate"><span class="pre">SmoothStepInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.SoftSphereInteraction"><code class="docutils literal notranslate"><span class="pre">SoftSphereInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedAngle"><code class="docutils literal notranslate"><span class="pre">TabulatedAngle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedDihedral"><code class="docutils literal notranslate"><span class="pre">TabulatedDihedral</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedDistance"><code class="docutils literal notranslate"><span class="pre">TabulatedDistance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.TabulatedNonBonded"><code class="docutils literal notranslate"><span class="pre">TabulatedNonBonded</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.ThermalizedBond"><code class="docutils literal notranslate"><span class="pre">ThermalizedBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.TholeInteraction"><code class="docutils literal notranslate"><span class="pre">TholeInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.Virtual"><code class="docutils literal notranslate"><span class="pre">Virtual</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.interactions.WCAInteraction"><code class="docutils literal notranslate"><span class="pre">WCAInteraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.lb">espressomd.lb module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.Container"><code class="docutils literal notranslate"><span class="pre">Container</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.LBFluid"><code class="docutils literal notranslate"><span class="pre">LBFluid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.LBFluidNode"><code class="docutils literal notranslate"><span class="pre">LBFluidNode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.LBFluidSlice"><code class="docutils literal notranslate"><span class="pre">LBFluidSlice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.VTKOutput"><code class="docutils literal notranslate"><span class="pre">VTKOutput</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.VelocityBounceBack"><code class="docutils literal notranslate"><span class="pre">VelocityBounceBack</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.calc_cylinder_tangential_vectors"><code class="docutils literal notranslate"><span class="pre">calc_cylinder_tangential_vectors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lb.edge_detection"><code class="docutils literal notranslate"><span class="pre">edge_detection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.lees_edwards">espressomd.lees_edwards module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lees_edwards.LeesEdwards"><code class="docutils literal notranslate"><span class="pre">LeesEdwards</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lees_edwards.LinearShear"><code class="docutils literal notranslate"><span class="pre">LinearShear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lees_edwards.Off"><code class="docutils literal notranslate"><span class="pre">Off</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.lees_edwards.OscillatoryShear"><code class="docutils literal notranslate"><span class="pre">OscillatoryShear</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.magnetostatics">espressomd.magnetostatics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.Container"><code class="docutils literal notranslate"><span class="pre">Container</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DLC"><code class="docutils literal notranslate"><span class="pre">DLC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarDirectSum"><code class="docutils literal notranslate"><span class="pre">DipolarDirectSum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.DipolarP3M"><code class="docutils literal notranslate"><span class="pre">DipolarP3M</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.MagnetostaticInteraction"><code class="docutils literal notranslate"><span class="pre">MagnetostaticInteraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.magnetostatics.Scafacos"><code class="docutils literal notranslate"><span class="pre">Scafacos</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.math">espressomd.math module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.math.CylindricalTransformationParameters"><code class="docutils literal notranslate"><span class="pre">CylindricalTransformationParameters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.math.calc_quaternions_from_angles"><code class="docutils literal notranslate"><span class="pre">calc_quaternions_from_angles()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.observables">espressomd.observables module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.BondAngles"><code class="docutils literal notranslate"><span class="pre">BondAngles</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.BondDihedrals"><code class="docutils literal notranslate"><span class="pre">BondDihedrals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ComPosition"><code class="docutils literal notranslate"><span class="pre">ComPosition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ComVelocity"><code class="docutils literal notranslate"><span class="pre">ComVelocity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CosPersistenceAngles"><code class="docutils literal notranslate"><span class="pre">CosPersistenceAngles</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalDensityProfile"><code class="docutils literal notranslate"><span class="pre">CylindricalDensityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalFluxDensityProfile"><code class="docutils literal notranslate"><span class="pre">CylindricalFluxDensityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalLBFluxDensityProfileAtParticlePositions"><code class="docutils literal notranslate"><span class="pre">CylindricalLBFluxDensityProfileAtParticlePositions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalLBVelocityProfile"><code class="docutils literal notranslate"><span class="pre">CylindricalLBVelocityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalLBVelocityProfileAtParticlePositions"><code class="docutils literal notranslate"><span class="pre">CylindricalLBVelocityProfileAtParticlePositions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalProfileObservable"><code class="docutils literal notranslate"><span class="pre">CylindricalProfileObservable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.CylindricalVelocityProfile"><code class="docutils literal notranslate"><span class="pre">CylindricalVelocityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.DPDStress"><code class="docutils literal notranslate"><span class="pre">DPDStress</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.DensityProfile"><code class="docutils literal notranslate"><span class="pre">DensityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.DipoleMoment"><code class="docutils literal notranslate"><span class="pre">DipoleMoment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.Energy"><code class="docutils literal notranslate"><span class="pre">Energy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.FluxDensityProfile"><code class="docutils literal notranslate"><span class="pre">FluxDensityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ForceDensityProfile"><code class="docutils literal notranslate"><span class="pre">ForceDensityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.LBFluidPressureTensor"><code class="docutils literal notranslate"><span class="pre">LBFluidPressureTensor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.LBVelocityProfile"><code class="docutils literal notranslate"><span class="pre">LBVelocityProfile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.MagneticDipoleMoment"><code class="docutils literal notranslate"><span class="pre">MagneticDipoleMoment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.Observable"><code class="docutils literal notranslate"><span class="pre">Observable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.PairwiseDistances"><code class="docutils literal notranslate"><span class="pre">PairwiseDistances</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleAngularVelocities"><code class="docutils literal notranslate"><span class="pre">ParticleAngularVelocities</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleBodyAngularVelocities"><code class="docutils literal notranslate"><span class="pre">ParticleBodyAngularVelocities</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleBodyVelocities"><code class="docutils literal notranslate"><span class="pre">ParticleBodyVelocities</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleDipoleFields"><code class="docutils literal notranslate"><span class="pre">ParticleDipoleFields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleDirectors"><code class="docutils literal notranslate"><span class="pre">ParticleDirectors</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleDistances"><code class="docutils literal notranslate"><span class="pre">ParticleDistances</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleForces"><code class="docutils literal notranslate"><span class="pre">ParticleForces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticlePositions"><code class="docutils literal notranslate"><span class="pre">ParticlePositions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ParticleVelocities"><code class="docutils literal notranslate"><span class="pre">ParticleVelocities</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.Pressure"><code class="docutils literal notranslate"><span class="pre">Pressure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.PressureTensor"><code class="docutils literal notranslate"><span class="pre">PressureTensor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.ProfileObservable"><code class="docutils literal notranslate"><span class="pre">ProfileObservable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.RDF"><code class="docutils literal notranslate"><span class="pre">RDF</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.observables.TotalForce"><code class="docutils literal notranslate"><span class="pre">TotalForce</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.pair_criteria">espressomd.pair_criteria module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.pair_criteria.BondCriterion"><code class="docutils literal notranslate"><span class="pre">BondCriterion</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.pair_criteria.DistanceCriterion"><code class="docutils literal notranslate"><span class="pre">DistanceCriterion</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.pair_criteria.EnergyCriterion"><code class="docutils literal notranslate"><span class="pre">EnergyCriterion</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.particle_data">espressomd.particle_data module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleHandle"><code class="docutils literal notranslate"><span class="pre">ParticleHandle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleList"><code class="docutils literal notranslate"><span class="pre">ParticleList</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.particle_data.ParticleSlice"><code class="docutils literal notranslate"><span class="pre">ParticleSlice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.particle_data.set_slice_one_for_all"><code class="docutils literal notranslate"><span class="pre">set_slice_one_for_all()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.particle_data.set_slice_one_for_each"><code class="docutils literal notranslate"><span class="pre">set_slice_one_for_each()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.polymer">espressomd.polymer module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.polymer.linear_polymer_positions"><code class="docutils literal notranslate"><span class="pre">linear_polymer_positions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.polymer.setup_diamond_polymer"><code class="docutils literal notranslate"><span class="pre">setup_diamond_polymer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.profiler">espressomd.profiler module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.profiler.Caliper"><code class="docutils literal notranslate"><span class="pre">Caliper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.propagation">espressomd.propagation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.propagation.Propagation"><code class="docutils literal notranslate"><span class="pre">Propagation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.reaction_methods">espressomd.reaction_methods module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.reaction_methods.ConstantpHEnsemble"><code class="docutils literal notranslate"><span class="pre">ConstantpHEnsemble</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.reaction_methods.ReactionAlgorithm"><code class="docutils literal notranslate"><span class="pre">ReactionAlgorithm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.reaction_methods.ReactionEnsemble"><code class="docutils literal notranslate"><span class="pre">ReactionEnsemble</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.reaction_methods.SingleReaction"><code class="docutils literal notranslate"><span class="pre">SingleReaction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.reaction_methods.WidomInsertion"><code class="docutils literal notranslate"><span class="pre">WidomInsertion</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.rotation">espressomd.rotation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.rotation.diagonalized_inertia_tensor"><code class="docutils literal notranslate"><span class="pre">diagonalized_inertia_tensor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.rotation.inertia_tensor"><code class="docutils literal notranslate"><span class="pre">inertia_tensor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.rotation.matrix_to_quat"><code class="docutils literal notranslate"><span class="pre">matrix_to_quat()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.script_interface">espressomd.script_interface module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.PObjectRef"><code class="docutils literal notranslate"><span class="pre">PObjectRef</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.PScriptInterface"><code class="docutils literal notranslate"><span class="pre">PScriptInterface</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.ScriptInterfaceHelper"><code class="docutils literal notranslate"><span class="pre">ScriptInterfaceHelper</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.ScriptObjectList"><code class="docutils literal notranslate"><span class="pre">ScriptObjectList</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.ScriptObjectMap"><code class="docutils literal notranslate"><span class="pre">ScriptObjectMap</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.array_variant"><code class="docutils literal notranslate"><span class="pre">array_variant</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.fast_tiling"><code class="docutils literal notranslate"><span class="pre">fast_tiling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.script_interface.script_interface_register"><code class="docutils literal notranslate"><span class="pre">script_interface_register()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.shapes">espressomd.shapes module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Cylinder"><code class="docutils literal notranslate"><span class="pre">Cylinder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Ellipsoid"><code class="docutils literal notranslate"><span class="pre">Ellipsoid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.HollowConicalFrustum"><code class="docutils literal notranslate"><span class="pre">HollowConicalFrustum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Rhomboid"><code class="docutils literal notranslate"><span class="pre">Rhomboid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Shape"><code class="docutils literal notranslate"><span class="pre">Shape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.SimplePore"><code class="docutils literal notranslate"><span class="pre">SimplePore</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Slitpore"><code class="docutils literal notranslate"><span class="pre">Slitpore</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Sphere"><code class="docutils literal notranslate"><span class="pre">Sphere</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.SpheroCylinder"><code class="docutils literal notranslate"><span class="pre">SpheroCylinder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Torus"><code class="docutils literal notranslate"><span class="pre">Torus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Union"><code class="docutils literal notranslate"><span class="pre">Union</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.shapes.Wall"><code class="docutils literal notranslate"><span class="pre">Wall</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.swimmer_helpers">espressomd.swimmer_helpers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.swimmer_helpers.add_dipole_particle"><code class="docutils literal notranslate"><span class="pre">add_dipole_particle()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.system">espressomd.system module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.system.System"><code class="docutils literal notranslate"><span class="pre">System</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.thermostat">espressomd.thermostat module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.Brownian"><code class="docutils literal notranslate"><span class="pre">Brownian</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.DPDThermostat"><code class="docutils literal notranslate"><span class="pre">DPDThermostat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.IsotropicNpt"><code class="docutils literal notranslate"><span class="pre">IsotropicNpt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.LBThermostat"><code class="docutils literal notranslate"><span class="pre">LBThermostat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.Langevin"><code class="docutils literal notranslate"><span class="pre">Langevin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.Stokesian"><code class="docutils literal notranslate"><span class="pre">Stokesian</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.ThermalizedBond"><code class="docutils literal notranslate"><span class="pre">ThermalizedBond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.thermostat.Thermostat"><code class="docutils literal notranslate"><span class="pre">Thermostat</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.utils">espressomd.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.array_locked"><code class="docutils literal notranslate"><span class="pre">array_locked</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.check_required_keys"><code class="docutils literal notranslate"><span class="pre">check_required_keys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.check_type_or_throw_except"><code class="docutils literal notranslate"><span class="pre">check_type_or_throw_except()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.check_valid_keys"><code class="docutils literal notranslate"><span class="pre">check_valid_keys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.handle_errors"><code class="docutils literal notranslate"><span class="pre">handle_errors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.is_valid_type"><code class="docutils literal notranslate"><span class="pre">is_valid_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.nesting_level"><code class="docutils literal notranslate"><span class="pre">nesting_level()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.to_bytes"><code class="docutils literal notranslate"><span class="pre">to_bytes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.utils.to_str"><code class="docutils literal notranslate"><span class="pre">to_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.version">espressomd.version module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.friendly"><code class="docutils literal notranslate"><span class="pre">friendly()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.git_branch"><code class="docutils literal notranslate"><span class="pre">git_branch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.git_commit"><code class="docutils literal notranslate"><span class="pre">git_commit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.git_state"><code class="docutils literal notranslate"><span class="pre">git_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.major"><code class="docutils literal notranslate"><span class="pre">major()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.minor"><code class="docutils literal notranslate"><span class="pre">minor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.version.version"><code class="docutils literal notranslate"><span class="pre">version()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.visualization">espressomd.visualization module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Camera"><code class="docutils literal notranslate"><span class="pre">Camera</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Cylinder"><code class="docutils literal notranslate"><span class="pre">Cylinder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Ellipsoid"><code class="docutils literal notranslate"><span class="pre">Ellipsoid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.HollowConicalFrustum"><code class="docutils literal notranslate"><span class="pre">HollowConicalFrustum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.KeyboardButtonEvent"><code class="docutils literal notranslate"><span class="pre">KeyboardButtonEvent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.KeyboardFireEvent"><code class="docutils literal notranslate"><span class="pre">KeyboardFireEvent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.KeyboardManager"><code class="docutils literal notranslate"><span class="pre">KeyboardManager</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.MouseButtonEvent"><code class="docutils literal notranslate"><span class="pre">MouseButtonEvent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.MouseFireEvent"><code class="docutils literal notranslate"><span class="pre">MouseFireEvent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.MouseManager"><code class="docutils literal notranslate"><span class="pre">MouseManager</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Shape"><code class="docutils literal notranslate"><span class="pre">Shape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.SimplePore"><code class="docutils literal notranslate"><span class="pre">SimplePore</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Slitpore"><code class="docutils literal notranslate"><span class="pre">Slitpore</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Sphere"><code class="docutils literal notranslate"><span class="pre">Sphere</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Spherocylinder"><code class="docutils literal notranslate"><span class="pre">Spherocylinder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.Wall"><code class="docutils literal notranslate"><span class="pre">Wall</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.draw_arrow"><code class="docutils literal notranslate"><span class="pre">draw_arrow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.draw_box"><code class="docutils literal notranslate"><span class="pre">draw_box()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.draw_cylinder"><code class="docutils literal notranslate"><span class="pre">draw_cylinder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.draw_plane"><code class="docutils literal notranslate"><span class="pre">draw_plane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.get_extra_clip_plane"><code class="docutils literal notranslate"><span class="pre">get_extra_clip_plane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.openGLLive"><code class="docutils literal notranslate"><span class="pre">openGLLive</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.rotation_helper"><code class="docutils literal notranslate"><span class="pre">rotation_helper()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.visualization.set_solid_material"><code class="docutils literal notranslate"><span class="pre">set_solid_material()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd.zn">espressomd.zn module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.zn.LBField"><code class="docutils literal notranslate"><span class="pre">LBField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.zn.VectorField"><code class="docutils literal notranslate"><span class="pre">VectorField</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.zn.Visualizer"><code class="docutils literal notranslate"><span class="pre">Visualizer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="espressomd.html#espressomd.zn.WallIntersection"><code class="docutils literal notranslate"><span class="pre">WallIntersection</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="espressomd.html#module-espressomd">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

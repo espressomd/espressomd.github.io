@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.electrokinetics &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.electrokinetics</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2021-2023 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.detail.walberla</span> <span class="kn">import</span> <span class="n">VTKOutputBase</span><span class="p">,</span> <span class="n">Lattice</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span><span class="p">,</span> <span class="n">ScriptObjectList</span><span class="p">,</span> <span class="n">array_variant</span>
+<span class="kn">import</span> <span class="nn">espressomd.detail.walberla</span>
+<span class="kn">import</span> <span class="nn">espressomd.shapes</span>
+
+
+<span class="k">def</span> <span class="nf">_check_lattice_blocks</span><span class="p">(</span><span class="n">class_name</span><span class="p">,</span> <span class="n">pack</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;lattice&quot;</span> <span class="ow">in</span> <span class="n">pack</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">pack</span><span class="p">[</span><span class="s2">&quot;lattice&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">blocks_per_mpi_rank</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Using more than one block per MPI rank is not supported for </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EKFFT">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKFFT">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKFFT</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A FFT-based Poisson solver.</span>
+<span class="sd">    Intrinsically assumes periodic boundary conditions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lattice : :obj:`espressomd.lb.Lattice &lt;espressomd.detail.walberla.Lattice&gt;`</span>
+<span class="sd">        Lattice object.</span>
+<span class="sd">    permittivity : :obj:`float`</span>
+<span class="sd">        permittivity of the fluid :math:`\\epsilon_0 \\epsilon_{\\mathrm{r}}`.</span>
+<span class="sd">    gpu : :obj:`bool`, optional</span>
+<span class="sd">        Use GPU implementation.</span>
+<span class="sd">    single_precision : :obj:`bool`, optional</span>
+<span class="sd">        Use single-precision floating-point arithmetic.</span>
+<span class="sd">    add_vtk_writer()</span>
+<span class="sd">        Attach a VTK writer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vtk : :class:`espressomd.electrokinetics.VTKOutput`</span>
+<span class="sd">            VTK writer.</span>
+
+<span class="sd">    remove_vtk_writer()</span>
+<span class="sd">        Detach a VTK writer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vtk : :class:`espressomd.electrokinetics.VTKOutput`</span>
+<span class="sd">            VTK writer.</span>
+
+<span class="sd">    clear_vtk_writers()</span>
+<span class="sd">        Detach all VTK writers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKFFT&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA_FFT&quot;</span><span class="p">,)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;add_vtk_writer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;remove_vtk_writer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear_vtk_writers&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">_check_lattice_blocks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">key</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">EKPoissonSolverSlice</span><span class="p">(</span>
+                    <span class="n">parent_sip</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">slice_range</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">EKPoissonSolverNode</span><span class="p">(</span>
+                    <span class="n">parent_sip</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not a valid index. Should be a point on the &quot;</span>
+            <span class="s2">&quot;nodegrid e.g. ek[0,0,0], or a slice, e.g. ek[:,0,0]&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EKNone">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKNone">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKNone</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The default Poisson solver.</span>
+<span class="sd">    Imposes a null electrostatic potential everywhere.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lattice : :obj:`espressomd.lb.Lattice &lt;espressomd.detail.walberla.Lattice&gt;`</span>
+<span class="sd">        Lattice object.</span>
+<span class="sd">    single_precision : :obj:`bool`, optional</span>
+<span class="sd">        Use single-precision floating-point arithmetic.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKNone&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">_check_lattice_blocks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EKPoissonSolverNode">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKPoissonSolverNode">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKPoissonSolverNode</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKPoissonSolverNode&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="EKPoissonSolverNode.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKPoissonSolverNode.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="EKPoissonSolverNode.validate_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKPoissonSolverNode.validate_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_required_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;The index of an EK poisson solver node consists of three integers.&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot serialize EK Poisson solver node objects&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">EKPoissonSolverNode</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">obj</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span>
+
+    <span class="nd">@index</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;index&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">potential</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_potential&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EKPoissonSolverSlice">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKPoissonSolverSlice">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKPoissonSolverSlice</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKPoissonSolverSlice&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="EKPoissonSolverSlice.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKPoissonSolverSlice.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">,</span> <span class="s2">&quot;slice_range&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="EKPoissonSolverSlice.validate_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKPoissonSolverSlice.validate_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_required_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">slice_range</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;slice_range&quot;</span><span class="p">)</span>
+            <span class="n">grid_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">extra_kwargs</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">detail</span><span class="o">.</span><span class="n">walberla</span><span class="o">.</span><span class="n">get_slice_bounding_box</span><span class="p">(</span>
+                <span class="n">slice_range</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">EKPoissonSolverNode</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">node_sip</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_slice_ranges&quot;</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+        <span class="n">ek_sip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_ek_solver_sip&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">indices</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">EKPoissonSolverNode</span><span class="p">(</span><span class="n">parent_sip</span><span class="o">=</span><span class="n">ek_sip</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Cannot serialize EK Poisson solver slice objects&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="n">value_grid</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;get_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">value_grid</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_slice_size&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot set properties of an empty &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object&quot;</span><span class="p">)</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">value_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_value_shape&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attr</span><span class="p">))</span>
+        <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">dimensions</span><span class="p">,</span> <span class="o">*</span><span class="n">value_shape</span><span class="p">)</span>
+
+        <span class="c1"># broadcast if only one element was provided</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">value_shape</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="ow">and</span> <span class="n">value_shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">target_shape</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">shape_squeeze</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">shape</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shape_squeeze</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">shape_squeeze</span><span class="p">(</span><span class="n">target_shape</span><span class="p">):</span>
+            <span class="n">target_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">target_shape</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Input-dimensions of &#39;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&#39; array </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> does not match slice dimensions </span><span class="si">{</span><span class="n">target_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;set_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">potential</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;potential&quot;</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="VTKPoissonOutput">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.VTKPoissonOutput">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">VTKPoissonOutput</span><span class="p">(</span><span class="n">VTKOutputBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a VTK writer.</span>
+
+<span class="sd">    Files are written to :file:`&lt;base_folder&gt;/&lt;identifier&gt;/&lt;prefix&gt;_*.vtu`.</span>
+<span class="sd">    Summary is written to :file:`&lt;base_folder&gt;/&lt;identifier&gt;.pvd`.</span>
+
+<span class="sd">    Manual VTK callbacks can be called at any time to take a snapshot</span>
+<span class="sd">    of the current state of the EK species.</span>
+
+<span class="sd">    Automatic VTK callbacks can be disabled at any time and re-enabled later.</span>
+<span class="sd">    Please note that the internal VTK counter is no longer incremented when</span>
+<span class="sd">    an automatic callback is disabled, which means the number of EK steps</span>
+<span class="sd">    between two frames will not always be an integer multiple of ``delta_N``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    identifier : :obj:`str`</span>
+<span class="sd">        Name of the VTK writer.</span>
+<span class="sd">    observables : :obj:`list`, {&#39;potential&#39;,}</span>
+<span class="sd">        List of observables to write to the VTK files.</span>
+<span class="sd">    delta_N : :obj:`int`</span>
+<span class="sd">        Write frequency. If this value is 0 (default), the object is a</span>
+<span class="sd">        manual VTK callback that must be triggered manually. Otherwise,</span>
+<span class="sd">        it is an automatic callback that is added to the time loop and</span>
+<span class="sd">        writes every ``delta_N`` EK steps.</span>
+<span class="sd">    base_folder : :obj:`str` or :obj:`pathlib.Path` (optional), default is :file:`vtk_out`</span>
+<span class="sd">        Path to the output VTK folder.</span>
+<span class="sd">    prefix : :obj:`str` (optional), default is &#39;simulation_step&#39;</span>
+<span class="sd">        Prefix for VTK files.</span>
+<span class="sd">    force_pvtu : :obj:`bool` (optional), default is ``True``</span>
+<span class="sd">        Force parallel unstructured grid format (file extension: ``.vtu``).</span>
+<span class="sd">        If ``False``, uses parallel structured grid format if possible</span>
+<span class="sd">        (file extension: ``.vti``).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKPoissonVTKHandle&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;enable&quot;</span><span class="p">,</span> <span class="s2">&quot;disable&quot;</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">)</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="VTKPoissonOutput.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.VTKPoissonOutput.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">class_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_N</span><span class="p">:</span>
+            <span class="n">write_when</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;every </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_N</span><span class="si">}</span><span class="s2"> EK steps&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+                <span class="n">write_when</span> <span class="o">+=</span> <span class="s2">&quot; (disabled)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">write_when</span> <span class="o">=</span> <span class="s2">&quot;on demand&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">class_id</span><span class="si">}</span><span class="s2">: write to &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vtk_uid</span><span class="si">}</span><span class="s2">&#39; </span><span class="si">{</span><span class="n">write_when</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EKSpecies">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpecies">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKSpecies</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">,</span>
+                <span class="n">espressomd</span><span class="o">.</span><span class="n">detail</span><span class="o">.</span><span class="n">walberla</span><span class="o">.</span><span class="n">LatticeModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The advection-diffusion-reaction method for chemical species using waLBerla.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lattice : :obj:`espressomd.electrokinetics.Lattice &lt;espressomd.detail.walberla.Lattice&gt;`</span>
+<span class="sd">        Lattice object.</span>
+<span class="sd">    tau : :obj:`float`</span>
+<span class="sd">        EK time step, must be an integer multiple of the MD time step.</span>
+<span class="sd">    density : :obj:`float`</span>
+<span class="sd">        Species density.</span>
+<span class="sd">    diffusion : :obj:`float`</span>
+<span class="sd">        Species diffusion coefficient.</span>
+<span class="sd">    valency : :obj:`float`</span>
+<span class="sd">        Species valency.</span>
+<span class="sd">    advection : :obj:`bool`</span>
+<span class="sd">        Whether to enable advection.</span>
+<span class="sd">    friction_coupling : :obj:`bool`</span>
+<span class="sd">        Whether to enable friction coupling.</span>
+<span class="sd">    ext_efield : (3,) array_like of :obj:`float`, optional</span>
+<span class="sd">        External electrical field.</span>
+<span class="sd">    kT : :obj:`float`, optional</span>
+<span class="sd">        Thermal energy of the simulated heat bath (for thermalized species).</span>
+<span class="sd">        Set it to 0 for an unthermalized species.</span>
+<span class="sd">    thermalized : :obj:`bool`, optional</span>
+<span class="sd">        Whether the species is thermalized.</span>
+<span class="sd">    seed : :obj:`int`, optional</span>
+<span class="sd">        Seed for the random number generator.</span>
+<span class="sd">    gpu : :obj:`bool`, optional</span>
+<span class="sd">        Use GPU implementation.</span>
+<span class="sd">    single_precision : :obj:`bool`, optional</span>
+<span class="sd">        Use single-precision floating-point arithmetic.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    clear_density_boundaries()</span>
+<span class="sd">        Remove density boundary conditions.</span>
+
+<span class="sd">    clear_flux_boundaries()</span>
+<span class="sd">        Remove flux boundary conditions.</span>
+
+<span class="sd">    clear_boundaries()</span>
+<span class="sd">        Remove all boundary conditions.</span>
+
+<span class="sd">    save_checkpoint()</span>
+<span class="sd">        Write EK densities and boundary conditions to a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : :obj:`str` or :obj:`pathlib.Path`</span>
+<span class="sd">            Destination file path.</span>
+<span class="sd">        binary : :obj:`bool`</span>
+<span class="sd">            Whether to write in binary or ASCII mode.</span>
+
+<span class="sd">    load_checkpoint()</span>
+<span class="sd">        Load EK densities and boundary conditions from a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : :obj:`str` or :obj:`pathlib.Path`</span>
+<span class="sd">            File path to read from.</span>
+<span class="sd">        binary : :obj:`bool`</span>
+<span class="sd">            Whether to read in binary or ASCII mode.</span>
+
+<span class="sd">    add_vtk_writer()</span>
+<span class="sd">        Attach a VTK writer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vtk : :class:`espressomd.electrokinetics.VTKOutput`</span>
+<span class="sd">            VTK writer.</span>
+
+<span class="sd">    remove_vtk_writer()</span>
+<span class="sd">        Detach a VTK writer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vtk : :class:`espressomd.electrokinetics.VTKOutput`</span>
+<span class="sd">            VTK writer.</span>
+
+<span class="sd">    clear_vtk_writers()</span>
+<span class="sd">        Detach all VTK writers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKSpecies&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;clear_density_boundaries&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear_flux_boundaries&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear_boundaries&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;add_vtk_writer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;remove_vtk_writer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear_vtk_writers&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">_check_lattice_blocks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EKSpecies.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpecies.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;kT&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;ext_efield&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span> <span class="s2">&quot;gpu&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;thermalized&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">key</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">EKSpeciesSlice</span><span class="p">(</span>
+                    <span class="n">parent_sip</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">slice_range</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">node_grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">EKSpeciesNode</span><span class="p">(</span><span class="n">parent_sip</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not a valid index. Should be a point on the &quot;</span>
+            <span class="s2">&quot;nodegrid e.g. ek[0,0,0], or a slice, e.g. ek[:,0,0]&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EKSpecies.add_boundary_from_shape">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpecies.add_boundary_from_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_boundary_from_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">boundary_type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set boundary conditions from a shape.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : :obj:`espressomd.shapes.Shape`</span>
+<span class="sd">            Shape to rasterize.</span>
+<span class="sd">        value : (O,) or (L, M, N, O) array_like of :obj:`float`, optional</span>
+<span class="sd">            Boundary numerical value. If a single value of shape ``(O,)``</span>
+<span class="sd">            is given, it will be broadcast to all nodes inside the shape,</span>
+<span class="sd">            otherwise ``L, M, N`` must be equal to the EK grid dimensions.</span>
+<span class="sd">        boundary_type : Union[:class:`~espressomd.electrokinetics.DensityBoundary`,</span>
+<span class="sd">                              :class:`~espressomd.electrokinetics.FluxBoundary`] (optional)</span>
+<span class="sd">            Type of the boundary condition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">boundary_type</span><span class="p">,</span> <span class="p">(</span><span class="n">FluxBoundary</span><span class="p">,</span> <span class="n">DensityBoundary</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter &#39;boundary_type&#39; must be a subclass of FluxBoundary or DensityBoundary&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">)</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">Shape</span><span class="p">,</span> <span class="s2">&quot;expected an espressomd.shapes.Shape&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">boundary_type</span><span class="p">,</span> <span class="n">FluxBoundary</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">3</span><span class="p">,),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot process flux value grid of shape </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">boundary_type</span><span class="p">,</span> <span class="n">DensityBoundary</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot process density value grid of shape </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shape_bitmask</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">boundary_type</span><span class="p">,</span> <span class="n">FluxBoundary</span><span class="p">):</span>
+            <span class="n">boundaries_update_method</span> <span class="o">=</span> <span class="s2">&quot;update_flux_boundary_from_shape&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">boundaries_update_method</span> <span class="o">=</span> <span class="s2">&quot;update_density_boundary_from_shape&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="n">boundaries_update_method</span><span class="p">,</span>
+            <span class="n">raster</span><span class="o">=</span><span class="n">array_variant</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">array_variant</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FluxBoundary">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.FluxBoundary">[docs]</a>
+<span class="k">class</span> <span class="nc">FluxBoundary</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hold flux information for the flux boundary</span>
+<span class="sd">    condition at a single node.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">flux</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;FluxBoundary flux must be three floats&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">=</span> <span class="n">flux</span></div>
+
+
+
+<div class="viewcode-block" id="DensityBoundary">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.DensityBoundary">[docs]</a>
+<span class="k">class</span> <span class="nc">DensityBoundary</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hold density information for the density boundary</span>
+<span class="sd">    condition at a single node.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">density</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">density</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;DensityBoundary flux must be one float&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">density</span> <span class="o">=</span> <span class="n">density</span></div>
+
+
+
+<div class="viewcode-block" id="EKSpeciesNode">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpeciesNode">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKSpeciesNode</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKSpeciesNode&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="EKSpeciesNode.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpeciesNode.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="EKSpeciesNode.validate_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpeciesNode.validate_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_required_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;The index of an EK species node consists of three integers.&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot serialize EK species node objects&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">EKSpeciesNode</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">obj</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span>
+
+    <span class="nd">@index</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;index&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_density&quot;</span><span class="p">)</span>
+
+    <span class="nd">@density</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_density&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_flux_vector&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_is_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@is_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;is_boundary&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`~espressomd.electrokinetics.DensityBoundary`</span>
+<span class="sd">            If the node is a boundary node</span>
+<span class="sd">        ``None``</span>
+<span class="sd">            If the node is not a boundary node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_node_density_at_boundary&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DensityBoundary</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@density_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">density_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : :class:`~espressomd.electrokinetics.DensityBoundary` or ``None``</span>
+<span class="sd">            If value is :class:`~espressomd.EkSpecies.DensityBoundary`,</span>
+<span class="sd">            set the node to be a boundary node with the specified density.</span>
+<span class="sd">            If value is ``None``, the node will become a domain node.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">DensityBoundary</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">density</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter &#39;value&#39; must be an instance of DensityBoundary or None&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_node_density_at_boundary&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flux_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`~espressomd.electrokinetics.FluxBoundary`</span>
+<span class="sd">            If the node is a boundary node</span>
+<span class="sd">        ``None``</span>
+<span class="sd">            If the node is not a boundary node</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_node_flux_at_boundary&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flux</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FluxBoundary</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@flux_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">flux_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : :class:`~espressomd.electrokinetics.FluxBoundary` or ``None``</span>
+<span class="sd">            If value is :class:`~espressomd.EkSpecies.FluxBoundary`,</span>
+<span class="sd">            set the node to be a boundary node with the specified flux.</span>
+<span class="sd">            If value is ``None``, the node will become a domain node.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">FluxBoundary</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">flux</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter &#39;value&#39; must be an instance of FluxBoundary or None&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_node_flux_at_boundary&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EKSpeciesSlice">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpeciesSlice">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKSpeciesSlice</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKSpeciesSlice&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="EKSpeciesSlice.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpeciesSlice.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">,</span> <span class="s2">&quot;slice_range&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="EKSpeciesSlice.validate_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKSpeciesSlice.validate_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_required_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">slice_range</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;slice_range&quot;</span><span class="p">)</span>
+            <span class="n">grid_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">extra_kwargs</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">detail</span><span class="o">.</span><span class="n">walberla</span><span class="o">.</span><span class="n">get_slice_bounding_box</span><span class="p">(</span>
+                <span class="n">slice_range</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">EKSpeciesNode</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">node_sip</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_slice_ranges&quot;</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+        <span class="n">ek_sip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_ek_sip&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">indices</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">EKSpeciesNode</span><span class="p">(</span><span class="n">parent_sip</span><span class="o">=</span><span class="n">ek_sip</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot serialize EK species slice objects&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="n">value_grid</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;get_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s2">&quot;flux_at_boundary&quot;</span><span class="p">:</span>
+            <span class="n">value_grid</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="kc">None</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">FluxBoundary</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value_grid</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s2">&quot;density_at_boundary&quot;</span><span class="p">:</span>
+            <span class="n">value_grid</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="kc">None</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">DensityBoundary</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value_grid</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">value_grid</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_slice_size&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot set properties of an empty &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object&quot;</span><span class="p">)</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">value_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_value_shape&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attr</span><span class="p">))</span>
+        <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">dimensions</span><span class="p">,</span> <span class="o">*</span><span class="n">value_shape</span><span class="p">)</span>
+
+        <span class="c1"># broadcast if only one element was provided</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">value_shape</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="ow">and</span> <span class="n">value_shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">target_shape</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">shape_squeeze</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">shape</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shape_squeeze</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">shape_squeeze</span><span class="p">(</span><span class="n">target_shape</span><span class="p">):</span>
+            <span class="n">target_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">target_shape</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Input-dimensions of &#39;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&#39; array </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> does not match slice dimensions </span><span class="si">{</span><span class="n">target_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;set_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;density&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@density</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;density&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;flux&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;is_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@is_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;is_boundary&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (N, M, L) array_like of :class:`~espressomd.electrokinetics.DensityBoundary`</span>
+<span class="sd">            If the nodes are boundary nodes</span>
+<span class="sd">        (N, M, L) array_like of ``None``</span>
+<span class="sd">            If the nodes are not boundary nodes</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;density_at_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@density_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">density_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : (N, M, L) array_like of :class:`~espressomd.electrokinetics.DensityBoundary` or obj:`None`</span>
+<span class="sd">            If values are :class:`~espressomd.electrokinetics.DensityBoundary`,</span>
+<span class="sd">            set the nodes to be boundary nodes with the specified density.</span>
+<span class="sd">            If values are obj:`None`, the nodes will become domain nodes.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">type_error_msg</span> <span class="o">=</span> <span class="s2">&quot;Parameter &#39;values&#39; must be an array_like of DensityBoundary or None&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">type_error_msg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">DensityBoundary</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">type_error_msg</span><span class="p">)</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">density</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;density_at_boundary&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flux_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (N, M, L) array_like of :class:`~espressomd.electrokinetics.FluxBoundary`</span>
+<span class="sd">            If the nodes are boundary nodes</span>
+<span class="sd">        (N, M, L) array_like of `None``</span>
+<span class="sd">            If the nodes are not boundary nodes</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;flux_at_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@flux_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">flux_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : (N, M, L) array_like of :class:`~espressomd.electrokinetics.FluxBoundary` or obj:`None`</span>
+<span class="sd">            If values are :class:`~espressomd.lb.FluxBoundary`,</span>
+<span class="sd">            set the nodes to be boundary nodes with the specified flux.</span>
+<span class="sd">            If values are obj:`None`, the nodes will become domain nodes.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">type_error_msg</span> <span class="o">=</span> <span class="s2">&quot;Parameter &#39;values&#39; must be an array_like of FluxBoundary or None&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">type_error_msg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">FluxBoundary</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">type_error_msg</span><span class="p">)</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;flux_at_boundary&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="VTKOutput">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.VTKOutput">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">VTKOutput</span><span class="p">(</span><span class="n">VTKOutputBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a VTK writer.</span>
+
+<span class="sd">    Files are written to :file:`&lt;base_folder&gt;/&lt;identifier&gt;/&lt;prefix&gt;_*.vtu`.</span>
+<span class="sd">    Summary is written to :file:`&lt;base_folder&gt;/&lt;identifier&gt;.pvd`.</span>
+
+<span class="sd">    Manual VTK callbacks can be called at any time to take a snapshot</span>
+<span class="sd">    of the current state of the EK species.</span>
+
+<span class="sd">    Automatic VTK callbacks can be disabled at any time and re-enabled later.</span>
+<span class="sd">    Please note that the internal VTK counter is no longer incremented when</span>
+<span class="sd">    an automatic callback is disabled, which means the number of EK steps</span>
+<span class="sd">    between two frames will not always be an integer multiple of ``delta_N``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    identifier : :obj:`str`</span>
+<span class="sd">        Name of the VTK writer.</span>
+<span class="sd">    observables : :obj:`list`, {&#39;density&#39;, &#39;flux&#39;,}</span>
+<span class="sd">        List of observables to write to the VTK files.</span>
+<span class="sd">    delta_N : :obj:`int`</span>
+<span class="sd">        Write frequency. If this value is 0 (default), the object is a</span>
+<span class="sd">        manual VTK callback that must be triggered manually. Otherwise,</span>
+<span class="sd">        it is an automatic callback that is added to the time loop and</span>
+<span class="sd">        writes every ``delta_N`` EK steps.</span>
+<span class="sd">    base_folder : :obj:`str` or :obj:`pathlib.Path` (optional), default is :file:`vtk_out`</span>
+<span class="sd">        Path to the output VTK folder.</span>
+<span class="sd">    prefix : :obj:`str` (optional), default is &#39;simulation_step&#39;</span>
+<span class="sd">        Prefix for VTK files.</span>
+<span class="sd">    force_pvtu : :obj:`bool` (optional), default is ``True``</span>
+<span class="sd">        Force parallel unstructured grid format (file extension: ``.vtu``).</span>
+<span class="sd">        If ``False``, uses parallel structured grid format if possible</span>
+<span class="sd">        (file extension: ``.vti``).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKVTKHandle&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;enable&quot;</span><span class="p">,</span> <span class="s2">&quot;disable&quot;</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">)</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="VTKOutput.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.VTKOutput.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">class_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_N</span><span class="p">:</span>
+            <span class="n">write_when</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;every </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_N</span><span class="si">}</span><span class="s2"> EK steps&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+                <span class="n">write_when</span> <span class="o">+=</span> <span class="s2">&quot; (disabled)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">write_when</span> <span class="o">=</span> <span class="s2">&quot;on demand&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">class_id</span><span class="si">}</span><span class="s2">: write to &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vtk_uid</span><span class="si">}</span><span class="s2">&#39; </span><span class="si">{</span><span class="n">write_when</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EKReactant">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKReactant">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKReactant</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reactant-object which specifies the contribution of a species to a reaction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ekspecies : :obj:`~espressomd.electrokinetics.EKSpecies`</span>
+<span class="sd">        EK species to react</span>
+<span class="sd">    stoech_coeff: :obj:`float`</span>
+<span class="sd">        Stoechiometric coefficient of this species in the reaction.</span>
+<span class="sd">        Products have positive coefficients whereas educts have negative ones.</span>
+<span class="sd">    order: :obj:`float`</span>
+<span class="sd">        Partial-order of this species in the reaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKReactant&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EKBulkReaction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKBulkReaction">[docs]</a>
+<span class="k">class</span> <span class="nc">EKBulkReaction</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reaction type that is applied everywhere in the domain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lattice : :obj:`espressomd.electrokinetics.Lattice &lt;espressomd.detail.walberla.Lattice&gt;`</span>
+<span class="sd">        Lattice object.</span>
+<span class="sd">    tau : :obj:`float`</span>
+<span class="sd">        EK time step, must be an integer multiple of the MD time step.</span>
+<span class="sd">    coefficient : :obj:`float`</span>
+<span class="sd">        Reaction rate constant of the reaction.</span>
+<span class="sd">    reactants: array_like of :obj:`~espressomd.electrokinetics.EKReactant`</span>
+<span class="sd">        Reactants that participate this reaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKBulkReaction&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EKIndexedReaction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKIndexedReaction">[docs]</a>
+<span class="k">class</span> <span class="nc">EKIndexedReaction</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reaction type that is applied only on specific cells in the domain.</span>
+<span class="sd">    Can be used to model surface-reactions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lattice : :obj:`espressomd.electrokinetics.Lattice &lt;espressomd.detail.walberla.Lattice&gt;`</span>
+<span class="sd">        Lattice object.</span>
+<span class="sd">    tau : :obj:`float`</span>
+<span class="sd">        EK time step, must be an integer multiple of the MD time step.</span>
+<span class="sd">    coefficient : :obj:`float`</span>
+<span class="sd">        Reaction rate constant of the reaction.</span>
+<span class="sd">    reactants: array_like of :obj:`~espressomd.electrokinetics.EKReactant`</span>
+<span class="sd">        Reactants that participate this reaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKIndexedReaction&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="EKIndexedReaction.add_node_to_index">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKIndexedReaction.add_node_to_index">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_node_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_node_is_boundary&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">is_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EKIndexedReaction.remove_node_from_index">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKIndexedReaction.remove_node_from_index">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_node_from_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_node_is_boundary&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="n">is_boundary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">key</span><span class="p">):</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+
+                <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+                           <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+                <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">ind</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
+
+                <span class="n">value_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">dimensions</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">,</span> <span class="n">indices</span><span class="p">))</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                    <span class="n">value_grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+                        <span class="s2">&quot;get_node_is_boundary&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+
+                <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">value_grid</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_node_is_boundary&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not a valid index. Should be a point on the nodegrid or a slice&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">key</span><span class="p">):</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+
+                <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+                           <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+                <span class="n">dimensions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ind</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">)</span>
+
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+                <span class="c1"># broadcast if only one element was provided</span>
+                <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">dimensions</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Input-dimensions of array </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> does not match slice dimensions </span><span class="si">{</span><span class="n">dimensions</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">,</span> <span class="n">indices</span><span class="p">))</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_node_is_boundary&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="n">is_boundary</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+                    <span class="s2">&quot;set_node_is_boundary&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">is_boundary</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not a valid index. Should be a point on the nodegrid or a slice&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="EKReactions">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKReactions">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKReactions</span><span class="p">(</span><span class="n">ScriptObjectList</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container object holding all EK-reactions that are considered.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    clear()</span>
+<span class="sd">        Remove all reactions.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKReactions&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;clear&quot;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="EKReactions.add">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKReactions.add">[docs]</a>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reaction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a reaction to the container.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction : :obj:`~espressomd.electrokinetics.EKBulkReaction` or :obj:`~espressomd.electrokinetics.EKIndexedReaction`</span>
+<span class="sd">            Reaction to be added.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reaction</span><span class="p">,</span> <span class="p">(</span><span class="n">EKBulkReaction</span><span class="p">,</span> <span class="n">EKIndexedReaction</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;reaction object is not of correct type.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">reaction</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EKReactions.remove">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKReactions.remove">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reaction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a reaction from the container.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reaction : :obj:`~espressomd.electrokinetics.EKBulkReaction` or :obj:`~espressomd.electrokinetics.EKIndexedReaction`</span>
+<span class="sd">            Reaction to be removed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">reaction</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EKContainer">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKContainer">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">EKContainer</span><span class="p">(</span><span class="n">ScriptObjectList</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container object holding the :obj:`~espressomd.electrokinetics.EKSpecies`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tau : :obj:`float`</span>
+<span class="sd">        EK time step, must be an integer multiple of the MD time step.</span>
+<span class="sd">    solver : :obj:`~espressomd.electrokinetics.EKNone` or :obj:`~espressomd.electrokinetics.EKFFT`</span>
+<span class="sd">        Solver defining the treatment of the electrostatic Poisson-equation.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    clear()</span>
+<span class="sd">        Removes all species.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::EKContainer&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;clear&quot;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;reactions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">EKReactions</span><span class="p">()</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Reactions-container of the current reactions (:obj:`~espressomd.electrokinetics.EKReactions`).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;reactions&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EKContainer.add">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKContainer.add">[docs]</a>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ekspecies</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an :obj:`~espressomd.electrokinetics.EKSpecies` to the container.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ekspecies : :obj:`~espressomd.electrokinetics.EKSpecies`</span>
+<span class="sd">            Species to be added.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">ekspecies</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EKContainer.remove">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.electrokinetics.EKContainer.remove">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ekspecies</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove an :obj:`~espressomd.electrokinetics.EKSpecies` from the container.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ekspecies : :obj:`~espressomd.electrokinetics.EKSpecies`</span>
+<span class="sd">            Species to be removed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;remove&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">ekspecies</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

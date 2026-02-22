@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>espressomd.detail package &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/toggleprompt.js?v=5801b3bb"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="espressomd.io package" href="espressomd.io.html" />
+    <link rel="prev" title="espressomd package" href="espressomd.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="espressomd-detail-package">
+<h1>espressomd.detail package<a class="headerlink" href="#espressomd-detail-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-espressomd.detail.walberla">
+<span id="espressomd-detail-walberla-module"></span><h2>espressomd.detail.walberla module<a class="headerlink" href="#module-espressomd.detail.walberla" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.Lattice">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">espressomd.detail.walberla.</span></span><span class="sig-name descname"><span class="pre">Lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#Lattice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.Lattice" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="espressomd.html#espressomd.script_interface.ScriptInterfaceHelper" title="espressomd.script_interface.ScriptInterfaceHelper"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScriptInterfaceHelper</span></code></a></p>
+<p>Interface to a waLBerla lattice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agrid</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>) – Lattice constant. The box size in every direction must be an integer
+multiple of <code class="docutils literal notranslate"><span class="pre">agrid</span></code>.</p></li>
+<li><p><strong>n_ghost_layers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – Lattice ghost layer thickness in units of <code class="docutils literal notranslate"><span class="pre">agrid</span></code>.</p></li>
+<li><p><strong>box_l</strong> ((3,) array_like of <code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, optional) – Domain size. If omitted, the currently active ESPResSo system’s
+<a class="reference internal" href="espressomd.html#espressomd.system.System.box_l" title="espressomd.system.System.box_l"><code class="xref py py-attr docutils literal notranslate"><span class="pre">box_l</span></code></a> will be used.</p></li>
+<li><p><strong>blocks_per_mpi_rank</strong> ((3,) array_like of <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – Distribute more than one block to each MPI rank.
+Meant to improve cache locality. Experimental.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.Lattice.default_params">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#Lattice.default_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.Lattice.default_params" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.Lattice.get_node_indices_inside_shape">
+<span class="sig-name descname"><span class="pre">get_node_indices_inside_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#Lattice.get_node_indices_inside_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.Lattice.get_node_indices_inside_shape" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.Lattice.get_shape_bitmask">
+<span class="sig-name descname"><span class="pre">get_shape_bitmask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#Lattice.get_shape_bitmask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.Lattice.get_shape_bitmask" title="Link to this definition">¶</a></dt>
+<dd><p>Create a bitmask for the given shape.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.Lattice.required_keys">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">required_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#Lattice.required_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.Lattice.required_keys" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.Lattice.valid_keys">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">valid_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#Lattice.valid_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.Lattice.valid_keys" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.LatticeModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">espressomd.detail.walberla.</span></span><span class="sig-name descname"><span class="pre">LatticeModel</span></span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#LatticeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.LatticeModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.LatticeModel.get_nodes_inside_shape">
+<span class="sig-name descname"><span class="pre">get_nodes_inside_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#LatticeModel.get_nodes_inside_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.LatticeModel.get_nodes_inside_shape" title="Link to this definition">¶</a></dt>
+<dd><p>Provide a generator for iterating over all nodes inside the given shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> (<a class="reference internal" href="espressomd.html#espressomd.shapes.Shape" title="espressomd.shapes.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Shape</span></code></a>) – Shape to use as filter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.LatticeModel.get_shape_bitmask">
+<span class="sig-name descname"><span class="pre">get_shape_bitmask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#LatticeModel.get_shape_bitmask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.LatticeModel.get_shape_bitmask" title="Link to this definition">¶</a></dt>
+<dd><p>Create a bitmask for the given shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> (<a class="reference internal" href="espressomd.html#espressomd.shapes.Shape" title="espressomd.shapes.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">espressomd.shapes.Shape</span></code></a>) – Shape to rasterize.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.LatticeModel.load_checkpoint">
+<span class="sig-name descname"><span class="pre">load_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#LatticeModel.load_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.LatticeModel.load_checkpoint" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.LatticeModel.save_checkpoint">
+<span class="sig-name descname"><span class="pre">save_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#LatticeModel.save_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.LatticeModel.save_checkpoint" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.VTKOutputBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">espressomd.detail.walberla.</span></span><span class="sig-name descname"><span class="pre">VTKOutputBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#VTKOutputBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.VTKOutputBase" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="espressomd.html#espressomd.script_interface.ScriptInterfaceHelper" title="espressomd.script_interface.ScriptInterfaceHelper"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScriptInterfaceHelper</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.VTKOutputBase.default_params">
+<span class="sig-name descname"><span class="pre">default_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#VTKOutputBase.default_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.VTKOutputBase.default_params" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.VTKOutputBase.valid_keys">
+<span class="sig-name descname"><span class="pre">valid_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#VTKOutputBase.valid_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.VTKOutputBase.valid_keys" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.VTKOutputBase.valid_observables">
+<span class="sig-name descname"><span class="pre">valid_observables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#VTKOutputBase.valid_observables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.VTKOutputBase.valid_observables" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="espressomd.detail.walberla.get_slice_bounding_box">
+<span class="sig-prename descclassname"><span class="pre">espressomd.detail.walberla.</span></span><span class="sig-name descname"><span class="pre">get_slice_bounding_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/espressomd/detail/walberla.html#get_slice_bounding_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#espressomd.detail.walberla.get_slice_bounding_box" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-espressomd.detail">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-espressomd.detail" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">espressomd.detail package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-espressomd.detail.walberla">espressomd.detail.walberla module</a><ul>
+<li><a class="reference internal" href="#espressomd.detail.walberla.Lattice"><code class="docutils literal notranslate"><span class="pre">Lattice</span></code></a></li>
+<li><a class="reference internal" href="#espressomd.detail.walberla.LatticeModel"><code class="docutils literal notranslate"><span class="pre">LatticeModel</span></code></a></li>
+<li><a class="reference internal" href="#espressomd.detail.walberla.VTKOutputBase"><code class="docutils literal notranslate"><span class="pre">VTKOutputBase</span></code></a></li>
+<li><a class="reference internal" href="#espressomd.detail.walberla.get_slice_bounding_box"><code class="docutils literal notranslate"><span class="pre">get_slice_bounding_box()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-espressomd.detail">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

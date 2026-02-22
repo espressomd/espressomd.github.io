@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.system &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.system</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2026 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">accumulators</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">analyze</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">bond_breakage</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cell_system</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cuda_init</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">collision_detection</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">comfixed</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constraints</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">electrokinetics</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">electrostatics</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">magnetostatics</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">galilei</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">interactions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integrate</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">lb</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">lees_edwards</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">particle_data</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">thermostat</span>
+<span class="c1"># pylint: enable=unused-import</span>
+
+<span class="kn">from</span> <span class="nn">.code_features</span> <span class="kn">import</span> <span class="n">has_features</span><span class="p">,</span> <span class="n">assert_features</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">script_interface_register</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span>
+
+
+<div class="viewcode-block" id="System">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">System</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The ESPResSo system class.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    analysis: :class:`espressomd.analyze.Analysis`</span>
+<span class="sd">    auto_update_accumulators: :class:`espressomd.accumulators.AutoUpdateAccumulators`</span>
+<span class="sd">    bond_breakage: :class:`espressomd.bond_breakage.BreakageSpecs`</span>
+<span class="sd">    bonded_inter: :class:`espressomd.interactions.BondedInteractions`</span>
+<span class="sd">    cell_system: :class:`espressomd.cell_system.CellSystem`</span>
+<span class="sd">    collision_detection: :class:`espressomd.collision_detection.CollisionDetection`</span>
+<span class="sd">    comfixed: :class:`espressomd.comfixed.ComFixed`</span>
+<span class="sd">    constraints: :class:`espressomd.constraints.Constraints`</span>
+<span class="sd">    cuda_init_handle: :class:`espressomd.cuda_init.CudaInitHandle`</span>
+<span class="sd">    galilei: :class:`espressomd.galilei.GalileiTransform`</span>
+<span class="sd">    integrator: :class:`espressomd.integrate.IntegratorHandle`</span>
+<span class="sd">    lees_edwards: :class:`espressomd.lees_edwards.LeesEdwards`</span>
+<span class="sd">    non_bonded_inter: :class:`espressomd.interactions.NonBondedInteractions`</span>
+<span class="sd">    part: :class:`espressomd.particle_data.ParticleList`</span>
+<span class="sd">    thermostat: :class:`espressomd.thermostat.Thermostat`</span>
+<span class="sd">    ekcontainer: :class:`espressomd.electrokinetics.EKContainer`</span>
+<span class="sd">        EK system (diffusion-advection-reaction models).</span>
+<span class="sd">    box_l: (3,) array_like of :obj:`float`</span>
+<span class="sd">        Dimensions of the simulation box.</span>
+<span class="sd">    periodicity: (3,) array_like of :obj:`bool`</span>
+<span class="sd">        System periodicity in ``[x, y, z]``, ``False`` for no periodicity</span>
+<span class="sd">        in this direction, ``True`` for periodicity</span>
+<span class="sd">    min_global_cut : :obj:`float`</span>
+<span class="sd">        Minimal interaction cutoff.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    setup_type_map()</span>
+<span class="sd">        For using ESPResSo conveniently for simulations in the grand canonical</span>
+<span class="sd">        ensemble, or other purposes, when particles of certain types are created</span>
+<span class="sd">        and deleted frequently. Particle ids can be stored in lists for each</span>
+<span class="sd">        individual type and so random ids of particles of a certain type can be</span>
+<span class="sd">        drawn. If you want ESPResSo to keep track of particle ids of a certain type</span>
+<span class="sd">        you have to initialize the method by calling the setup function. After that</span>
+<span class="sd">        ESPResSo will keep track of particle ids of that type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type_list : array_like of :obj:`int`</span>
+<span class="sd">            Types to track.</span>
+
+<span class="sd">    number_of_particles()</span>
+<span class="sd">        Count the number of particles of a given type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type : :obj:`int` (:attr:`~espressomd.particle_data.ParticleHandle.type`)</span>
+<span class="sd">            Particle type to count the number for.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`int`</span>
+<span class="sd">            The number of particles which have the given type.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If the particle ``type`` is not currently tracked by the system.</span>
+<span class="sd">            To select which particle types are tracked, call :meth:`setup_type_map`.</span>
+
+<span class="sd">    rotate_system()</span>
+<span class="sd">        Rotate the particles in the system about the center of mass.</span>
+
+<span class="sd">        If ``ROTATION`` is activated, the internal rotation degrees of</span>
+<span class="sd">        freedom are rotated accordingly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phi : :obj:`float`</span>
+<span class="sd">            Angle between the z-axis and the rotation axis.</span>
+<span class="sd">        theta : :obj:`float`</span>
+<span class="sd">            Rotation of the axis around the y-axis.</span>
+<span class="sd">        alpha : :obj:`float`</span>
+<span class="sd">            How much to rotate</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;System::System&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;setup_type_map&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;number_of_particles&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rotate_system&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setup_atexit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">_regular_constructor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;CUDA&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cuda_init_handle</span> <span class="o">=</span> <span class="n">cuda_init</span><span class="o">.</span><span class="n">CudaInitHandle</span><span class="p">()</span>
+
+            <span class="c1"># lock class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;lock_system_creation&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setup_atexit</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_setup_atexit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">atexit</span>
+
+        <span class="k">def</span> <span class="nf">session_shutdown</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;session_shutdown&quot;</span><span class="p">)</span>
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">session_shutdown</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">so_callback</span><span class="p">,</span> <span class="n">so_callback_args</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__reduce__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">System</span><span class="o">.</span><span class="n">_restore_object</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">so_callback</span><span class="p">,</span> <span class="n">so_callback_args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getstate__</span><span class="p">()))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_restore_object</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">so_callback</span><span class="p">,</span> <span class="n">so_callback_args</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">so</span> <span class="o">=</span> <span class="n">so_callback</span><span class="p">(</span><span class="o">*</span><span class="n">so_callback_args</span><span class="p">)</span>
+        <span class="n">so</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">so</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="c1"># initialize Python-only members</span>
+        <span class="k">for</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">System</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">property_name</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;lock_system_creation&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">force_cap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If &gt; 0, the magnitude of the force on the particles</span>
+<span class="sd">        are capped to this value.</span>
+
+<span class="sd">        Type: :obj:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">force_cap</span>
+
+    <span class="nd">@force_cap</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">force_cap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">force_cap</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Total simulation time.</span>
+
+<span class="sd">        Type: :obj:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">time</span>
+
+    <span class="nd">@time</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        MD time step.</span>
+
+<span class="sd">        Type: :obj:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">time_step</span>
+
+    <span class="nd">@time_step</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_cut_nonbonded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Maximal cutoff for non-bonded interactions.</span>
+
+<span class="sd">        Type: :obj:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">max_cut_nonbonded</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_cut_bonded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Maximal cutoff for bonded interactions.</span>
+
+<span class="sd">        Type: :obj:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_system</span><span class="o">.</span><span class="n">max_cut_bonded</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lattice-Boltzmann method.</span>
+
+<span class="sd">        Type: :class:`espressomd.lb.LBFluid`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lbcontainer</span><span class="o">.</span><span class="n">solver</span>
+
+    <span class="nd">@lb</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lbcontainer</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">lb</span>
+
+<div class="viewcode-block" id="System.change_volume_and_rescale_particles">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System.change_volume_and_rescale_particles">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_volume_and_rescale_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_new</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s2">&quot;xyz&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Change box size and rescale particle coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        d_new : :obj:`float`</span>
+<span class="sd">            New box length</span>
+<span class="sd">        dir : :obj:`str`, optional</span>
+<span class="sd">            Coordinate to work on, ``&quot;x&quot;``, ``&quot;y&quot;``, ``&quot;z&quot;`` or ``&quot;xyz&quot;`` for isotropic.</span>
+<span class="sd">            Isotropic assumes a cubic box.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">coord</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;xyz&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coord</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Usage: change_volume_and_rescale_particles(&lt;L_new&gt;, [{ &quot;x&quot; | &quot;y&quot; | &quot;z&quot; | &quot;xyz&quot; }])&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;rescale_boxl&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">d_new</span><span class="p">,</span> <span class="n">coord</span><span class="o">=</span><span class="n">coord</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="System.volume">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System.volume">[docs]</a>
+    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return volume of the cuboid box.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_l</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="System.distance">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System.distance">[docs]</a>
+    <span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the scalar distance between particles, between a particle</span>
+<span class="sd">        and a point or between two points, respecting periodic boundaries.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p1 : :class:`~espressomd.particle_data.ParticleHandle` or (3,) array_like of :obj:`float`</span>
+<span class="sd">            First particle or position.</span>
+<span class="sd">        p2 : :class:`~espressomd.particle_data.ParticleHandle` or (3,) array_like of :obj:`float`</span>
+<span class="sd">            Second particle or position.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">distance_vec</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="System.distance_vec">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System.distance_vec">[docs]</a>
+    <span class="k">def</span> <span class="nf">distance_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the distance vector between particles, between a particle</span>
+<span class="sd">        and a point or between two points, respecting periodic boundaries.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p1 : :class:`~espressomd.particle_data.ParticleHandle` or (3,) array_like of :obj:`float`</span>
+<span class="sd">            First particle or position.</span>
+<span class="sd">        p2 : :class:`~espressomd.particle_data.ParticleHandle` or (3,) array_like of :obj:`float`</span>
+<span class="sd">            Second particle or position.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">.</span><span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="n">pos1</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">pos_folded</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos1</span> <span class="o">=</span> <span class="n">p1</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">.</span><span class="n">ParticleHandle</span><span class="p">):</span>
+            <span class="n">pos2</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">pos_folded</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos2</span> <span class="o">=</span> <span class="n">p2</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;distance_vec&quot;</span><span class="p">,</span> <span class="n">pos1</span><span class="o">=</span><span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span><span class="o">=</span><span class="n">pos2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="System.velocity_difference">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System.velocity_difference">[docs]</a>
+    <span class="k">def</span> <span class="nf">velocity_difference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the velocity difference between two particles,</span>
+<span class="sd">        considering Lees-Edwards boundary conditions, if active.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p1 : :class:`~espressomd.particle_data.ParticleHandle`</span>
+<span class="sd">        p2 : :class:`~espressomd.particle_data.ParticleHandle`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;velocity_difference&quot;</span><span class="p">,</span> <span class="n">pos1</span><span class="o">=</span><span class="n">p1</span><span class="o">.</span><span class="n">pos_folded</span><span class="p">,</span>
+                                <span class="n">pos2</span><span class="o">=</span><span class="n">p2</span><span class="o">.</span><span class="n">pos_folded</span><span class="p">,</span> <span class="n">v1</span><span class="o">=</span><span class="n">p1</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">v2</span><span class="o">=</span><span class="n">p2</span><span class="o">.</span><span class="n">v</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="System.auto_exclusions">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.system.System.auto_exclusions">[docs]</a>
+    <span class="k">def</span> <span class="nf">auto_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add exclusions between particles that are bonded.</span>
+
+<span class="sd">        This only considers pair bonds.</span>
+
+<span class="sd">        Requires feature ``EXCLUSIONS``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        distance : :obj:`int`</span>
+<span class="sd">            Bond distance up to which the exclusions should be added.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">assert_features</span><span class="p">(</span><span class="s2">&quot;EXCLUSIONS&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part</span><span class="o">.</span><span class="n">auto_exclusions</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.lb &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.lb</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2023 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.detail.walberla</span> <span class="kn">import</span> <span class="n">VTKOutputBase</span><span class="p">,</span> <span class="n">Lattice</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span><span class="p">,</span> <span class="n">array_variant</span>
+<span class="kn">import</span> <span class="nn">espressomd.detail.walberla</span>
+<span class="kn">import</span> <span class="nn">espressomd.shapes</span>
+<span class="kn">import</span> <span class="nn">espressomd.code_features</span>
+
+
+<div class="viewcode-block" id="Container">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.Container">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;LB::Container&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;clear&quot;</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="VelocityBounceBack">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.VelocityBounceBack">[docs]</a>
+<span class="k">class</span> <span class="nc">VelocityBounceBack</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hold velocity information for the velocity bounce back boundary</span>
+<span class="sd">    condition at a single node.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">velocity</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">velocity</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;VelocityBounceBack velocity must be three floats&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity</span> <span class="o">=</span> <span class="n">velocity</span></div>
+
+
+
+<div class="viewcode-block" id="LBFluid">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LBFluid</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">detail</span><span class="o">.</span><span class="n">walberla</span><span class="o">.</span><span class="n">LatticeModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The lattice-Boltzmann method for hydrodynamics using waLBerla.</span>
+<span class="sd">    If argument ``lattice`` is not provided, one will be default</span>
+<span class="sd">    constructed if an argument ``agrid`` is provided.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lattice : :obj:`~espressomd.detail.walberla.Lattice`</span>
+<span class="sd">        Lattice object. If not provided, a default one will be constructed</span>
+<span class="sd">        using the ``agrid`` parameter.</span>
+<span class="sd">    agrid : :obj:`float`</span>
+<span class="sd">        Lattice constant. The box size in every direction must be an integer</span>
+<span class="sd">        multiple of ``agrid``. Cannot be provided together with ``lattice``.</span>
+<span class="sd">    tau : :obj:`float`</span>
+<span class="sd">        LB time step, must be an integer multiple of the MD time step.</span>
+<span class="sd">    density : :obj:`float`</span>
+<span class="sd">        Fluid density.</span>
+<span class="sd">    kinematic_viscosity : :obj:`float`</span>
+<span class="sd">        Fluid kinematic viscosity.</span>
+<span class="sd">    ext_force_density : (3,) array_like of :obj:`float`, optional</span>
+<span class="sd">        Force density applied on the fluid.</span>
+<span class="sd">    kT : :obj:`float`, optional</span>
+<span class="sd">        Thermal energy of the simulated heat bath (for thermalized fluids).</span>
+<span class="sd">        Set it to 0 for an unthermalized fluid.</span>
+<span class="sd">    seed : :obj:`int`, optional</span>
+<span class="sd">        Initial counter value (or seed) of the philox RNG.</span>
+<span class="sd">        Required for a thermalized fluid. Must be positive.</span>
+<span class="sd">    gpu : :obj:`bool`, optional</span>
+<span class="sd">        Use GPU implementation.</span>
+<span class="sd">    single_precision : :obj:`bool`, optional</span>
+<span class="sd">        Use single-precision floating-point arithmetic.</span>
+<span class="sd">    \\*\\*kwargs :</span>
+<span class="sd">        Additional parameters forwarded to the</span>
+<span class="sd">        :obj:`~espressomd.detail.walberla.Lattice` constructor.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    get_interpolated_velocity()</span>
+<span class="sd">        Get LB fluid velocity at specified position.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos : (3,) array_like of :obj:`float`</span>
+<span class="sd">            The position at which velocity is requested.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        v : (3,) array_like :obj:`float`</span>
+<span class="sd">            The LB fluid velocity at ``pos``.</span>
+
+<span class="sd">    add_force_at_pos():</span>
+<span class="sd">        Adds a force to the fluid at given position.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos : (3,) array_like of :obj:`float`</span>
+<span class="sd">            The position at which the force will be added.</span>
+<span class="sd">        force : (3,) array_like of :obj:`float`</span>
+<span class="sd">            The force vector which will be distributed at the position.</span>
+
+<span class="sd">    clear_boundaries()</span>
+<span class="sd">        Remove velocity bounce-back boundary conditions.</span>
+
+<span class="sd">    save_checkpoint()</span>
+<span class="sd">        Write LB node populations and boundary conditions to a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : :obj:`str` or :obj:`pathlib.Path`</span>
+<span class="sd">            Destination file path.</span>
+<span class="sd">        binary : :obj:`bool`</span>
+<span class="sd">            Whether to write in binary or ASCII mode.</span>
+
+<span class="sd">    load_checkpoint()</span>
+<span class="sd">        Load LB node populations and boundary conditions from a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : :obj:`str` or :obj:`pathlib.Path`</span>
+<span class="sd">            File path to read from.</span>
+<span class="sd">        binary : :obj:`bool`</span>
+<span class="sd">            Whether to read in binary or ASCII mode.</span>
+
+<span class="sd">    add_vtk_writer()</span>
+<span class="sd">        Attach a VTK writer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vtk : :class:`espressomd.lb.VTKOutput`</span>
+<span class="sd">            VTK writer.</span>
+
+<span class="sd">    remove_vtk_writer()</span>
+<span class="sd">        Detach a VTK writer.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vtk : :class:`espressomd.lb.VTKOutput`</span>
+<span class="sd">            VTK writer.</span>
+
+<span class="sd">    clear_vtk_writers()</span>
+<span class="sd">        Detach all VTK writers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::LBFluid&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;add_force_at_pos&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear_boundaries&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;get_interpolated_velocity&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;add_vtk_writer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;remove_vtk_writer&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;clear_vtk_writers&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+<div class="viewcode-block" id="LBFluid.validate_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.validate_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="c1"># extract lattice-specific parameters</span>
+        <span class="n">lattice_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">lattice_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="c1"># construct default lattice if necessary</span>
+        <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lattice&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">Lattice</span><span class="o">.</span><span class="n">required_keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lattice_params</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing argument &#39;lattice&#39; or &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;lattice&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Lattice</span><span class="p">(</span><span class="o">**</span><span class="n">lattice_params</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">lattice_params</span><span class="p">:</span>
+            <span class="n">any_key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">lattice_params</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cannot provide both &#39;lattice&#39; and &#39;</span><span class="si">{</span><span class="n">any_key</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_required_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="LBFluid.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;lattice&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;kT&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;gpu&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;ext_force_density&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]}</span></div>
+
+
+<div class="viewcode-block" id="LBFluid.valid_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.valid_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">valid_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;agrid&quot;</span><span class="p">,</span> <span class="s2">&quot;tau&quot;</span><span class="p">,</span> <span class="s2">&quot;lattice&quot;</span><span class="p">,</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span> <span class="s2">&quot;ext_force_density&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;kinematic_viscosity&quot;</span><span class="p">,</span> <span class="s2">&quot;kT&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="s2">&quot;blocks_per_mpi_rank&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;single_precision&quot;</span><span class="p">,</span> <span class="s2">&quot;gpu&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="LBFluid.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;lattice&quot;</span><span class="p">,</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span> <span class="s2">&quot;kinematic_viscosity&quot;</span><span class="p">,</span> <span class="s2">&quot;tau&quot;</span><span class="p">}</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">key</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">LBFluidSlice</span><span class="p">(</span><span class="n">parent_sip</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">slice_range</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">LBFluidNode</span><span class="p">(</span><span class="n">parent_sip</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is not a valid index. Should be a point on the &quot;</span>
+            <span class="s2">&quot;nodegrid e.g. lbf[0,0,0], or a slice e.g. lbf[:,0,0]&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LBFluid.mach_limit">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.mach_limit">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">mach_limit</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The fluid velocity is limited to :math:`v_{\\mathrm{max}} = 0.20`</span>
+<span class="sd">        (see *quasi-incompressible limit* in :cite:`kruger17a`,</span>
+<span class="sd">        chapter 7, page 272), which corresponds to Mach 0.35.</span>
+
+<span class="sd">        The relative error in the fluid density between a compressible fluid</span>
+<span class="sd">        and an incompressible fluid at Mach 0.30 is less than 5% (see</span>
+<span class="sd">        *constant density assumption* in :cite:`kundu02a` chapter 16, page</span>
+<span class="sd">        663). Since the speed of sound is :math:`c_s = 1 / \\sqrt{3}` in LB</span>
+<span class="sd">        velocity units in a D3Q19 lattice, the velocity limit at Mach 0.30</span>
+<span class="sd">        is :math:`v_{\\mathrm{max}} = 0.30 / \\sqrt{3} \\approx 0.17`.</span>
+<span class="sd">        At Mach 0.35 the relative error is around 6% and</span>
+<span class="sd">        :math:`v_{\\mathrm{max}} = 0.35 / \\sqrt{3} \\approx 0.20`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        v_max : :obj:`float`</span>
+<span class="sd">            The Mach limit expressed in LB velocity units.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.20</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_mach_limit</span><span class="p">(</span><span class="n">velocities</span><span class="p">):</span>
+        <span class="n">vel_max</span> <span class="o">=</span> <span class="n">LBFluid</span><span class="o">.</span><span class="n">mach_limit</span><span class="p">()</span>
+        <span class="n">velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">velocities</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">velocities</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">vel_max</span><span class="p">):</span>
+            <span class="n">speed_of_sound</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.</span><span class="p">)</span>
+            <span class="n">mach_number</span> <span class="o">=</span> <span class="n">vel_max</span> <span class="o">/</span> <span class="n">speed_of_sound</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Slip velocity exceeds Mach </span><span class="si">{</span><span class="n">mach_number</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary_force</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_boundary_force&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_pressure_tensor&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+    <span class="nd">@pressure_tensor</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Property &#39;pressure_tensor&#39; is read-only&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LBFluid.add_boundary_from_shape">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.add_boundary_from_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_boundary_from_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span>
+                                <span class="n">velocity</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                                <span class="n">boundary_type</span><span class="o">=</span><span class="n">VelocityBounceBack</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set velocity bounce-back boundary conditions from a shape.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : :obj:`espressomd.shapes.Shape`</span>
+<span class="sd">            Shape to rasterize.</span>
+<span class="sd">        velocity : (3,) or (L, M, N, 3) array_like of :obj:`float`, optional</span>
+<span class="sd">            Slip velocity. By default no-slip boundary conditions are used.</span>
+<span class="sd">            If a vector of 3 values, a uniform slip velocity is used,</span>
+<span class="sd">            otherwise ``L, M, N`` must be equal to the LB grid dimensions.</span>
+<span class="sd">        boundary_type : Union[:class:`~espressomd.lb.VelocityBounceBack`] (optional)</span>
+<span class="sd">            Type of the boundary condition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">boundary_type</span><span class="p">,</span> <span class="n">VelocityBounceBack</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter &#39;boundary_type&#39; must be a subclass of VelocityBounceBack&quot;</span><span class="p">)</span>
+
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">Shape</span><span class="p">,</span> <span class="s2">&quot;expected an espressomd.shapes.Shape&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">velocity</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">3</span><span class="p">,),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Cannot process velocity value grid of shape </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">velocity</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># range checks</span>
+        <span class="n">lattice_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_lattice_speed&quot;</span><span class="p">)</span>
+        <span class="n">velocity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">velocity</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">velocity</span> <span class="o">*=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">lattice_speed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_mach_limit</span><span class="p">(</span><span class="n">velocity</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shape_bitmask</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;add_boundary_from_shape&quot;</span><span class="p">,</span>
+            <span class="n">raster</span><span class="o">=</span><span class="n">array_variant</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">flatten</span><span class="p">()),</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">array_variant</span><span class="p">(</span><span class="n">velocity</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="LBFluid.get_boundary_force_from_shape">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluid.get_boundary_force_from_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_boundary_force_from_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the boundary force from a shape.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : :obj:`espressomd.shapes.Shape`</span>
+<span class="sd">            Shape to rasterize.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_type_or_throw_except</span><span class="p">(</span>
+            <span class="n">shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">Shape</span><span class="p">,</span> <span class="s2">&quot;expected an espressomd.shapes.Shape&quot;</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shape_bitmask</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;get_boundary_force_from_shape&quot;</span><span class="p">,</span>
+            <span class="n">raster</span><span class="o">=</span><span class="n">array_variant</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LBFluidNode">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluidNode">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LBFluidNode</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::LBFluidNode&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="LBFluidNode.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluidNode.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">}</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot serialize LB fluid node objects&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">LBFluidNode</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">obj</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">)</span>
+
+    <span class="nd">@index</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;index&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_density&quot;</span><span class="p">)</span>
+
+    <span class="nd">@density</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_density&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_population</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_population&quot;</span><span class="p">))</span>
+
+    <span class="nd">@_population</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_population</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_population&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_pressure_tensor&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+    <span class="nd">@pressure_tensor</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;pressure_tensor&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor_neq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_pressure_tensor_neq&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+    <span class="nd">@pressure_tensor_neq</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor_neq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;pressure_tensor_neq&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_is_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@is_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;is_boundary&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`~espressomd.lb.VelocityBounceBack`</span>
+<span class="sd">            If the node is a boundary node</span>
+<span class="sd">        None</span>
+<span class="sd">            If the node is not a boundary node</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">velocity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_velocity_at_boundary&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">velocity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">VelocityBounceBack</span><span class="p">(</span><span class="n">velocity</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : :class:`~espressomd.lb.VelocityBounceBack` or ``None``</span>
+<span class="sd">            If value is :class:`~espressomd.lb.VelocityBounceBack`,</span>
+<span class="sd">            set the node to be a boundary node with the specified velocity.</span>
+<span class="sd">            If value is ``None``, the node will become a fluid node.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">VelocityBounceBack</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">velocity</span>
+            <span class="n">lattice_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_lattice_speed&quot;</span><span class="p">)</span>
+            <span class="n">LBFluid</span><span class="o">.</span><span class="n">_check_mach_limit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="n">lattice_speed</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter &#39;value&#39; must be an instance of VelocityBounceBack or None&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_velocity_at_boundary&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary_force</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_boundary_force&quot;</span><span class="p">)</span>
+
+    <span class="nd">@boundary_force</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">boundary_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;boundary_force&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_velocity&quot;</span><span class="p">)</span>
+
+    <span class="nd">@velocity</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_velocity&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last_applied_force</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_last_applied_force&quot;</span><span class="p">)</span>
+
+    <span class="nd">@last_applied_force</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">last_applied_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_last_applied_force&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LBFluidSlice">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluidSlice">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LBFluidSlice</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::LBFluidSlice&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+<div class="viewcode-block" id="LBFluidSlice.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluidSlice.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">,</span> <span class="s2">&quot;slice_range&quot;</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="LBFluidSlice.validate_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.LBFluidSlice.validate_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">validate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">check_required_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">required_keys</span><span class="p">(),</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_params</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">slice_range</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;slice_range&quot;</span><span class="p">)</span>
+            <span class="n">grid_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;parent_sip&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">extra_kwargs</span> <span class="o">=</span> <span class="n">espressomd</span><span class="o">.</span><span class="n">detail</span><span class="o">.</span><span class="n">walberla</span><span class="o">.</span><span class="n">get_slice_bounding_box</span><span class="p">(</span>
+                <span class="n">slice_range</span><span class="p">,</span> <span class="n">grid_size</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">LBFluidNode</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">node_sip</span><span class="o">=</span><span class="n">node</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_slice_ranges&quot;</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">upper</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+        <span class="n">lb_sip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_lb_sip&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">indices</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">LBFluidNode</span><span class="p">(</span><span class="n">parent_sip</span><span class="o">=</span><span class="n">lb_sip</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot serialize LB fluid slice objects&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="n">value_grid</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;get_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s2">&quot;velocity_at_boundary&quot;</span><span class="p">:</span>
+            <span class="n">value_grid</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="kc">None</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">VelocityBounceBack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value_grid</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_locked</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">value_grid</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_slice_size&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot set properties of an empty &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object&quot;</span><span class="p">)</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">value_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_value_shape&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">attr</span><span class="p">))</span>
+        <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">dimensions</span><span class="p">,</span> <span class="o">*</span><span class="n">value_shape</span><span class="p">)</span>
+
+        <span class="c1"># broadcast if only one element was provided</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">value_shape</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="ow">and</span> <span class="n">value_shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">target_shape</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">shape_squeeze</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">shape</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shape_squeeze</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">shape_squeeze</span><span class="p">(</span><span class="n">target_shape</span><span class="p">):</span>
+            <span class="n">target_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">target_shape</span><span class="p">])</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Input-dimensions of &#39;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&#39; array </span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> does not match slice dimensions </span><span class="si">{</span><span class="n">target_shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;set_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;density&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@density</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;density&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_population</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;population&quot;</span><span class="p">)</span>
+
+    <span class="nd">@_population</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_population</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;population&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;pressure_tensor&quot;</span><span class="p">)</span>
+
+    <span class="nd">@pressure_tensor</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;pressure_tensor&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor_neq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;pressure_tensor_neq&quot;</span><span class="p">)</span>
+
+    <span class="nd">@pressure_tensor_neq</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">pressure_tensor_neq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;pressure_tensor_neq&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;is_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@is_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;is_boundary&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (N, M, L) array_like of :class:`~espressomd.lb.VelocityBounceBack`</span>
+<span class="sd">            If the nodes are boundary nodes</span>
+<span class="sd">        (N, M, L) array_like of ``None``</span>
+<span class="sd">            If the nodes are not boundary nodes</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;velocity_at_boundary&quot;</span><span class="p">)</span>
+
+    <span class="nd">@boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : (N, M, L) array_like of :class:`~espressomd.lb.VelocityBounceBack` or ``None``</span>
+<span class="sd">            If values are :class:`~espressomd.lb.VelocityBounceBack`,</span>
+<span class="sd">            set the nodes to be boundary nodes with the specified velocity.</span>
+<span class="sd">            If values are ``None``, the nodes will become fluid nodes.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">type_error_msg</span> <span class="o">=</span> <span class="s2">&quot;Parameter &#39;values&#39; must be an array_like of VelocityBounceBack or None&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">lattice_speed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_lattice_speed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;O&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">type_error_msg</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">VelocityBounceBack</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">type_error_msg</span><span class="p">)</span>
+                <span class="n">LBFluid</span><span class="o">.</span><span class="n">_check_mach_limit</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">velocity</span><span class="p">)</span> <span class="o">/</span> <span class="n">lattice_speed</span><span class="p">)</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">velocity</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;velocity_at_boundary&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">boundary_force</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;boundary_force&quot;</span><span class="p">)</span>
+
+    <span class="nd">@boundary_force</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">boundary_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Property &#39;boundary_force&#39; is read-only.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;velocity&quot;</span><span class="p">)</span>
+
+    <span class="nd">@velocity</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;velocity&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last_applied_force</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getter</span><span class="p">(</span><span class="s2">&quot;last_applied_force&quot;</span><span class="p">)</span>
+
+    <span class="nd">@last_applied_force</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">last_applied_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setter</span><span class="p">(</span><span class="s2">&quot;last_applied_force&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="VTKOutput">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.VTKOutput">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">VTKOutput</span><span class="p">(</span><span class="n">VTKOutputBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a VTK writer.</span>
+
+<span class="sd">    Files are written to :file:`&lt;base_folder&gt;/&lt;identifier&gt;/&lt;prefix&gt;_*.vtu`.</span>
+<span class="sd">    Summary is written to :file:`&lt;base_folder&gt;/&lt;identifier&gt;.pvd`.</span>
+
+<span class="sd">    Manual VTK callbacks can be called at any time to take a snapshot</span>
+<span class="sd">    of the current state of the LB fluid.</span>
+
+<span class="sd">    Automatic VTK callbacks can be disabled at any time and re-enabled later.</span>
+<span class="sd">    Please note that the internal VTK counter is no longer incremented when</span>
+<span class="sd">    an automatic callback is disabled, which means the number of LB steps</span>
+<span class="sd">    between two frames will not always be an integer multiple of ``delta_N``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    identifier : :obj:`str`</span>
+<span class="sd">        Name of the VTK writer.</span>
+<span class="sd">    observables : :obj:`list`, {&#39;density&#39;, &#39;velocity_vector&#39;, &#39;pressure_tensor&#39;}</span>
+<span class="sd">        List of observables to write to the VTK files.</span>
+<span class="sd">    delta_N : :obj:`int`</span>
+<span class="sd">        Write frequency. If this value is 0 (default), the object is a</span>
+<span class="sd">        manual VTK callback that must be triggered manually. Otherwise,</span>
+<span class="sd">        it is an automatic callback that is added to the time loop and</span>
+<span class="sd">        writes every ``delta_N`` LB steps.</span>
+<span class="sd">    base_folder : :obj:`str` or :obj:`pathlib.Path` (optional), default is :file:`vtk_out`</span>
+<span class="sd">        Path to the output VTK folder.</span>
+<span class="sd">    prefix : :obj:`str` (optional), default is &#39;simulation_step&#39;</span>
+<span class="sd">        Prefix for VTK files.</span>
+<span class="sd">    force_pvtu : :obj:`bool` (optional), default is ``True``</span>
+<span class="sd">        Force parallel unstructured grid format (file extension: ``.vtu``).</span>
+<span class="sd">        If ``False``, uses parallel structured grid format if possible</span>
+<span class="sd">        (file extension: ``.vti``).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;walberla::LBVTKHandle&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;enable&quot;</span><span class="p">,</span> <span class="s2">&quot;disable&quot;</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">)</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;WALBERLA&quot;</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="VTKOutput.required_keys">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.VTKOutput.required_keys">[docs]</a>
+    <span class="k">def</span> <span class="nf">required_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_keys</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">class_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_N</span><span class="p">:</span>
+            <span class="n">write_when</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;every </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_N</span><span class="si">}</span><span class="s2"> LB steps&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+                <span class="n">write_when</span> <span class="o">+=</span> <span class="s2">&quot; (disabled)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">write_when</span> <span class="o">=</span> <span class="s2">&quot;on demand&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">class_id</span><span class="si">}</span><span class="s2">: write to &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vtk_uid</span><span class="si">}</span><span class="s2">&#39; </span><span class="si">{</span><span class="n">write_when</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="edge_detection">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.edge_detection">[docs]</a>
+<span class="k">def</span> <span class="nf">edge_detection</span><span class="p">(</span><span class="n">boundary_mask</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find boundary nodes in contact with the fluid. Relies on a convolution</span>
+<span class="sd">    kernel constructed from the D3Q19 stencil.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    boundary_mask : (N, M, L) array_like of :obj:`bool`</span>
+<span class="sd">        Bitmask for the rasterized boundary geometry.</span>
+<span class="sd">    periodicity : (3,) array_like of :obj:`bool`</span>
+<span class="sd">        Bitmask for the box periodicity.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) array_like of :obj:`int`</span>
+<span class="sd">        The indices of the boundary nodes at the interface with the fluid.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy.signal</span>
+    <span class="kn">import</span> <span class="nn">itertools</span>
+
+    <span class="n">fluid_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">boundary_mask</span><span class="p">)</span>
+
+    <span class="c1"># edge kernel</span>
+    <span class="n">edge</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)):</span>
+        <span class="n">edge</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+
+    <span class="c1"># periodic convolution</span>
+    <span class="n">wrapped_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">fluid_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wrap&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">periodicity</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">wrapped_mask</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">wrapped_mask</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">periodicity</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">wrapped_mask</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">wrapped_mask</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">periodicity</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="n">wrapped_mask</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">wrapped_mask</span><span class="p">[:,</span> <span class="p">:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">convolution</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+        <span class="n">wrapped_mask</span><span class="p">,</span> <span class="n">edge</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">convolution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">convolution</span><span class="p">,</span> <span class="n">boundary_mask</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">convolution</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">T</span></div>
+
+
+
+<div class="viewcode-block" id="calc_cylinder_tangential_vectors">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.lb.calc_cylinder_tangential_vectors">[docs]</a>
+<span class="k">def</span> <span class="nf">calc_cylinder_tangential_vectors</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">agrid</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">node_indices</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to calculate a constant slip velocity tangential to the</span>
+<span class="sd">    surface of a cylinder.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    center : (3,) array_like of :obj:`float`</span>
+<span class="sd">        Center of the cylinder.</span>
+<span class="sd">    agrid : :obj:`float`</span>
+<span class="sd">        LB agrid.</span>
+<span class="sd">    offset : :obj:`float`</span>
+<span class="sd">        LB offset.</span>
+<span class="sd">    node_indices : (N, 3) array_like of :obj:`int`</span>
+<span class="sd">        Indices of the boundary surface nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (N, 3) array_like of :obj:`float`</span>
+<span class="sd">        The unit vectors tangential to the surface of a cylinder.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">velocities</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ijk</span> <span class="ow">in</span> <span class="n">node_indices</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">ijk</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span> <span class="o">*</span> <span class="n">agrid</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">center</span> <span class="o">-</span> <span class="n">p</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+            <span class="n">velocities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+            <span class="k">continue</span>
+        <span class="n">angle_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">norm</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="n">angle_v</span> <span class="o">=</span> <span class="n">angle_r</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">flip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">slip_velocity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">flip</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle_v</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle_v</span><span class="p">),</span> <span class="mf">0.</span><span class="p">])</span>
+        <span class="n">velocities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">slip_velocity</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">velocities</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

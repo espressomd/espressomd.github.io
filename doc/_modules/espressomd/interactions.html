@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.interactions &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.interactions</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2013-2025 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">code_features</span>
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptObjectMap</span><span class="p">,</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="NonBondedInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.NonBondedInteraction">[docs]</a>
+<span class="k">class</span> <span class="nc">NonBondedInteraction</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents an instance of a non-bonded interaction, such as Lennard-Jones.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    deactivate()</span>
+<span class="sd">        Reset parameters for the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;deactivate&quot;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">code_features</span><span class="o">.</span><span class="n">assert_features</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_so_feature&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span>
+
+<div class="viewcode-block" id="NonBondedInteraction.set_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.NonBondedInteraction.set_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set new parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_params</span><span class="p">()</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;setting </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> raised an error&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;set_params&quot;</span><span class="p">,</span> <span class="n">handle_errors_message</span><span class="o">=</span><span class="n">err_msg</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NonBondedInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.NonBondedInteraction.default_params">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LennardJonesInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.LennardJonesInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LennardJonesInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standard 6-12 Lennard-Jones potential.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        epsilon : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        sigma : :obj:`float`</span>
+<span class="sd">            Interaction length scale.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+<span class="sd">        shift : :obj:`float` or :obj:`str` {&#39;auto&#39;}</span>
+<span class="sd">            Constant shift of the potential. If ``&#39;auto&#39;``, a default value</span>
+<span class="sd">            is computed from ``sigma`` and ``cutoff``. The LJ potential</span>
+<span class="sd">            will be shifted by :math:`4\\epsilon\\cdot\\text{shift}`.</span>
+<span class="sd">        offset : :obj:`float`, optional</span>
+<span class="sd">            Offset distance of the interaction.</span>
+<span class="sd">        min : :obj:`float`, optional</span>
+<span class="sd">            Restricts the interaction to a minimal distance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionLJ&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;LENNARD_JONES&quot;</span>
+
+<div class="viewcode-block" id="LennardJonesInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.LennardJonesInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="WCAInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.WCAInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">WCAInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Standard 6-12 Weeks-Chandler-Andersen potential.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        epsilon : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        sigma : :obj:`float`</span>
+<span class="sd">            Interaction length scale.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionWCA&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;WCA&quot;</span>
+
+<div class="viewcode-block" id="WCAInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.WCAInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_cutoff&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="GenericLennardJonesInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.GenericLennardJonesInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">GenericLennardJonesInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generalized Lennard-Jones potential.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        epsilon : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        sigma : :obj:`float`</span>
+<span class="sd">            Interaction length scale.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+<span class="sd">        shift : :obj:`float` or :obj:`str` {&#39;auto&#39;}</span>
+<span class="sd">            Constant shift of the potential. If ``&#39;auto&#39;``, a default value</span>
+<span class="sd">            is computed from the other parameters. The LJ potential</span>
+<span class="sd">            will be shifted by :math:`\\epsilon\\cdot\\text{shift}`.</span>
+<span class="sd">        offset : :obj:`float`</span>
+<span class="sd">            Offset distance of the interaction.</span>
+<span class="sd">        e1 : :obj:`int`</span>
+<span class="sd">            Exponent of the repulsion term.</span>
+<span class="sd">        e2 : :obj:`int`</span>
+<span class="sd">            Exponent of the attraction term.</span>
+<span class="sd">        b1 : :obj:`float`</span>
+<span class="sd">            Prefactor of the repulsion term.</span>
+<span class="sd">        b2 : :obj:`float`</span>
+<span class="sd">            Prefactor of the attraction term.</span>
+<span class="sd">        delta : :obj:`float`, optional</span>
+<span class="sd">            ``LJGEN_SOFTCORE`` parameter delta. Allows control over how</span>
+<span class="sd">            smoothly the potential drops to zero as lambda approaches zero.</span>
+<span class="sd">        lam : :obj:`float`, optional</span>
+<span class="sd">            ``LJGEN_SOFTCORE`` parameter lambda. Tune the strength of the</span>
+<span class="sd">            interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionLJGen&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;LENNARD_JONES_GENERIC&quot;</span>
+
+<div class="viewcode-block" id="GenericLennardJonesInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.GenericLennardJonesInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">code_features</span><span class="o">.</span><span class="n">has_features</span><span class="p">(</span><span class="s2">&quot;LJGEN_SOFTCORE&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;delta&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="mf">1.</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LennardJonesCosInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.LennardJonesCosInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LennardJonesCosInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lennard-Jones cosine interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set or update parameters for the interaction.</span>
+<span class="sd">        Parameters marked as required become optional once the</span>
+<span class="sd">        interaction has been activated for the first time;</span>
+<span class="sd">        subsequent calls to this method update the existing values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        epsilon : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        sigma : :obj:`float`</span>
+<span class="sd">            Interaction length scale.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+<span class="sd">        offset : :obj:`float`, optional</span>
+<span class="sd">            Offset distance of the interaction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionLJcos&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;LJCOS&quot;</span>
+
+<div class="viewcode-block" id="LennardJonesCosInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.LennardJonesCosInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LennardJonesCos2Interaction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.LennardJonesCos2Interaction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">LennardJonesCos2Interaction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Second variant of the Lennard-Jones cosine interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        epsilon : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        sigma : :obj:`float`</span>
+<span class="sd">            Interaction length scale.</span>
+<span class="sd">        offset : :obj:`float`, optional</span>
+<span class="sd">            Offset distance of the interaction.</span>
+<span class="sd">        width : :obj:`float`</span>
+<span class="sd">            Width of interaction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionLJcos2&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;LJCOS2&quot;</span>
+
+<div class="viewcode-block" id="LennardJonesCos2Interaction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.LennardJonesCos2Interaction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_cutoff&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="HatInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.HatInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">HatInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hat interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        F_max : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionHat&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;HAT&quot;</span>
+
+<div class="viewcode-block" id="HatInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.HatInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GayBerneInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.GayBerneInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">GayBerneInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gay--Berne interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        eps : :obj:`float`</span>
+<span class="sd">            Potential well depth.</span>
+<span class="sd">        sig : :obj:`float`</span>
+<span class="sd">            Interaction range.</span>
+<span class="sd">        cut : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+<span class="sd">        k1 : :obj:`float` or :obj:`str`</span>
+<span class="sd">            Molecular elongation.</span>
+<span class="sd">        k2 : :obj:`float`, optional</span>
+<span class="sd">            Ratio of the potential well depths for the side-by-side</span>
+<span class="sd">            and end-to-end configurations.</span>
+<span class="sd">        mu : :obj:`float`, optional</span>
+<span class="sd">            Adjustable exponent.</span>
+<span class="sd">        nu : :obj:`float`, optional</span>
+<span class="sd">            Adjustable exponent.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionGayBerne&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;GAY_BERNE&quot;</span>
+
+<div class="viewcode-block" id="GayBerneInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.GayBerneInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TabulatedNonBonded">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedNonBonded">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TabulatedNonBonded</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tabulated interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min : :obj:`float`</span>
+<span class="sd">            The minimal interaction distance.</span>
+<span class="sd">        max : :obj:`float`</span>
+<span class="sd">            The maximal interaction distance.</span>
+<span class="sd">        energy: array_like of :obj:`float`</span>
+<span class="sd">            The energy table.</span>
+<span class="sd">        force: array_like of :obj:`float`</span>
+<span class="sd">            The force table.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionTabulated&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;TABULATED&quot;</span>
+
+<div class="viewcode-block" id="TabulatedNonBonded.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedNonBonded.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="TabulatedNonBonded.set_analytical">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedNonBonded.set_analytical">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_analytical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist_param</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set new parameters from a function :math:`f(r)` that evaluates the</span>
+<span class="sd">        force magnitude for a given inter-particle distance :math:`r`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min : :obj:`float`</span>
+<span class="sd">            The minimal interaction distance.</span>
+<span class="sd">        max : :obj:`float`</span>
+<span class="sd">            The maximal interaction distance.</span>
+<span class="sd">        energy_expr: :obj:`str` or :obj:`sympy.Expr` or :obj:`sympy.Piecewise`</span>
+<span class="sd">            Analytical expression for the inter-atomic potential.</span>
+<span class="sd">        dist_param: :obj:`str` or :obj:`sympy.Symbol`, optional</span>
+<span class="sd">            Symbol for the inter-particle distance variable in ``energy_expr``.</span>
+<span class="sd">        steps: :obj:`int`</span>
+<span class="sd">            Number of values in the force and energy arrays.</span>
+<span class="sd">        \\*\\*kwargs:</span>
+<span class="sd">            All mathematical constants that appear in ``energy_expr``.</span>
+<span class="sd">            Argument names are used as symbols.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+        <span class="n">min_val</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">)</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;steps&quot;</span><span class="p">)</span>
+        <span class="n">expression</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;energy_expr&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">Expr</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Piecewise</span><span class="p">)):</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span> <span class="ow">is</span> <span class="n">sp</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">energy</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+                <span class="n">energy</span> <span class="o">=</span> <span class="n">energy</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sympify</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;energy_expr&#39; isn&#39;t sympy-compatible&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_param</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="n">dist_param</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dist_param</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">Symbol</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">dist_param</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;dist_param&#39; isn&#39;t sympy-compatible&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">energy</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter &#39;energy_expr&#39; isn&#39;t a function of &#39;</span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">symbol</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">energy</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parameter &#39;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">&#39; isn&#39;t a constant in &#39;energy_expr&#39;&quot;</span><span class="p">)</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="n">energy</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">evaluate_tab</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">xdata</span><span class="p">):</span>
+            <span class="n">tabulated</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xdata</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">oo</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="n">tabulated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">tabulated</span>
+
+        <span class="n">force</span> <span class="o">=</span> <span class="o">-</span><span class="n">energy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="n">energy_tab</span> <span class="o">=</span> <span class="n">evaluate_tab</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">xdata</span><span class="p">)</span>
+        <span class="n">force_tab</span> <span class="o">=</span> <span class="n">evaluate_tab</span><span class="p">(</span><span class="n">force</span><span class="p">,</span> <span class="n">xdata</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="n">min_val</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">max_val</span><span class="p">,</span>
+                        <span class="n">energy</span><span class="o">=</span><span class="n">energy_tab</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force_tab</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_cutoff&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="DPDInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.DPDInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">DPDInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DPD interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        weight_function : :obj:`int`, {0, 1}</span>
+<span class="sd">            The distance dependence of the parallel part,</span>
+<span class="sd">            either 0 (constant) or 1 (linear)</span>
+<span class="sd">        gamma : :obj:`float`</span>
+<span class="sd">            Friction coefficient of the parallel part</span>
+<span class="sd">        k : :obj:`float`</span>
+<span class="sd">            Exponent in the modified weight function</span>
+<span class="sd">        r_cut : :obj:`float`</span>
+<span class="sd">            Cutoff of the parallel part</span>
+<span class="sd">        trans_weight_function : :obj:`int`, {0, 1}</span>
+<span class="sd">            The distance dependence of the orthogonal part,</span>
+<span class="sd">            either 0 (constant) or 1 (linear)</span>
+<span class="sd">        trans_gamma : :obj:`float`</span>
+<span class="sd">            Friction coefficient of the orthogonal part</span>
+<span class="sd">        trans_r_cut : :obj:`float`</span>
+<span class="sd">            Cutoff of the orthogonal part</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionDPD&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;DPD&quot;</span>
+
+<div class="viewcode-block" id="DPDInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.DPDInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;weight_function&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">&quot;r_cut&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">&quot;trans_weight_function&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;trans_gamma&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;trans_r_cut&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SmoothStepInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.SmoothStepInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SmoothStepInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Smooth step interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        d : :obj:`float`</span>
+<span class="sd">            Short range repulsion parameter.</span>
+<span class="sd">        n : :obj:`int`, optional</span>
+<span class="sd">            Exponent of short range repulsion.</span>
+<span class="sd">        eps : :obj:`float`</span>
+<span class="sd">            Magnitude of the second (soft) repulsion.</span>
+<span class="sd">        k0 : :obj:`float`, optional</span>
+<span class="sd">            Exponential factor in second (soft) repulsion.</span>
+<span class="sd">        sig : :obj:`float`, optional</span>
+<span class="sd">            Length scale of second (soft) repulsion.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionSmoothStep&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;SMOOTH_STEP&quot;</span>
+
+<div class="viewcode-block" id="SmoothStepInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.SmoothStepInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;k0&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BMHTFInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BMHTFInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BMHTFInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;BMHTF interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : :obj:`float`</span>
+<span class="sd">            Magnitude of exponential part of the interaction.</span>
+<span class="sd">        b : :obj:`float`</span>
+<span class="sd">            Exponential factor of the interaction.</span>
+<span class="sd">        c : :obj:`float`</span>
+<span class="sd">            Magnitude of the term decaying with the sixth power of r.</span>
+<span class="sd">        d : :obj:`float`</span>
+<span class="sd">            Magnitude of the term decaying with the eighth power of r.</span>
+<span class="sd">        sig : :obj:`float`</span>
+<span class="sd">            Shift in the exponent.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionBMHTF&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;BMHTF_NACL&quot;</span>
+
+<div class="viewcode-block" id="BMHTFInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BMHTFInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="MorseInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.MorseInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">MorseInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Morse interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        eps : :obj:`float`</span>
+<span class="sd">            The magnitude of the interaction.</span>
+<span class="sd">        alpha : :obj:`float`</span>
+<span class="sd">            Stiffness of the Morse interaction.</span>
+<span class="sd">        rmin : :obj:`float`</span>
+<span class="sd">            Distance of potential minimum</span>
+<span class="sd">        cutoff : :obj:`float`, optional</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionMorse&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;MORSE&quot;</span>
+
+<div class="viewcode-block" id="MorseInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.MorseInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;cutoff&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BuckinghamInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BuckinghamInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BuckinghamInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Buckingham interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : :obj:`float`</span>
+<span class="sd">            Magnitude of the exponential part of the interaction.</span>
+<span class="sd">        b : :obj:`float`, optional</span>
+<span class="sd">            Exponent of the exponential part of the interaction.</span>
+<span class="sd">        c : :obj:`float`</span>
+<span class="sd">            Prefactor of term decaying with the sixth power of distance.</span>
+<span class="sd">        d : :obj:`float`</span>
+<span class="sd">            Prefactor of term decaying with the fourth power of distance.</span>
+<span class="sd">        discont : :obj:`float`</span>
+<span class="sd">            Distance below which the potential is linearly continued.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+<span class="sd">        shift: :obj:`float`, optional</span>
+<span class="sd">            Constant potential shift.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionBuckingham&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;BUCKINGHAM&quot;</span>
+
+<div class="viewcode-block" id="BuckinghamInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BuckinghamInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;shift&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SoftSphereInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.SoftSphereInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">SoftSphereInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Soft sphere interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        n : :obj:`float`</span>
+<span class="sd">            Exponent of the power law.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+<span class="sd">        offset : :obj:`float`, optional</span>
+<span class="sd">            Offset distance of the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionSoftSphere&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;SOFT_SPHERE&quot;</span>
+
+<div class="viewcode-block" id="SoftSphereInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.SoftSphereInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HertzianInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.HertzianInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">HertzianInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hertzian interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        eps : :obj:`float`</span>
+<span class="sd">            Magnitude of the interaction.</span>
+<span class="sd">        sig : :obj:`float`</span>
+<span class="sd">            Interaction length scale.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionHertzian&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;HERTZIAN&quot;</span>
+
+<div class="viewcode-block" id="HertzianInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.HertzianInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="GaussianInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.GaussianInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">GaussianInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        eps : :obj:`float`</span>
+<span class="sd">            Overlap energy epsilon.</span>
+<span class="sd">        sig : :obj:`float`</span>
+<span class="sd">            Variance sigma of the Gaussian interaction.</span>
+<span class="sd">        cutoff : :obj:`float`</span>
+<span class="sd">            Cutoff distance of the interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionGaussian&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;GAUSSIAN&quot;</span>
+
+<div class="viewcode-block" id="GaussianInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.GaussianInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Python dictionary of default parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TholeInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TholeInteraction">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TholeInteraction</span><span class="p">(</span><span class="n">NonBondedInteraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Thole interaction.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    set_params()</span>
+<span class="sd">        Set new parameters for the interaction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scaling_coeff : :obj:`float`</span>
+<span class="sd">            The factor used in the Thole damping function between</span>
+<span class="sd">            polarizable particles i and j. Usually calculated by</span>
+<span class="sd">            the polarizabilities :math:`\\alpha_i`, :math:`\\alpha_j`</span>
+<span class="sd">            and damping parameters :math:`a_i`, :math:`a_j` via</span>
+<span class="sd">            :math:`s_{ij} = \\frac{(a_i+a_j)/2}{((\\alpha_i\\cdot\\alpha_j)^{1/2})^{1/3}}`</span>
+<span class="sd">        q1q2: :obj:`float`</span>
+<span class="sd">            Charge factor of the involved charges. Has to be set because</span>
+<span class="sd">            it acts only on the portion of the Drude core charge that is</span>
+<span class="sd">            associated to the dipole of the atom. For charged, polarizable</span>
+<span class="sd">            atoms that charge is not equal to the particle charge property.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::InteractionThole&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;THOLE&quot;</span>
+
+<div class="viewcode-block" id="TholeInteraction.default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TholeInteraction.default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="NonBondedInteractionHandle">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.NonBondedInteractionHandle">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">NonBondedInteractionHandle</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides access to all non-bonded interactions between two particle types.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::NonBondedInteractionHandle&quot;</span>
+
+<div class="viewcode-block" id="NonBondedInteractionHandle.reset">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.NonBondedInteractionHandle.reset">[docs]</a>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="NonBondedInteractions">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.NonBondedInteractions">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">NonBondedInteractions</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Access to non-bonded interaction parameters via ``[i,j]``, where ``i, j``</span>
+<span class="sd">    are particle types. Returns a :class:`NonBondedInteractionHandle` object.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    reset()</span>
+<span class="sd">        Reset all interaction parameters to their default values.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::NonBondedInteractions&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_handle&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BONDED_IA">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BONDED_IA">[docs]</a>
+<span class="k">class</span> <span class="nc">BONDED_IA</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">NONE</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">FENE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">HARMONIC</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">QUARTIC</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">BONDED_COULOMB</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">BONDED_COULOMB_SR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">ANGLE_HARMONIC</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">ANGLE_COSINE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">ANGLE_COSSQUARE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">DIHEDRAL</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">TABULATED_DISTANCE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">TABULATED_ANGLE</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">TABULATED_DIHEDRAL</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">THERMALIZED_DIST</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">RIGID_BOND</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">IBM_TRIEL</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">IBM_VOLUME_CONSERVATION</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">IBM_TRIBEND</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">OIF_GLOBAL_FORCES</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">OIF_LOCAL_FORCES</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">VIRTUAL_BOND</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="BondedInteraction">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedInteraction">[docs]</a>
+<span class="k">class</span> <span class="nc">BondedInteraction</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for bonded interactions.</span>
+
+<span class="sd">    Either called with an interaction id, in which case the interaction</span>
+<span class="sd">    will represent the bonded interaction as it is defined in ESPResSo core,</span>
+<span class="sd">    or called with keyword arguments describing a new interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::BondedInteraction&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_so_feature&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">feature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">code_features</span><span class="o">.</span><span class="n">assert_features</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ctor_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_params</span><span class="p">()</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ctor_params</span> <span class="o">=</span> <span class="n">params</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+
+    <span class="nd">@params</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Bond parameters are immutable.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctor_params</span><span class="si">}</span><span class="s1">)&#39;</span>
+
+<div class="viewcode-block" id="BondedInteraction.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedInteraction.get_default_params">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s1">&gt;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span>
+            <span class="s2">&quot;is_same_bond&quot;</span><span class="p">,</span> <span class="n">bond</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeneBond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.FeneBond">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">FeneBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FENE bond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    k : :obj:`float`</span>
+<span class="sd">        Magnitude of the bond interaction.</span>
+<span class="sd">    d_r_max : :obj:`float`</span>
+<span class="sd">        Maximum stretch and compression length of the bond.</span>
+<span class="sd">    r_0 : :obj:`float`, optional</span>
+<span class="sd">        Equilibrium bond length.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::FeneBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">FENE</span>
+
+<div class="viewcode-block" id="FeneBond.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.FeneBond.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;r_0&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HarmonicBond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.HarmonicBond">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">HarmonicBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Harmonic bond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    k : :obj:`float`</span>
+<span class="sd">        Magnitude of the bond interaction.</span>
+<span class="sd">    r_0 : :obj:`float`</span>
+<span class="sd">        Equilibrium bond length.</span>
+<span class="sd">    r_cut : :obj:`float`, optional</span>
+<span class="sd">        Maximum distance beyond which the bond is considered broken.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::HarmonicBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">HARMONIC</span>
+
+<div class="viewcode-block" id="HarmonicBond.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.HarmonicBond.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;r_cut&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BondedCoulomb">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedCoulomb">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BondedCoulomb</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bonded Coulomb bond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    prefactor : :obj:`float`</span>
+<span class="sd">        Coulomb prefactor of the bonded Coulomb interaction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::BondedCoulomb&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;ELECTROSTATICS&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">BONDED_COULOMB</span>
+
+<div class="viewcode-block" id="BondedCoulomb.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedCoulomb.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BondedCoulombSRBond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedCoulombSRBond">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BondedCoulombSRBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bonded Coulomb short range bond. Calculates the short range part of</span>
+<span class="sd">    Coulomb interactions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    q1q2 : :obj:`float`</span>
+<span class="sd">        Charge factor of the involved particle pair. Note the</span>
+<span class="sd">        particle charges are used to allow e.g. only partial subtraction</span>
+<span class="sd">        of the involved charges.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::BondedCoulombSR&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;ELECTROSTATICS&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">BONDED_COULOMB_SR</span>
+
+<div class="viewcode-block" id="BondedCoulombSRBond.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedCoulombSRBond.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ThermalizedBond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.ThermalizedBond">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">ThermalizedBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Thermalized bond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    temp_com : :obj:`float`</span>
+<span class="sd">        Temperature of the Langevin thermostat for the center of mass of the</span>
+<span class="sd">        particle pair.</span>
+<span class="sd">    gamma_com: :obj:`float`</span>
+<span class="sd">        Friction coefficient of the Langevin thermostat for the center of mass</span>
+<span class="sd">        of the particle pair.</span>
+<span class="sd">    temp_distance: :obj:`float`</span>
+<span class="sd">        Temperature of the Langevin thermostat for the distance vector</span>
+<span class="sd">        of the particle pair.</span>
+<span class="sd">    gamma_distance: :obj:`float`</span>
+<span class="sd">        Friction coefficient of the Langevin thermostat for the</span>
+<span class="sd">        distance vector of the particle pair.</span>
+<span class="sd">    r_cut: :obj:`float`, optional</span>
+<span class="sd">        Maximum distance beyond which the bond is considered broken.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::ThermalizedBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">THERMALIZED_DIST</span>
+
+<div class="viewcode-block" id="ThermalizedBond.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.ThermalizedBond.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;r_cut&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RigidBond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.RigidBond">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">RigidBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rigid bond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r : :obj:`float`</span>
+<span class="sd">        Bond length.</span>
+<span class="sd">    ptol : :obj:`float`, optional</span>
+<span class="sd">        Tolerance for positional deviations.</span>
+<span class="sd">    vtop : :obj:`float`, optional</span>
+<span class="sd">        Tolerance for velocity deviations.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::RigidBond&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;BOND_CONSTRAINT&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">RIGID_BOND</span>
+
+<div class="viewcode-block" id="RigidBond.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.RigidBond.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO rationality of Default Parameters has to be checked</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ptol&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span> <span class="s2">&quot;vtol&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Dihedral">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.Dihedral">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Dihedral</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dihedral potential with phase shift.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mult : :obj:`int`</span>
+<span class="sd">        Multiplicity of the potential (number of minima).</span>
+<span class="sd">    bend : :obj:`float`</span>
+<span class="sd">        Bending constant.</span>
+<span class="sd">    phase : :obj:`float`</span>
+<span class="sd">        Angle of the first local minimum in radians.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::DihedralBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">DIHEDRAL</span>
+
+<div class="viewcode-block" id="Dihedral.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.Dihedral.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TabulatedDistance">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedDistance">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TabulatedDistance</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tabulated bond length.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    min : :obj:`float`</span>
+<span class="sd">        The minimal interaction distance.</span>
+<span class="sd">    max : :obj:`float`</span>
+<span class="sd">        The maximal interaction distance.</span>
+<span class="sd">    energy: array_like of :obj:`float`</span>
+<span class="sd">        The energy table.</span>
+<span class="sd">    force: array_like of :obj:`float`</span>
+<span class="sd">        The force table.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::TabulatedDistanceBond&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;TABULATED&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">TABULATED_DISTANCE</span>
+
+<div class="viewcode-block" id="TabulatedDistance.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedDistance.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TabulatedAngle">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedAngle">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TabulatedAngle</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tabulated bond angle.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    energy: array_like of :obj:`float`</span>
+<span class="sd">        The energy table for the range :math:`0-\\pi`.</span>
+<span class="sd">    force: array_like of :obj:`float`</span>
+<span class="sd">        The force table for the range :math:`0-\\pi`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::TabulatedAngleBond&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;TABULATED&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">TABULATED_ANGLE</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="mf">3.14159265358979</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">pi</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TabulatedAngle.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedAngle.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TabulatedDihedral">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedDihedral">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">TabulatedDihedral</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tabulated bond dihedral.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    energy: array_like of :obj:`float`</span>
+<span class="sd">        The energy table for the range :math:`0-2\\pi`.</span>
+<span class="sd">    force: array_like of :obj:`float`</span>
+<span class="sd">        The force table for the range :math:`0-2\\pi`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::TabulatedDihedralBond&quot;</span>
+    <span class="n">_so_feature</span> <span class="o">=</span> <span class="s2">&quot;TABULATED&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">TABULATED_DIHEDRAL</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="mf">3.14159265358979</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s2">&quot;sip&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">pi</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TabulatedDihedral.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.TabulatedDihedral.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Virtual">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.Virtual">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Virtual</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Virtual bond.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::VirtualBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">VIRTUAL_BOND</span>
+
+<div class="viewcode-block" id="Virtual.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.Virtual.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AngleHarmonic">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.AngleHarmonic">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">AngleHarmonic</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bond-angle-dependent harmonic potential.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi0 : :obj:`float`</span>
+<span class="sd">        Equilibrium bond angle in radians.</span>
+<span class="sd">    bend : :obj:`float`</span>
+<span class="sd">        Magnitude of the bond interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::AngleHarmonicBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">ANGLE_HARMONIC</span>
+
+<div class="viewcode-block" id="AngleHarmonic.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.AngleHarmonic.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AngleCosine">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.AngleCosine">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">AngleCosine</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bond-angle-dependent cosine potential.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi0 : :obj:`float`</span>
+<span class="sd">        Equilibrium bond angle in radians.</span>
+<span class="sd">    bend : :obj:`float`</span>
+<span class="sd">        Magnitude of the bond interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::AngleCosineBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">ANGLE_COSINE</span>
+
+<div class="viewcode-block" id="AngleCosine.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.AngleCosine.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AngleCossquare">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.AngleCossquare">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">AngleCossquare</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bond-angle-dependent cosine squared potential.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phi0 : :obj:`float`</span>
+<span class="sd">        Equilibrium bond angle in radians.</span>
+<span class="sd">    bend : :obj:`float`</span>
+<span class="sd">        Magnitude of the bond interaction.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::AngleCossquareBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">ANGLE_COSSQUARE</span>
+
+<div class="viewcode-block" id="AngleCossquare.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.AngleCossquare.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IBM_Triel">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.IBM_Triel">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">IBM_Triel</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    IBM Triel bond.</span>
+
+<span class="sd">    See Figure C.1 in :cite:`kruger12a`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ind1, ind2, ind3 : :obj:`int`</span>
+<span class="sd">        First, second and third bonding partner. Used for</span>
+<span class="sd">        initializing reference state</span>
+<span class="sd">    k1 : :obj:`float`</span>
+<span class="sd">        Shear elasticity for Skalak and Neo-Hookean</span>
+<span class="sd">    k2 : :obj:`float`, optional</span>
+<span class="sd">        Area resistance for Skalak</span>
+<span class="sd">    maxDist : :obj:`float`</span>
+<span class="sd">        Gives an error if an edge becomes longer than maxDist</span>
+<span class="sd">    elasticLaw : :obj:`str`, {&#39;NeoHookean&#39;, &#39;Skalak&#39;}</span>
+<span class="sd">        Type of elastic bond</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::IBMTriel&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">IBM_TRIEL</span>
+
+<div class="viewcode-block" id="IBM_Triel.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.IBM_Triel.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;k2&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;is_initialized&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;_cache&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IBM_Tribend">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.IBM_Tribend">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">IBM_Tribend</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    IBM Tribend bond.</span>
+
+<span class="sd">    See Figure C.2 in :cite:`kruger12a`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ind1, ind2, ind3, ind4 : :obj:`int`</span>
+<span class="sd">        First, second, third and fourth bonding partner. Used for</span>
+<span class="sd">        initializing reference state</span>
+<span class="sd">    kb : :obj:`float`</span>
+<span class="sd">        Bending modulus</span>
+<span class="sd">    refShape : :obj:`str`, optional, {&#39;Flat&#39;, &#39;Initial&#39;}</span>
+<span class="sd">        Reference shape, default is ``&#39;Flat&#39;``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::IBMTribend&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">IBM_TRIBEND</span>
+
+<div class="viewcode-block" id="IBM_Tribend.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.IBM_Tribend.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;refShape&quot;</span><span class="p">:</span> <span class="s2">&quot;Flat&quot;</span><span class="p">,</span> <span class="s2">&quot;theta0&quot;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s2">&quot;is_initialized&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IBM_VolCons">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.IBM_VolCons">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">IBM_VolCons</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    IBM volume conservation bond.</span>
+
+<span class="sd">    See Figure C.3 in :cite:`kruger12a`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    softID : :obj:`int`</span>
+<span class="sd">        Used to identify the object to which this bond belongs. Each object</span>
+<span class="sd">        (cell) needs its own ID. For performance reasons, it is best to</span>
+<span class="sd">        start from ``softID=0`` and increment by 1 for each subsequent bond.</span>
+<span class="sd">    kappaV : :obj:`float`</span>
+<span class="sd">        Modulus for volume force</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    current_volume()</span>
+<span class="sd">        Query the current volume of the soft object associated to this bond.</span>
+<span class="sd">        The volume is initialized once all :class:`IBM_Triel` bonds have</span>
+<span class="sd">        been added and the forces have been recalculated.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::IBMVolCons&quot;</span>
+    <span class="n">_so_bind_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;current_volume&quot;</span><span class="p">,)</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">IBM_VOLUME_CONSERVATION</span>
+
+<div class="viewcode-block" id="IBM_VolCons.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.IBM_VolCons.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OifGlobalForces">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.OifGlobalForces">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">OifGlobalForces</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Characterize the distribution of the force of the global mesh deformation</span>
+<span class="sd">    onto individual vertices of the mesh.</span>
+
+<span class="sd">    Part of the :ref:`Object-in-fluid` method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A0_g : :obj:`float`</span>
+<span class="sd">        Relaxed area of the mesh</span>
+<span class="sd">    ka_g : :obj:`float`</span>
+<span class="sd">        Area coefficient</span>
+<span class="sd">    V0 : :obj:`float`</span>
+<span class="sd">        Relaxed volume of the mesh</span>
+<span class="sd">    kv : :obj:`float`</span>
+<span class="sd">        Volume coefficient</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::OifGlobalForcesBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">OIF_GLOBAL_FORCES</span>
+
+<div class="viewcode-block" id="OifGlobalForces.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.OifGlobalForces.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OifLocalForces">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.OifLocalForces">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">OifLocalForces</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Characterize the deformation of two triangles sharing an edge.</span>
+
+<span class="sd">    Part of the :ref:`Object-in-fluid` method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r0 : :obj:`float`</span>
+<span class="sd">        Equilibrium bond length of triangle edges</span>
+<span class="sd">    ks : :obj:`float`</span>
+<span class="sd">        Non-linear stretching coefficient of triangle edges</span>
+<span class="sd">    kslin : :obj:`float`</span>
+<span class="sd">        Linear stretching coefficient of triangle edges</span>
+<span class="sd">    phi0 : :obj:`float`</span>
+<span class="sd">        Equilibrium angle between the two triangles</span>
+<span class="sd">    kb : :obj:`float`</span>
+<span class="sd">        Bending coefficient for the angle between the two triangles</span>
+<span class="sd">    A01 : :obj:`float`</span>
+<span class="sd">        Equilibrium surface of the first triangle</span>
+<span class="sd">    A02 : :obj:`float`</span>
+<span class="sd">        Equilibrium surface of the second triangle</span>
+<span class="sd">    kal : :obj:`float`</span>
+<span class="sd">        Stretching coefficient of a triangle surface</span>
+<span class="sd">    kvisc : :obj:`float`</span>
+<span class="sd">        Viscous coefficient of the triangle vertices</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::OifLocalForcesBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">OIF_LOCAL_FORCES</span>
+
+<div class="viewcode-block" id="OifLocalForces.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.OifLocalForces.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="QuarticBond">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.QuarticBond">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">QuarticBond</span><span class="p">(</span><span class="n">BondedInteraction</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quartic bond.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    k0 : :obj:`float`</span>
+<span class="sd">        Magnitude of the square term.</span>
+<span class="sd">    k1 : :obj:`float`</span>
+<span class="sd">        Magnitude of the fourth order term.</span>
+<span class="sd">    r : :obj:`float`</span>
+<span class="sd">        Equilibrium bond length.</span>
+<span class="sd">    r_cut : :obj:`float`</span>
+<span class="sd">        Maximum interaction length.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::QuarticBond&quot;</span>
+    <span class="n">_type_number</span> <span class="o">=</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">QUARTIC</span>
+
+<div class="viewcode-block" id="QuarticBond.get_default_params">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.QuarticBond.get_default_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets default values of optional parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BondedInteractions">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedInteractions">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BondedInteractions</span><span class="p">(</span><span class="n">ScriptObjectMap</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the bonded interactions list.</span>
+
+<span class="sd">    Individual interactions can be accessed using ``BondedInteractions[i]``,</span>
+<span class="sd">    where ``i`` is the bond id.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    remove()</span>
+<span class="sd">        Remove a bond from the list.</span>
+<span class="sd">        This is a no-op if the bond does not exist.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bond_id : :obj:`int`</span>
+
+<span class="sd">    clear()</span>
+<span class="sd">        Remove all bonds.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;Interactions::BondedInteractions&quot;</span>
+    <span class="n">_so_creation_policy</span> <span class="o">=</span> <span class="s2">&quot;GLOBAL&quot;</span>
+    <span class="n">_bond_classes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_type_number</span><span class="p">:</span> <span class="bp">cls</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">BondedInteraction</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">cls</span> <span class="o">!=</span> <span class="n">BondedInteraction</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="BondedInteractions.add">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.interactions.BondedInteractions.add">[docs]</a>
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a bond to the list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bond: :class:`espressomd.interactions.BondedInteraction`</span>
+<span class="sd">            Either a bond object...</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">BondedInteraction</span><span class="p">):</span>
+            <span class="n">bonded_ia</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;A BondedInteraction object needs to be passed.&quot;</span><span class="p">)</span>
+        <span class="n">bonded_ia</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_bond</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">bonded_ia</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bonded_ia</span><span class="o">.</span><span class="n">_bond_id</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s1">&#39;has_bond&#39;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">):</span>
+            <span class="n">bond_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s1">&#39;get_bond&#39;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">)</span>
+            <span class="n">bond_obj</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="n">bond_id</span>
+            <span class="k">return</span> <span class="n">bond_obj</span>
+
+        <span class="c1"># Find out the type of the interaction from ESPResSo</span>
+        <span class="n">bond_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_zero_based_type&quot;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">)</span>
+
+        <span class="c1"># Check if the bonded interaction exists in ESPResSo core</span>
+        <span class="k">if</span> <span class="n">bond_type</span> <span class="o">==</span> <span class="n">BONDED_IA</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The bond with id </span><span class="si">{</span><span class="n">bond_id</span><span class="si">}</span><span class="s2"> is not yet defined.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Find the appropriate class representing such a bond</span>
+        <span class="n">bond_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bond_classes</span><span class="p">[</span><span class="n">bond_type</span><span class="p">]</span>
+
+        <span class="c1"># Create a new script interface object (i.e. a copy of the shared_ptr)</span>
+        <span class="c1"># which links to the bonded interaction object</span>
+        <span class="k">return</span> <span class="n">bond_class</span><span class="p">(</span><span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond_id</span><span class="p">,</span> <span class="n">bond_obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_insert_bond</span><span class="p">(</span><span class="n">bond_id</span><span class="p">,</span> <span class="n">bond_obj</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_insert_bond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bond_id</span><span class="p">,</span> <span class="n">bond_obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts a new bond. If a ``bond_id`` is given, the bond is inserted at</span>
+<span class="sd">        that id. If no id is given, a new id is generated.</span>
+
+<span class="sd">        Bonds can only be overwritten if the new bond is of the same type as the</span>
+<span class="sd">        old one, e.g. a :class:`~espressomd.interactions.FeneBond` bond can only</span>
+<span class="sd">        be overwritten by another :class:`~espressomd.interactions.FeneBond` bond.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Validate arguments</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bond_obj</span><span class="p">,</span> <span class="n">BondedInteraction</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Only subclasses of BondedInteraction can be assigned.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Send the script interface object pointer to the core</span>
+        <span class="k">if</span> <span class="n">bond_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bond_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;insert&quot;</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">bond_obj</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Throw error if attempting to overwrite a bond of different type</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;contains&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">bond_id</span><span class="p">):</span>
+                <span class="n">old_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bond_classes</span><span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_zero_based_type&quot;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bond_obj</span><span class="p">,</span> <span class="n">old_type</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Bonds can only be overwritten by bonds of equal type.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;insert&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">bond_id</span><span class="p">,</span> <span class="nb">object</span><span class="o">=</span><span class="n">bond_obj</span><span class="p">)</span>
+
+        <span class="c1"># Save the bond id in the BondedInteraction instance</span>
+        <span class="n">bond_obj</span><span class="o">.</span><span class="n">_bond_id</span> <span class="o">=</span> <span class="n">bond_id</span>
+
+        <span class="k">return</span> <span class="n">bond_id</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s1">&#39;get_size&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Support iteration over active bonded interactions</span>
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">bond_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s1">&#39;get_bond_ids&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_method</span><span class="p">(</span><span class="s2">&quot;get_zero_based_type&quot;</span><span class="p">,</span> <span class="n">bond_id</span><span class="o">=</span><span class="n">bond_id</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="p">[</span><span class="n">bond_id</span><span class="p">]</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

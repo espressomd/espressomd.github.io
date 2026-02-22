@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>espressomd.collision_detection &#8212; ESPResSo 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=97504538" />
+    <link rel="stylesheet" type="text/css" href="../../_static/blockquotes.css?v=270de11a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=539bf778" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/toggleprompt.js?v=5801b3bb"></script>
+    <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for espressomd.collision_detection</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (C) 2010-2024 The ESPResSo project</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of ESPResSo.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># ESPResSo is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.script_interface</span> <span class="kn">import</span> <span class="n">ScriptInterfaceHelper</span><span class="p">,</span> <span class="n">script_interface_register</span>
+
+
+<div class="viewcode-block" id="CollisionDetection">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.collision_detection.CollisionDetection">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">CollisionDetection</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interface to the collision detection / dynamic binding.</span>
+
+<span class="sd">    See :ref:`Creating bonds when particles collide` for detailed instructions.</span>
+
+<span class="sd">    This class should not be instantiated by the user. Instead, use</span>
+<span class="sd">    the :attr:`~espressomd.system.System.collision_detection` attribute</span>
+<span class="sd">    of the system class to access the collision detection.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    protocol :</span>
+<span class="sd">        Protocol instance, or ``None`` if not set.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;CollisionDetection::CollisionDetection&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;COLLISION_DETECTION&quot;</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="Off">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.collision_detection.Off">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">Off</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Disable collision detection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;CollisionDetection::Off&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;COLLISION_DETECTION&quot;</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="BindCenters">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.collision_detection.BindCenters">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BindCenters</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a pair bond between two particles upon collision.</span>
+<span class="sd">    Particles can still slide around their contact point.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    distance : :obj:`float`</span>
+<span class="sd">        Distance below which two particles are considered to have collided.</span>
+
+<span class="sd">    bond_centers : :obj:`espressomd.interactions.BondedInteraction`</span>
+<span class="sd">        Bond to add between the colliding particles.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;CollisionDetection::BindCenters&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;COLLISION_DETECTION&quot;</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="BindAtPointOfCollision">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.collision_detection.BindAtPointOfCollision">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">BindAtPointOfCollision</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a pair bond between two particles upon collision, and two extra</span>
+<span class="sd">    pair bonds or angle bonds with two automatically-generated virtual sites.</span>
+<span class="sd">    This protocol prevents sliding of the particles at the contact point.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    distance : :obj:`float`</span>
+<span class="sd">        Distance below which two particles are considered to have collided.</span>
+
+<span class="sd">    bond_centers : :obj:`espressomd.interactions.BondedInteraction`</span>
+<span class="sd">        Bond to add between the colliding particles.</span>
+
+<span class="sd">    bond_vs : :obj:`espressomd.interactions.BondedInteraction`</span>
+<span class="sd">        Bond to add between virtual sites.</span>
+
+<span class="sd">    part_type_vs : :obj:`int`</span>
+<span class="sd">        Particle type of the virtual sites created on collision.</span>
+
+<span class="sd">    vs_placement : :obj:`float`</span>
+<span class="sd">        Barycenter of the virtual sites. A value of 0 means that the virtual sites</span>
+<span class="sd">        are placed at the same position as the colliding particles on which they are based.</span>
+<span class="sd">        A value of 0.5 will result in the virtual sites being placed at the mid-point between</span>
+<span class="sd">        the two colliding particles. A value of 1 will result the virtual site associated to</span>
+<span class="sd">        the first colliding particle to be placed at the position of the second colliding particle.</span>
+<span class="sd">        In most cases, 0.5, is a good choice. Then, the bond connecting the virtual sites</span>
+<span class="sd">        should have an equilibrium length of zero.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;CollisionDetection::BindAtPointOfCollision&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;COLLISION_DETECTION&quot;</span><span class="p">,</span> <span class="s2">&quot;VIRTUAL_SITES_RELATIVE&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="GlueToSurface">
+<a class="viewcode-back" href="../../espressomd.html#espressomd.collision_detection.GlueToSurface">[docs]</a>
+<span class="nd">@script_interface_register</span>
+<span class="k">class</span> <span class="nc">GlueToSurface</span><span class="p">(</span><span class="n">ScriptInterfaceHelper</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attach small particles to the surface of a larger particle.</span>
+
+<span class="sd">    It is asymmetric: several small particles can be bound to a large particle</span>
+<span class="sd">    but not vice versa. It can be made irreversible: the small particles can</span>
+<span class="sd">    change type after collision to become *inert*.</span>
+
+<span class="sd">    On collision, a single virtual site is placed and related to the large</span>
+<span class="sd">    particle. Then a bond (``bond_centers``) connects the large and the small</span>
+<span class="sd">    particle. A second bond (``bond_vs``) connects the virtual site and</span>
+<span class="sd">    the small particle.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    distance : :obj:`float`</span>
+<span class="sd">        Distance below which two particles are considered to have collided.</span>
+
+<span class="sd">    bond_centers : :obj:`espressomd.interactions.BondedInteraction`</span>
+<span class="sd">        Bond to add between the colliding particles.</span>
+
+<span class="sd">    bond_vs : :obj:`espressomd.interactions.BondedInteraction`</span>
+<span class="sd">        Bond to add between virtual sites.</span>
+
+<span class="sd">    part_type_vs : :obj:`int`</span>
+<span class="sd">        Particle type of the virtual sites created on collision.</span>
+
+<span class="sd">    part_type_to_attach_vs_to : :obj:`int`</span>
+<span class="sd">        Type of the large particle.</span>
+
+<span class="sd">    part_type_to_be_glued : :obj:`int`</span>
+<span class="sd">        Type of the small particle.</span>
+
+<span class="sd">    part_type_after_glueing : :obj:`int`</span>
+<span class="sd">        Type of the small particle after collision. If different from</span>
+<span class="sd">        ``part_type_to_be_glued``, the bond is irreversible.</span>
+
+<span class="sd">    distance_glued_particle_to_vs : :obj:`float`</span>
+<span class="sd">        Distance of the virtual site to the small particle,</span>
+<span class="sd">        as a fraction of the pair distance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_so_name</span> <span class="o">=</span> <span class="s2">&quot;CollisionDetection::GlueToSurface&quot;</span>
+    <span class="n">_so_features</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;COLLISION_DETECTION&quot;</span><span class="p">,</span> <span class="s2">&quot;VIRTUAL_SITES_RELATIVE&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018-2025, The ESPResSo project.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
