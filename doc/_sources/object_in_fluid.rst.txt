@@ -1,0 +1,29 @@
+object\_in\_fluid package
+=========================
+
+Submodules
+----------
+
+object\_in\_fluid.oif\_classes module
+-------------------------------------
+
+.. automodule:: object_in_fluid.oif_classes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+object\_in\_fluid.oif\_utils module
+-----------------------------------
+
+.. automodule:: object_in_fluid.oif_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: object_in_fluid
+   :members:
+   :undoc-members:
+   :show-inheritance:
