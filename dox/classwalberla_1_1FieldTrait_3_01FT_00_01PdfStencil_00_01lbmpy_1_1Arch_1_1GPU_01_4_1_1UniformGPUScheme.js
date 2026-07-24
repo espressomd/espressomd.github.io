@@ -1,0 +1,4 @@
+var classwalberla_1_1FieldTrait_3_01FT_00_01PdfStencil_00_01lbmpy_1_1Arch_1_1GPU_01_4_1_1UniformGPUScheme =
+[
+    [ "UniformGPUScheme", "classwalberla_1_1FieldTrait_3_01FT_00_01PdfStencil_00_01lbmpy_1_1Arch_1_1GPU_01_4_1_1UniformGPUScheme.html#a1198f16cd085e43d05cf0d8ccf2d740f", null ]
+];
