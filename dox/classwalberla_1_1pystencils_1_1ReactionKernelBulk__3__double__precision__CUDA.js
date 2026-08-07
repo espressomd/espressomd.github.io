@@ -1,0 +1,26 @@
+var classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA =
+[
+    [ "ReactionKernelBulk_3_double_precision_CUDA", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#ae2fe978dd5c248bee0a03ee493e432fc", null ],
+    [ "configure", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a50d61792ec5004707356583cecc5c20f", null ],
+    [ "getOrder_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a0732e6b1d96bb1f94ac03aadaf6f49c9", null ],
+    [ "getOrder_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a59c06635971291a6d37935cbbf3121de", null ],
+    [ "getOrder_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a710927222ab42102fb76c7952b4154db", null ],
+    [ "getRate_coefficient", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#aea783ebec51127112806364fb543a348", null ],
+    [ "getStoech_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a361a6bc8086a0e6f495c81879f0d55ad", null ],
+    [ "getStoech_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a97be2edd7e1aa5b3a23188acee292f97", null ],
+    [ "getStoech_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a9438e7c1ce75de64d6be7200ca1621c6", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a2f01fecdbe6f90b7e5ffed1e87ca1226", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a9729b93b62678fd1af0d5e9feb5d747f", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a4cf4a59913e65239b1e8ea0c34a3ec1e", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#ae1f58fea02e25d16788ca610d4c439c4", null ],
+    [ "operator()", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a453d89d5f5233a463b6eca1a63a224bc", null ],
+    [ "run", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a5f7e101ce7c00fa6d7fa94a5b310e90a", null ],
+    [ "runOnCellInterval", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a9842fa507e16a2381d2fecbf00457a6b", null ],
+    [ "setOrder_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a056c8a7c8051c5039e9758e40583e05c", null ],
+    [ "setOrder_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a9f56fdcbe6bd20bef8ccbbe139e8ee67", null ],
+    [ "setOrder_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a2e5695ffb95f7e606e6a3af921cc96b2", null ],
+    [ "setRate_coefficient", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#ae6129cfe7ecba1c6f3dc98c029fb60bc", null ],
+    [ "setStoech_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a0c900c02660e42f40fcfb9b1988c3505", null ],
+    [ "setStoech_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#a3dee2c3566dc38131365941dc7643b4c", null ],
+    [ "setStoech_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision__CUDA.html#ac40846b773e414b41f42e2c400a0cd1c", null ]
+];

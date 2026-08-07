@@ -1,0 +1,27 @@
+var classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX =
+[
+    [ "StreamCollideSweepLeesEdwardsSinglePrecisionAVX", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a9ead1ec4afa550ec49f922c7f07d9b8c", null ],
+    [ "~StreamCollideSweepLeesEdwardsSinglePrecisionAVX", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#ac76f30602f1f6412394eabf114a4c6ff", null ],
+    [ "configure", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a0bc76a6630917a9647aacf62359d800c", null ],
+    [ "getLebc_bot_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a62e23aa87991a9f17fd1738fce754779", null ],
+    [ "getLebc_top_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a42d17057fab783e9e93a4560ad1a057c", null ],
+    [ "getOmega_bulk", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a4ec3732b2197aa88605d48bb853516de", null ],
+    [ "getOmega_even", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a406e388eb83e8efa78f8ce8b5aa84ee1", null ],
+    [ "getOmega_odd", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a00a7b9b9783669a8a8f8dffe4b016fb9", null ],
+    [ "getOmega_shear", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a3eef7457077a1d900ad2c242de04afc6", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a416196a52d045f34e5db6ae35339d700", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a256ce91848794480ec8b4e62d3951074", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a6c9b5406c013498a9694a29dea6d3920", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a8172e37eb9b9ba92710d24b4e8c266ed", null ],
+    [ "getV_s", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a07a4c4feac9e8e4effd526b3c24dc765", null ],
+    [ "operator()", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#ab1755737f4f44b3f5651e4766fdf7923", null ],
+    [ "run", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a2e67c8f1d2d083f850528ad0692e1d11", null ],
+    [ "runOnCellInterval", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a7527ba6c15d732b9b90a8a264d1bf66b", null ],
+    [ "setLebc_bot_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a46801e9e3269c4cda522599685f5f33e", null ],
+    [ "setLebc_top_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a20c2b57ee5faff1ed24814f4651f36a9", null ],
+    [ "setOmega_bulk", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#ab48d5c99d72f47cdae3261ac2fb2996a", null ],
+    [ "setOmega_even", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#ab77017bd1ca552843f99bd14138be6e5", null ],
+    [ "setOmega_odd", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#ada1f41ebe60d1442e18e32b103f0d3f1", null ],
+    [ "setOmega_shear", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#a20e561d588d85c60d3467a44bca674f1", null ],
+    [ "setV_s", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsSinglePrecisionAVX.html#aa00c3997ef1e7c8929a5478e74cb98fc", null ]
+];
