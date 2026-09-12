@@ -1,0 +1,26 @@
+var classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision =
+[
+    [ "ReactionKernelBulk_3_double_precision", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a6f3e3f63c36e78a7f389ec8499d456ca", null ],
+    [ "configure", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a3ecd450d5f1a5eca22e35f84c798cf60", null ],
+    [ "getOrder_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a8098b7e243a27036559b04427a0a4126", null ],
+    [ "getOrder_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#afec7306f0798ab25408b3481397f6133", null ],
+    [ "getOrder_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a7e3183b9241c33da784ed46c0cdaad10", null ],
+    [ "getRate_coefficient", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a8a5f182bda798783d0e01310a4b785d3", null ],
+    [ "getStoech_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a0c8fcd04e77c2a5d96914ac5d819a90a", null ],
+    [ "getStoech_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#ab0950a7fc6034c1974084839024a5991", null ],
+    [ "getStoech_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#acaedacb78814e79a14cd722d77a343e6", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a09950fc8ec8a4861c648d8e7a039df8f", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a9f47b236551de947308c360846eb4840", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a037eb9e58c97eda2ab12b3366eddb29f", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a24104a6f4166701825f87b2e8393872b", null ],
+    [ "operator()", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a92ad066191a64de0df256b667b917a61", null ],
+    [ "run", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a11bfd14a9e6d303a09cda76153408366", null ],
+    [ "runOnCellInterval", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#aac3987470e715c107633007e0c0b420e", null ],
+    [ "setOrder_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#ae64817f6b8fb253a5a3ad8f08fb65ba8", null ],
+    [ "setOrder_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a34c6400cd56e278e2416adec9b84bf9a", null ],
+    [ "setOrder_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a45634f4e7574faabd8965c4fafd61375", null ],
+    [ "setRate_coefficient", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a4313578080c3beb68f86a3e006c528b2", null ],
+    [ "setStoech_0", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a2545ea4118319c7a180b7fd65176b83f", null ],
+    [ "setStoech_1", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a84847a5340a2355029f3fefe509952af", null ],
+    [ "setStoech_2", "classwalberla_1_1pystencils_1_1ReactionKernelBulk__3__double__precision.html#a5475eca113f7ebfaab2c4e78b8d15745", null ]
+];

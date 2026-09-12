@@ -1,0 +1,21 @@
+espressomd.detail package
+=========================
+
+Submodules
+----------
+
+espressomd.detail.walberla module
+---------------------------------
+
+.. automodule:: espressomd.detail.walberla
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: espressomd.detail
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,37 @@
+espressomd.io package
+=====================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   espressomd.io.writer
+
+Submodules
+----------
+
+espressomd.io.mpiio module
+--------------------------
+
+.. automodule:: espressomd.io.mpiio
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+espressomd.io.vtk module
+------------------------
+
+.. automodule:: espressomd.io.vtk
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: espressomd.io
+   :members:
+   :undoc-members:
+   :show-inheritance:
