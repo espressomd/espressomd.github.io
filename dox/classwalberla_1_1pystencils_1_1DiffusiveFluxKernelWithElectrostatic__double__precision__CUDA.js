@@ -1,0 +1,25 @@
+var classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA =
+[
+    [ "DiffusiveFluxKernelWithElectrostatic_double_precision_CUDA", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a838f425c8d9d18b69b0142c1b91f362a", null ],
+    [ "configure", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#aebbb06a1e7cccc7d74f3ccb64d5f17f3", null ],
+    [ "getD", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a630e4f4ab977a490779e92bd920d7046", null ],
+    [ "getF_ext_0", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a28aabbd1a57d17a32c72692b3cf0015a", null ],
+    [ "getF_ext_1", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a8c427d0fbc5c3fb086668a53ab3fe822", null ],
+    [ "getF_ext_2", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a20beb8442bcefa38dcf1fc9e4e5d0e43", null ],
+    [ "getKt", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a8075300cede1ea15b920fe7d3e331a60", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a1063da922cc6e242fab8af46e69d1819", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a0338826e7acaeb35d035c0a1fd6b382c", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#aa3481fefb40b129dd09eae29c4641257", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#af2df46808c4ff2dc3ce3c2b9e626d2bf", null ],
+    [ "getZ", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a13755f1bc4f1adf720e3cf5eb2383d47", null ],
+    [ "operator()", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a6030c4afac9d070471afaf3f1ad67633", null ],
+    [ "run", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a67b5881a118baa3948878edca1e6260f", null ],
+    [ "runOnCellInterval", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a2dfa670fb9386ab8741c1e2ce70b2ecd", null ],
+    [ "setD", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a7965f4e86a98973df6a1f4d1ec84c6dc", null ],
+    [ "setF_ext_0", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a204ed0381a8e8047519dbd205446bb86", null ],
+    [ "setF_ext_1", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#afb29d7a71be04d1919e9499bce98fc50", null ],
+    [ "setF_ext_2", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a798b514b9b50af127762e7c691810e07", null ],
+    [ "setKt", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a4a41cc6ca557362f3c805f60e31184ae", null ],
+    [ "setPhiID", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a239ccf40b0b2fdad76fc895a3870a5e5", null ],
+    [ "setZ", "classwalberla_1_1pystencils_1_1DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA.html#a59911b543f7b97f1a479ef741127ba85", null ]
+];
