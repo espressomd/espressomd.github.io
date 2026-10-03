@@ -1,0 +1,4 @@
+var structboost_1_1qvm_1_1deduce__scalar_3_01Utils_1_1Quaternion_3_01T_01_4_00_01Utils_1_1Quaternion_3_01U_01_4_01_4 =
+[
+    [ "type", "structboost_1_1qvm_1_1deduce__scalar_3_01Utils_1_1Quaternion_3_01T_01_4_00_01Utils_1_1Quaternion_3_01U_01_4_01_4.html#ad0a6ea449f2eeaf6c83d9ca750b37572", null ]
+];
