@@ -1,0 +1,25 @@
+var DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu =
+[
+    [ "FUNC_PREFIX", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a51a2ba326e140bf59e73b07a680ff233", null ],
+    [ "__launch_bounds__", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a098f228bce598c9397c3ac4b33b9c605", null ],
+    [ "_data_j", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a6627dd75359f84474e1977fc6f2890e4", null ],
+    [ "_data_phi", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a7b74734e6ff2bdf1aec0fbde46df68af", null ],
+    [ "_data_rho", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#aa8686f67cc7914f3b0479f1789ccce7b", null ],
+    [ "_size_j_0", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a16752b1969f628dfcf25caae82116576", null ],
+    [ "_size_j_1", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a98aaf36fb5e3916298936b19b59125ab", null ],
+    [ "_size_j_2", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#aa767996a153ed8b8de4101fbc5bea8d6", null ],
+    [ "_stride_j_0", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a11e2f9d3a24e60f0ab916590cb555b19", null ],
+    [ "_stride_j_1", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#aeaa7cebada5c96e42993fbfdb7fde6b5", null ],
+    [ "_stride_j_2", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#ad2f8401f7f27443806386dbe6561a863", null ],
+    [ "_stride_j_3", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a40e59a3c89ffa564e7a3d87f7200504c", null ],
+    [ "_stride_phi_0", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a8495a4540b561d28469590659b6c5a81", null ],
+    [ "_stride_phi_1", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a48645824dd70f6ad207be47e9c5c805e", null ],
+    [ "_stride_phi_2", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#adcde7421c4ae6ad04b0aed8029666f07", null ],
+    [ "_stride_rho_0", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a9c5c62e3520d9c46db7d15528b0117ba", null ],
+    [ "_stride_rho_1", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a5eaf7f4fbda8266dee264656c14700fe", null ],
+    [ "_stride_rho_2", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#aec63931f579d1bf129b3326b9ca4e88e", null ],
+    [ "f_ext_0", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a4f6a42438b3354891737bc20da2b269e", null ],
+    [ "f_ext_1", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#ae2692831e1ecd3fd42b282036c792f21", null ],
+    [ "f_ext_2", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a8049e9cc9e0041d897e23e07d79d53c8", null ],
+    [ "kT", "DiffusiveFluxKernelWithElectrostatic__double__precision__CUDA_8cu.html#a6421c785caf1ed1e2a61691fd9c836c1", null ]
+];
