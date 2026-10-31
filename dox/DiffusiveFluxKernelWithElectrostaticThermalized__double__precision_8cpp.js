@@ -1,0 +1,5 @@
+var DiffusiveFluxKernelWithElectrostaticThermalized__double__precision_8cpp =
+[
+    [ "FUNC_PREFIX", "DiffusiveFluxKernelWithElectrostaticThermalized__double__precision_8cpp.html#a51a2ba326e140bf59e73b07a680ff233", null ],
+    [ "diffusivefluxkernelwithelectrostaticthermalized_double_precision_diffusivefluxkernelwithelectrostaticthermalized_double_precision", "DiffusiveFluxKernelWithElectrostaticThermalized__double__precision_8cpp.html#ac0e88425ee7b185e5016b1f020ca64a9", null ]
+];
