@@ -1,0 +1,21 @@
+espressomd.plugins package
+==========================
+
+Submodules
+----------
+
+espressomd.plugins.ase module
+-----------------------------
+
+.. automodule:: espressomd.plugins.ase
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: espressomd.plugins
+   :members:
+   :undoc-members:
+   :show-inheritance:

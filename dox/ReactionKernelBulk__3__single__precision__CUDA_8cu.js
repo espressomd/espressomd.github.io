@@ -1,0 +1,25 @@
+var ReactionKernelBulk__3__single__precision__CUDA_8cu =
+[
+    [ "FUNC_PREFIX", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a51a2ba326e140bf59e73b07a680ff233", null ],
+    [ "__launch_bounds__", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a58f6597637af91627617a3b140ca5ecb", null ],
+    [ "_data_rho_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a388dcaadc37ae6946b7f3f35e8b9f6c8", null ],
+    [ "_data_rho_2", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a1b7b10bf154fb1124df72349a64b94d5", null ],
+    [ "_size_rho_0_0", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a75ea5df75aee889cdea38514b5d95091", null ],
+    [ "_size_rho_0_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a9c75b47fb1abf795f053d53ba94b311f", null ],
+    [ "_size_rho_0_2", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#ae349497826e3d1ec30c137cee6d42572", null ],
+    [ "_stride_rho_0_0", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a5d1cc5d86f3e467f9185457282bbbccc", null ],
+    [ "_stride_rho_0_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#aa62b5fc99fe186ad7769a83012a59d8a", null ],
+    [ "_stride_rho_0_2", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#ae7b9519651363eee9231acd08a1c726e", null ],
+    [ "_stride_rho_1_0", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#acfda54a7f5971f8b0cc4883735e918b2", null ],
+    [ "_stride_rho_1_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a5127a861505ecd92b19ffc56eb28ac39", null ],
+    [ "_stride_rho_1_2", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#afaf13feaa6045a4081aa8706f118f24b", null ],
+    [ "_stride_rho_2_0", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a4fcaf1c42fb7abc23d1cb42b12592c53", null ],
+    [ "_stride_rho_2_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a4e0d5ba1e5adc117943a1b7516b301f1", null ],
+    [ "_stride_rho_2_2", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a9c7afd5002a8276d4ebbd3a03ac567f0", null ],
+    [ "order_0", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a6dfdb096d57332c84c7f416c137346ac", null ],
+    [ "order_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a18e4a05c3732670c1e385367792a7619", null ],
+    [ "order_2", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#aea4a4550c0198c02f1cceeef983d2361", null ],
+    [ "rate_coefficient", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a434508b21a44318d6dffd07c7be9b986", null ],
+    [ "stoech_0", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a981efcab627a7c358b7b8ef2d1a53525", null ],
+    [ "stoech_1", "ReactionKernelBulk__3__single__precision__CUDA_8cu.html#a33ee5f3e5597606239df4c4af1080168", null ]
+];
