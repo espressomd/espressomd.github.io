@@ -1,0 +1,27 @@
+var classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA =
+[
+    [ "StreamCollideSweepLeesEdwardsDoublePrecisionCUDA", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#abc482f3c747e16104c3f0104b671dffc", null ],
+    [ "~StreamCollideSweepLeesEdwardsDoublePrecisionCUDA", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a1991e4604b12a7463f61fe6138e4c487", null ],
+    [ "configure", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a122e5820178b7bbf6bce9143cf351337", null ],
+    [ "getLebc_bot_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#aba8be68f4f32b29f194bcbe999cbd9fe", null ],
+    [ "getLebc_top_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a61a87c3e28d61439f0a860c6bd9bb49f", null ],
+    [ "getOmega_bulk", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a463b770deac215b843ecfcf26386d430", null ],
+    [ "getOmega_even", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a9c606b868005e6d8edb126d266882f93", null ],
+    [ "getOmega_odd", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#ada9b9dd1618953b0a3b2b4b8000afcca", null ],
+    [ "getOmega_shear", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a5305d9bb490d4ebfe089dd6dcdc9075d", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a575d6a364f31a332631524db86195942", null ],
+    [ "getSweep", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#abb111e3968c4c2f45097b14160e5d0eb", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a2234aca7117b09bbc55e33ff56d31db2", null ],
+    [ "getSweepOnCellInterval", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a2f3e648a7b6bc373194d82dc9f374dbc", null ],
+    [ "getV_s", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#afd8eaa4cc15fc283c41eaac023a6af47", null ],
+    [ "operator()", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a4e9061b68ab8e8402d1962354aea2a0b", null ],
+    [ "run", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#ac520e306f1b2575ea079dd1ee945137f", null ],
+    [ "runOnCellInterval", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#afb5f582b97a8e2aed68e1b040157f206", null ],
+    [ "setLebc_bot_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a2292b5cb57e5f5f4b8edddff4109267c", null ],
+    [ "setLebc_top_index", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#afa042041820ea8eb4bcb445cc490e431", null ],
+    [ "setOmega_bulk", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#aadd56824976eae1250240674d523a929", null ],
+    [ "setOmega_even", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#acd75cfb73e28eab019e2c3c266f283a1", null ],
+    [ "setOmega_odd", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a8548f779f7a86559cfa67d962eb9e738", null ],
+    [ "setOmega_shear", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a87e6b1936f172b7b787272e3b707f595", null ],
+    [ "setV_s", "classwalberla_1_1pystencils_1_1StreamCollideSweepLeesEdwardsDoublePrecisionCUDA.html#a4ccd325ee9f0e29e2fd158e933ed6368", null ]
+];
