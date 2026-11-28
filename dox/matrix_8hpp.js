@@ -1,0 +1,13 @@
+var matrix_8hpp =
+[
+    [ "Utils::Matrix&lt; T, Rows, Cols &gt;", "structUtils_1_1Matrix.html", "structUtils_1_1Matrix" ],
+    [ "boost::qvm::mat_traits&lt; Utils::Matrix&lt; T, Rows, Cols &gt; &gt;", "structboost_1_1qvm_1_1mat__traits_3_01Utils_1_1Matrix_3_01T_00_01Rows_00_01Cols_01_4_01_4.html", "structboost_1_1qvm_1_1mat__traits_3_01Utils_1_1Matrix_3_01T_00_01Rows_00_01Cols_01_4_01_4" ],
+    [ "boost::qvm::deduce_vec2&lt; Utils::Matrix&lt; T, 2, 2 &gt;, Utils::Vector&lt; U, 2 &gt;, 2 &gt;", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_012_00_012_01_4_00_01Utils_1_1Ve6f282e72b9e13c4f9560e4446eea4de6.html", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_012_00_012_01_4_00_01Utils_1_1Ve6f282e72b9e13c4f9560e4446eea4de6" ],
+    [ "boost::qvm::deduce_vec2&lt; Utils::Matrix&lt; T, 3, 3 &gt;, Utils::Vector&lt; U, 3 &gt;, 3 &gt;", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_013_00_013_01_4_00_01Utils_1_1Vef70fef1c6a608bc6086e2823df164552.html", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_013_00_013_01_4_00_01Utils_1_1Vef70fef1c6a608bc6086e2823df164552" ],
+    [ "boost::qvm::deduce_vec2&lt; Utils::Matrix&lt; T, 4, 4 &gt;, Utils::Vector&lt; U, 4 &gt;, 4 &gt;", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_014_00_014_01_4_00_01Utils_1_1Ve93f4e8e8cda39932ca193dd0abdcf856.html", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_014_00_014_01_4_00_01Utils_1_1Ve93f4e8e8cda39932ca193dd0abdcf856" ],
+    [ "boost::qvm::deduce_vec2&lt; Utils::Matrix&lt; T, 2, 3 &gt;, Utils::Vector&lt; U, 3 &gt;, 2 &gt;", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_012_00_013_01_4_00_01Utils_1_1Veb9b51c8971c9075457970a8a99260994.html", "structboost_1_1qvm_1_1deduce__vec2_3_01Utils_1_1Matrix_3_01T_00_012_00_013_01_4_00_01Utils_1_1Veb9b51c8971c9075457970a8a99260994" ],
+    [ "boost::qvm::deduce_mat2&lt; Utils::Matrix&lt; T, 3, 3 &gt;, Utils::Matrix&lt; U, 3, 3 &gt;, 3, 3 &gt;", "structboost_1_1qvm_1_1deduce__mat2_3_01Utils_1_1Matrix_3_01T_00_013_00_013_01_4_00_01Utils_1_1Ma00635fe6607c37b267a8f9fd25d576dc.html", "structboost_1_1qvm_1_1deduce__mat2_3_01Utils_1_1Matrix_3_01T_00_013_00_013_01_4_00_01Utils_1_1Ma00635fe6607c37b267a8f9fd25d576dc" ],
+    [ "Utils::diagonal_mat", "namespaceUtils.html#adb6301bd482b324ce5d091afab9474e4", null ],
+    [ "Utils::flatten", "namespaceUtils.html#a24b15dbb83da661b60ae981aaba1dbec", null ],
+    [ "Utils::identity_mat", "namespaceUtils.html#a9bff3445139e2eeb06b88a91f98af8c5", null ]
+];

@@ -1,0 +1,11 @@
+var FixedFlux__single__precision__CUDA_8cu =
+[
+    [ "FUNC_PREFIX", "FixedFlux__single__precision__CUDA_8cu.html#a51a2ba326e140bf59e73b07a680ff233", null ],
+    [ "RESTRICT", "FixedFlux__single__precision__CUDA_8cu.html#aae3356b63849abbe8789dd41648ee90a", null ],
+    [ "walberla::pystencils::internal_fixedflux_single_precision_cuda_boundary_FixedFlux_single_precision_CUDA::__launch_bounds__", "namespacewalberla_1_1pystencils_1_1internal__fixedflux__single__precision__cuda__boundary__FixedFlux__single__precision__CUDA.html#ae82507abdaffbfa18acf81e9e65dfd6c", null ],
+    [ "walberla::pystencils::internal_fixedflux_single_precision_cuda_boundary_FixedFlux_single_precision_CUDA::_data_indexVector", "namespacewalberla_1_1pystencils_1_1internal__fixedflux__single__precision__cuda__boundary__FixedFlux__single__precision__CUDA.html#a8e5613b6e674e8c6026eb8abdaa1325b", null ],
+    [ "walberla::pystencils::internal_fixedflux_single_precision_cuda_boundary_FixedFlux_single_precision_CUDA::_stride_flux_0", "namespacewalberla_1_1pystencils_1_1internal__fixedflux__single__precision__cuda__boundary__FixedFlux__single__precision__CUDA.html#a16ffc6eca47c50579f54992f82932b5d", null ],
+    [ "walberla::pystencils::internal_fixedflux_single_precision_cuda_boundary_FixedFlux_single_precision_CUDA::_stride_flux_1", "namespacewalberla_1_1pystencils_1_1internal__fixedflux__single__precision__cuda__boundary__FixedFlux__single__precision__CUDA.html#a9454dc49c97a53dbfcf6eb5042024497", null ],
+    [ "walberla::pystencils::internal_fixedflux_single_precision_cuda_boundary_FixedFlux_single_precision_CUDA::_stride_flux_2", "namespacewalberla_1_1pystencils_1_1internal__fixedflux__single__precision__cuda__boundary__FixedFlux__single__precision__CUDA.html#a9b46e0648b6537d29b23ba0a03afa903", null ],
+    [ "walberla::pystencils::internal_fixedflux_single_precision_cuda_boundary_FixedFlux_single_precision_CUDA::_stride_flux_3", "namespacewalberla_1_1pystencils_1_1internal__fixedflux__single__precision__cuda__boundary__FixedFlux__single__precision__CUDA.html#a5c6ea22ae6d8548fffd0d9ac5a66d021", null ]
+];
